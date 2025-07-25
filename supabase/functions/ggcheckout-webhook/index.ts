@@ -199,18 +199,19 @@ const handler = async (req: Request): Promise<Response> => {
 
   try {
     const payload = await req.text();
-    const signature = req.headers.get("x-ggcheckout-signature") || req.headers.get("signature") || "";
-
-    console.log("Received webhook with signature:", signature);
-    console.log("Available headers:", Object.fromEntries(req.headers.entries()));
+    
+    // Get Bearer token from authorization header
+    const authHeader = req.headers.get("authorization") || "";
+    console.log("Received authorization header:", authHeader);
     console.log("Webhook secret configured:", !!webhookSecret);
 
-    // Verify webhook signature
-    if (!(await verifyWebhookSignature(payload, signature))) {
-      console.error("Invalid webhook signature");
-      console.error("Payload length:", payload.length);
-      console.error("Signature received:", signature);
-      await logWebhook("ggcheckout", JSON.parse(payload), "error", "Invalid signature");
+    // Validate Bearer token
+    const token = authHeader.replace("Bearer ", "").trim();
+    if (token !== webhookSecret) {
+      console.error("Invalid webhook secret token");
+      console.error("Expected secret:", webhookSecret);
+      console.error("Received token:", token);
+      await logWebhook("ggcheckout", JSON.parse(payload), "error", "Invalid secret token");
       
       return new Response("Unauthorized", { 
         status: 401, 
