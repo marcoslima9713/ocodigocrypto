@@ -1,11 +1,12 @@
 // Dashboard Principal - Painel com 5 módulos premium
 import { motion } from 'framer-motion';
 import { 
-  BookOpen, 
-  Target, 
-  Cog, 
-  TestTube, 
-  TrendingUp, 
+  Bitcoin, 
+  Globe, 
+  Timer, 
+  Eye, 
+  Wallet, 
+  FileText,
   LogOut, 
   User,
   Award,
@@ -20,43 +21,51 @@ import { ProgressStats } from '@/components/ProgressStats';
 const modules = [
   {
     id: 'modulo-1',
-    title: 'Introdução',
-    description: 'Fundamentos do mercado financeiro e conceitos básicos para iniciantes',
-    icon: BookOpen,
-    color: 'from-blue-500/20 to-blue-600/20',
-    estimatedTime: '30 min'
-  },
-  {
-    id: 'modulo-2', 
-    title: 'Estratégias',
-    description: 'Estratégias avançadas de investimento e análise de mercado',
-    icon: Target,
-    color: 'from-green-500/20 to-green-600/20',
+    title: 'Origens do Bitcoin',
+    description: 'A verdadeira história por trás da criação do Bitcoin, os players envolvidos e como isso moldou o mercado que conhecemos hoje. Informações que poucos sabem e que são fundamentais para entender os ciclos.',
+    icon: Bitcoin,
+    color: 'from-orange-500/20 to-orange-600/20',
     estimatedTime: '45 min'
   },
   {
-    id: 'modulo-3',
-    title: 'Implementação',
-    description: 'Como colocar as estratégias em prática no mercado real',
-    icon: Cog,
-    color: 'from-purple-500/20 to-purple-600/20',
+    id: 'modulo-2', 
+    title: 'Ciclos Macroeconômicos',
+    description: 'Como políticas monetárias globais, decisões do FED e eventos geopolíticos criam ondas no mercado crypto. Aprenda a surfar essas ondas em vez de ser engolido por elas.',
+    icon: Globe,
+    color: 'from-blue-500/20 to-blue-600/20',
     estimatedTime: '60 min'
   },
   {
+    id: 'modulo-3',
+    title: 'Timing de Mercado',
+    description: 'Os sinais que antecedem grandes movimentos do Bitcoin. Como identificar topos e fundos usando dados macroeconômicos. O timing que faz a diferença entre lucro e prejuízo.',
+    icon: Timer,
+    color: 'from-green-500/20 to-green-600/20',
+    estimatedTime: '50 min'
+  },
+  {
     id: 'modulo-4',
-    title: 'Testes',
-    description: 'Backtesting e validação das suas estratégias de investimento',
-    icon: TestTube,
-    color: 'from-orange-500/20 to-orange-600/20',
-    estimatedTime: '40 min'
+    title: 'Análise de Fluxos',
+    description: 'Como rastrear o dinheiro das instituições e whales. Onde eles colocam capital e como você pode acompanhar esses movimentos para se posicionar antes da massa.',
+    icon: Eye,
+    color: 'from-purple-500/20 to-purple-600/20',
+    estimatedTime: '55 min'
   },
   {
     id: 'modulo-5',
-    title: 'Escala',
-    description: 'Como escalar seus investimentos e maximizar os retornos',
-    icon: TrendingUp,
+    title: 'Gestão de Capital',
+    description: 'Como alocar capital de forma inteligente, quando aumentar posições e quando reduzir exposição. A diferença entre trading e investimento estratégico de longo prazo.',
+    icon: Wallet,
+    color: 'from-indigo-500/20 to-indigo-600/20',
+    estimatedTime: '40 min'
+  },
+  {
+    id: 'modulo-6',
+    title: 'Casos Reais',
+    description: 'Análise detalhada dos grandes movimentos do Bitcoin desde 2017. O que causou cada movimento e como você poderia ter identificado essas oportunidades usando macroeconomia.',
+    icon: FileText,
     color: 'from-red-500/20 to-red-600/20',
-    estimatedTime: '50 min'
+    estimatedTime: '70 min'
   }
 ];
 
