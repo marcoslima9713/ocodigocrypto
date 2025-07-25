@@ -126,44 +126,85 @@ async function sendWelcomeEmail(memberData: any, password: string) {
     <html>
     <head>
       <meta charset="utf-8">
-      <title>Seu acesso foi liberado! 🎉</title>
+      <title>Bem-vindo à Área Premium! ✨</title>
     </head>
-    <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
-      <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
-        <h1 style="margin: 0; font-size: 28px;">🎉 Bem-vindo(a)!</h1>
-        <p style="margin: 10px 0 0 0; font-size: 18px;">Seu acesso foi liberado com sucesso!</p>
+    <body style="font-family: 'Georgia', serif; line-height: 1.6; color: #2c2c2c; max-width: 650px; margin: 0 auto; padding: 0; background: #1a1a1a;">
+      <!-- Header with Premium Golden Design -->
+      <div style="background: linear-gradient(135deg, #c9a961 0%, #f4e79d 50%, #c9a961 100%); color: #1a1a1a; padding: 40px 30px; text-align: center; position: relative; overflow: hidden;">
+        <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="%23ffffff" opacity="0.1"/><circle cx="75" cy="75" r="1" fill="%23ffffff" opacity="0.1"/><circle cx="50" cy="50" r="0.5" fill="%23ffffff" opacity="0.05"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>'); opacity: 0.3;"></div>
+        <div style="position: relative; z-index: 1;">
+          <h1 style="margin: 0; font-size: 36px; font-weight: bold; text-shadow: 0 2px 4px rgba(0,0,0,0.1); letter-spacing: 1px;">✨ BEM-VINDO AO PREMIUM</h1>
+          <p style="margin: 15px 0 0 0; font-size: 20px; opacity: 0.9; font-style: italic;">Seu acesso exclusivo foi liberado!</p>
+        </div>
       </div>
       
-      <div style="background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px;">
-        <p style="font-size: 16px; margin-bottom: 20px;">
-          Olá <strong>${memberData.full_name}</strong>,<br>
-          Obrigado por sua compra do produto <strong>${memberData.product_name}</strong>!
-        </p>
-        
-        <div style="background: white; padding: 25px; border-radius: 8px; border-left: 4px solid #667eea; margin: 20px 0;">
-          <h3 style="margin-top: 0; color: #667eea;">📋 Seus dados de acesso:</h3>
-          <p style="margin: 10px 0;"><strong>Login:</strong> ${memberData.email}</p>
-          <p style="margin: 10px 0;"><strong>Senha:</strong> <code style="background: #f1f1f1; padding: 5px 8px; border-radius: 4px; font-family: monospace;">${password}</code></p>
+      <!-- Main Content -->
+      <div style="background: linear-gradient(135deg, #2c2c2c 0%, #3d3d3d 100%); padding: 40px 30px; color: #f5f5f5;">
+        <div style="text-align: center; margin-bottom: 30px;">
+          <h2 style="color: #f4e79d; font-size: 24px; margin: 0 0 10px 0; font-weight: normal;">Olá, <span style="color: #c9a961; font-weight: bold;">${memberData.full_name}</span></h2>
+          <p style="font-size: 16px; margin: 0; opacity: 0.9;">
+            Obrigado por adquirir o <strong style="color: #f4e79d;">${memberData.product_name}</strong>
+          </p>
         </div>
         
-        <div style="text-align: center; margin: 30px 0;">
-          <a href="${supabaseUrl.replace('.supabase.co', '.vercel.app')}" 
-             style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px 30px; text-decoration: none; border-radius: 50px; font-weight: bold; display: inline-block; font-size: 16px;">
-            🚀 Acessar Área de Membros
+        <!-- Access Credentials Card -->
+        <div style="background: linear-gradient(135deg, #1a1a1a 0%, #2c2c2c 100%); padding: 30px; border-radius: 15px; border: 2px solid #c9a961; margin: 30px 0; box-shadow: 0 8px 25px rgba(201, 169, 97, 0.2);">
+          <h3 style="margin-top: 0; color: #f4e79d; font-size: 20px; text-align: center; margin-bottom: 25px;">🔑 Seus Dados de Acesso Premium</h3>
+          
+          <div style="background: rgba(201, 169, 97, 0.1); padding: 20px; border-radius: 10px; border-left: 4px solid #c9a961;">
+            <p style="margin: 0 0 15px 0; font-size: 16px;">
+              <span style="color: #f4e79d; font-weight: bold;">📧 Login:</span><br>
+              <span style="color: #ffffff; font-size: 18px; font-family: monospace; background: rgba(255,255,255,0.1); padding: 8px 12px; border-radius: 6px; display: inline-block; margin-top: 5px;">${memberData.email}</span>
+            </p>
+            <p style="margin: 0; font-size: 16px;">
+              <span style="color: #f4e79d; font-weight: bold;">🔐 Senha:</span><br>
+              <span style="color: #ffffff; font-size: 18px; font-family: monospace; background: rgba(255,255,255,0.1); padding: 8px 12px; border-radius: 6px; display: inline-block; margin-top: 5px; letter-spacing: 1px;">${password}</span>
+            </p>
+          </div>
+        </div>
+        
+        <!-- CTA Button -->
+        <div style="text-align: center; margin: 40px 0;">
+          <a href="https://YOUR_DOMAIN.lovable.app/login" 
+             style="background: linear-gradient(135deg, #c9a961 0%, #f4e79d 50%, #c9a961 100%); 
+                    color: #1a1a1a; 
+                    padding: 18px 40px; 
+                    text-decoration: none; 
+                    border-radius: 50px; 
+                    font-weight: bold; 
+                    display: inline-block; 
+                    font-size: 18px; 
+                    text-transform: uppercase; 
+                    letter-spacing: 1px;
+                    box-shadow: 0 8px 25px rgba(201, 169, 97, 0.3);
+                    transition: all 0.3s ease;">
+            ✨ ACESSAR ÁREA PREMIUM
           </a>
         </div>
         
-        <hr style="border: none; border-top: 1px solid #ddd; margin: 30px 0;">
+        <!-- Divider -->
+        <div style="border-top: 1px solid #c9a961; margin: 40px 0; opacity: 0.5;"></div>
         
-        <p style="color: #666; font-size: 14px; text-align: center;">
-          <strong>💡 Dica:</strong> Guarde bem seus dados de acesso em local seguro.<br>
-          Em caso de dúvidas, entre em contato conosco.
-        </p>
+        <!-- Security Notice -->
+        <div style="background: rgba(201, 169, 97, 0.05); padding: 25px; border-radius: 10px; border: 1px solid rgba(201, 169, 97, 0.2); text-align: center;">
+          <p style="color: #f4e79d; font-size: 16px; margin: 0 0 10px 0; font-weight: bold;">
+            🛡️ IMPORTANTE - ACESSO SEGURO
+          </p>
+          <p style="color: #f5f5f5; font-size: 14px; margin: 0; opacity: 0.9;">
+            Guarde seus dados de acesso em local seguro. Este é seu passaporte para o conteúdo premium.<br>
+            <span style="color: #c9a961;">Em caso de dúvidas, nossa equipe está pronta para ajudar.</span>
+          </p>
+        </div>
         
-        <p style="color: #666; font-size: 14px; text-align: center; margin-top: 30px;">
-          Bom aprendizado! 📚<br>
-          <strong>Equipe de Suporte</strong>
-        </p>
+        <!-- Footer -->
+        <div style="text-align: center; margin-top: 40px; padding-top: 30px; border-top: 1px solid rgba(201, 169, 97, 0.3);">
+          <p style="color: #c9a961; font-size: 16px; margin: 0 0 10px 0; font-weight: bold;">
+            Aproveite sua jornada premium! 🚀
+          </p>
+          <p style="color: #f5f5f5; font-size: 14px; margin: 0; opacity: 0.8;">
+            <strong style="color: #f4e79d;">Equipe Premium</strong>
+          </p>
+        </div>
       </div>
     </body>
     </html>
