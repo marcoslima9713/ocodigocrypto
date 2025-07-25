@@ -74,22 +74,19 @@ export default function Dashboard() {
     }} animate={{
       opacity: 1
     }} className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-b from-black/80 to-transparent backdrop-blur-sm">
-        <div className="px-4 sm:px-8 lg:px-16">
-          <div className="flex justify-between items-center h-16">
+        <div className="px-4 sm:px-6 lg:px-16">
+          <div className="flex justify-between items-center h-14 sm:h-16">
             {/* Logo */}
-            <div className="flex items-center space-x-8">
-              <h1 className="text-2xl font-bold text-red-600">Acesso Premium</h1>
-              
-              {/* Navigation Menu */}
-              
+            <div className="flex items-center">
+              <h1 className="text-lg sm:text-2xl font-bold text-red-600">Acesso Premium</h1>
             </div>
 
             {/* User Menu */}
-            <div className="flex items-center space-x-4">
-              <span className="text-white text-sm hidden sm:block">
+            <div className="flex items-center space-x-2 sm:space-x-4">
+              <span className="text-white text-xs sm:text-sm hidden md:block truncate max-w-[120px] lg:max-w-none">
                 {currentUser?.email}
               </span>
-              <Button variant="ghost" size="sm" onClick={handleLogout} className="text-white hover:text-gray-300">
+              <Button variant="ghost" size="sm" onClick={handleLogout} className="text-white hover:text-gray-300 p-2">
                 <LogOut className="w-4 h-4" />
               </Button>
             </div>
@@ -111,7 +108,7 @@ export default function Dashboard() {
         </div>
 
         {/* Hero Content */}
-        <div className="relative z-10 px-4 sm:px-8 lg:px-16 max-w-2xl">
+        <div className="relative z-10 px-4 sm:px-6 lg:px-16 max-w-full sm:max-w-2xl pt-16 sm:pt-0">
           <motion.div initial={{
           opacity: 0,
           y: 50
@@ -121,20 +118,20 @@ export default function Dashboard() {
         }} transition={{
           delay: 0.3
         }}>
-            <h1 className="text-5xl md:text-7xl font-bold text-white mb-4">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-bold text-white mb-3 sm:mb-4 leading-tight">
               {featuredModule.title}
             </h1>
-            <p className="text-xl text-gray-300 mb-8 leading-relaxed">
+            <p className="text-sm sm:text-lg lg:text-xl text-gray-300 mb-6 sm:mb-8 leading-relaxed line-clamp-3 sm:line-clamp-none">
               {featuredModule.description}
             </p>
             
-            <div className="flex space-x-4">
-              <Button className="bg-white text-black hover:bg-gray-200 px-8 py-3 text-lg font-semibold">
-                <Play className="w-5 h-5 mr-2" />
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+              <Button className="bg-white text-black hover:bg-gray-200 px-6 sm:px-8 py-2 sm:py-3 text-base sm:text-lg font-semibold w-full sm:w-auto">
+                <Play className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
                 Assistir Agora
               </Button>
-              <Button variant="secondary" className="bg-gray-600/70 text-white hover:bg-gray-600 px-8 py-3 text-lg">
-                <Info className="w-5 h-5 mr-2" />
+              <Button variant="secondary" className="bg-gray-600/70 text-white hover:bg-gray-600 px-6 sm:px-8 py-2 sm:py-3 text-base sm:text-lg w-full sm:w-auto">
+                <Info className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
                 Mais Informações
               </Button>
             </div>
@@ -143,7 +140,7 @@ export default function Dashboard() {
       </motion.section>
 
       {/* Content Sections */}
-      <div className="px-4 sm:px-8 lg:px-16 pb-16 space-y-12">
+      <div className="px-4 sm:px-6 lg:px-16 pb-8 sm:pb-16 space-y-8 sm:space-y-12">
         {/* Minha Lista */}
         <motion.section initial={{
         opacity: 0,
@@ -154,14 +151,15 @@ export default function Dashboard() {
       }} transition={{
         delay: 0.5
       }}>
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold text-white">Continuar Assistindo</h2>
-            <Button variant="ghost" className="text-gray-400 hover:text-white">
-              Ver Todos <ChevronRight className="w-4 h-4 ml-1" />
+          <div className="flex items-center justify-between mb-4 sm:mb-6">
+            <h2 className="text-lg sm:text-2xl font-bold text-white">Continuar Assistindo</h2>
+            <Button variant="ghost" className="text-gray-400 hover:text-white text-sm sm:text-base">
+              <span className="hidden sm:inline">Ver Todos</span>
+              <ChevronRight className="w-4 h-4 sm:ml-1" />
             </Button>
           </div>
           
-          <div className="flex space-x-4 overflow-x-auto pb-4">
+          <div className="flex space-x-3 sm:space-x-4 overflow-x-auto pb-4 scrollbar-hide">
             {modules.slice(0, 4).map((module, index) => <motion.div key={module.id} initial={{
             opacity: 0,
             x: 50
@@ -170,11 +168,11 @@ export default function Dashboard() {
             x: 0
           }} transition={{
             delay: 0.6 + index * 0.1
-          }} className="flex-shrink-0 w-80">
+          }} className="flex-shrink-0 w-64 sm:w-80">
                 <div className="relative group cursor-pointer">
-                  <img src={module.image} alt={module.title} className="w-full h-44 object-cover rounded-lg transition-transform duration-300 group-hover:scale-105" />
+                  <img src={module.image} alt={module.title} className="w-full h-36 sm:h-44 object-cover rounded-lg transition-transform duration-300 group-hover:scale-105" />
                   <div className="absolute inset-0 bg-black/0 group-hover:bg-black/50 transition-colors duration-300 rounded-lg flex items-center justify-center">
-                    <Play className="w-12 h-12 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                    <Play className="w-8 h-8 sm:w-12 sm:h-12 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                   </div>
                   
                   {/* Progress Bar */}
@@ -182,8 +180,8 @@ export default function Dashboard() {
                 </div>
                 
                 <div className="mt-2">
-                  <h3 className="text-white font-semibold">{module.title}</h3>
-                  <p className="text-gray-400 text-sm mt-1">{module.estimatedTime}</p>
+                  <h3 className="text-white font-semibold text-sm sm:text-base line-clamp-1">{module.title}</h3>
+                  <p className="text-gray-400 text-xs sm:text-sm mt-1">{module.estimatedTime}</p>
                 </div>
               </motion.div>)}
           </div>
@@ -199,14 +197,15 @@ export default function Dashboard() {
       }} transition={{
         delay: 0.7
       }}>
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold text-white">Módulos Exclusivos</h2>
-            <Button variant="ghost" className="text-gray-400 hover:text-white">
-              Ver Todos <ChevronRight className="w-4 h-4 ml-1" />
+          <div className="flex items-center justify-between mb-4 sm:mb-6">
+            <h2 className="text-lg sm:text-2xl font-bold text-white">Módulos Exclusivos</h2>
+            <Button variant="ghost" className="text-gray-400 hover:text-white text-sm sm:text-base">
+              <span className="hidden sm:inline">Ver Todos</span>
+              <ChevronRight className="w-4 h-4 sm:ml-1" />
             </Button>
           </div>
           
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4">
             {modules.map((module, index) => <motion.div key={module.id} initial={{
             opacity: 0,
             y: 50
@@ -216,17 +215,17 @@ export default function Dashboard() {
           }} transition={{
             delay: 0.8 + index * 0.1
           }} className="relative group cursor-pointer">
-                <img src={module.image} alt={module.title} className="w-full h-32 object-cover rounded-lg transition-transform duration-300 group-hover:scale-105" />
+                <img src={module.image} alt={module.title} className="w-full h-24 sm:h-28 md:h-32 object-cover rounded-lg transition-transform duration-300 group-hover:scale-105" />
                 <div className="absolute inset-0 bg-black/0 group-hover:bg-black/50 transition-colors duration-300 rounded-lg flex items-center justify-center">
-                  <Play className="w-8 h-8 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  <Play className="w-6 h-6 sm:w-8 sm:h-8 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                 </div>
                 
                 {/* Completion Badge */}
-                {userProgress?.completedModules.includes(module.id) && <div className="absolute top-2 right-2 w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
+                {userProgress?.completedModules.includes(module.id) && <div className="absolute top-1 right-1 sm:top-2 sm:right-2 w-5 h-5 sm:w-6 sm:h-6 bg-green-500 rounded-full flex items-center justify-center">
                     <span className="text-white text-xs">✓</span>
                   </div>}
                 
-                <h3 className="text-white text-sm font-medium mt-2 group-hover:text-gray-300">
+                <h3 className="text-white text-xs sm:text-sm font-medium mt-2 group-hover:text-gray-300 line-clamp-2">
                   {module.title}
                 </h3>
               </motion.div>)}
@@ -242,29 +241,29 @@ export default function Dashboard() {
         y: 0
       }} transition={{
         delay: 0.9
-      }} className="bg-gray-900/50 rounded-lg p-8">
-          <h2 className="text-2xl font-bold text-white mb-6">Seu Progresso</h2>
+      }} className="bg-gray-900/50 rounded-lg p-4 sm:p-6 lg:p-8">
+          <h2 className="text-lg sm:text-2xl font-bold text-white mb-4 sm:mb-6">Seu Progresso</h2>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
             <div className="text-center">
-              <div className="text-4xl font-bold text-red-600 mb-2">
+              <div className="text-2xl sm:text-3xl lg:text-4xl font-bold text-red-600 mb-1 sm:mb-2">
                 {completedCount}
               </div>
-              <div className="text-gray-400">Módulos Concluídos</div>
+              <div className="text-gray-400 text-sm sm:text-base">Módulos Concluídos</div>
             </div>
             
             <div className="text-center">
-              <div className="text-4xl font-bold text-red-600 mb-2">
+              <div className="text-2xl sm:text-3xl lg:text-4xl font-bold text-red-600 mb-1 sm:mb-2">
                 {modules.length - completedCount}
               </div>
-              <div className="text-gray-400">Módulos Restantes</div>
+              <div className="text-gray-400 text-sm sm:text-base">Módulos Restantes</div>
             </div>
             
             <div className="text-center">
-              <div className="text-4xl font-bold text-red-600 mb-2">
+              <div className="text-2xl sm:text-3xl lg:text-4xl font-bold text-red-600 mb-1 sm:mb-2">
                 {Math.round(completedCount / modules.length * 100)}%
               </div>
-              <div className="text-gray-400">Progresso Total</div>
+              <div className="text-gray-400 text-sm sm:text-base">Progresso Total</div>
             </div>
           </div>
         </motion.section>
