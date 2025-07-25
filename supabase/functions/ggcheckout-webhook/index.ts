@@ -1,7 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.52.1";
 import { Resend } from "npm:resend@4.0.0";
-import { createHash, createHmac } from "https://deno.land/std@0.190.0/node/crypto.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -50,19 +49,33 @@ async function hashPassword(password: string): Promise<string> {
   return hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
 }
 
-function verifyWebhookSignature(payload: string, signature: string): boolean {
+async function verifyWebhookSignature(payload: string, signature: string): Promise<boolean> {
   if (!webhookSecret) {
     console.error("Webhook secret not configured");
     return false;
   }
 
   try {
-    const expectedSignature = createHmac("sha256", webhookSecret)
-      .update(payload)
-      .digest("hex");
+    const encoder = new TextEncoder();
+    const keyData = encoder.encode(webhookSecret);
+    const messageData = encoder.encode(payload);
+
+    // Import the secret key
+    const key = await crypto.subtle.importKey(
+      "raw",
+      keyData,
+      { name: "HMAC", hash: "SHA-256" },
+      false,
+      ["sign"]
+    );
+
+    // Generate HMAC signature
+    const signatureBuffer = await crypto.subtle.sign("HMAC", key, messageData);
+    const signatureArray = Array.from(new Uint8Array(signatureBuffer));
+    const expectedSignature = signatureArray.map(b => b.toString(16).padStart(2, "0")).join("");
     
     // Remove 'sha256=' prefix if present
-    const cleanSignature = signature.replace("sha256=", "");
+    const cleanSignature = signature.replace("sha256=", "").toLowerCase();
     
     return expectedSignature === cleanSignature;
   } catch (error) {
@@ -188,7 +201,7 @@ const handler = async (req: Request): Promise<Response> => {
     console.log("Received webhook with signature:", signature);
 
     // Verify webhook signature
-    if (!verifyWebhookSignature(payload, signature)) {
+    if (!(await verifyWebhookSignature(payload, signature))) {
       console.error("Invalid webhook signature");
       await logWebhook("ggcheckout", JSON.parse(payload), "error", "Invalid signature");
       
