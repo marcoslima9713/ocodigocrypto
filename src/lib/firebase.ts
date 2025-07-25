@@ -13,12 +13,12 @@ import { getFirestore } from 'firebase/firestore';
 // 5. Copie as configurações e cole aqui
 
 const firebaseConfig = {
-  apiKey: "AIzaSy...", // COLE SUA API KEY AQUI
-  authDomain: "seu-projeto.firebaseapp.com", // COLE SEU AUTH DOMAIN
-  projectId: "seu-projeto-id", // COLE SEU PROJECT ID
-  storageBucket: "seu-projeto.appspot.com", // COLE SEU STORAGE BUCKET
-  messagingSenderId: "123456789", // COLE SEU MESSAGING SENDER ID
-  appId: "1:123456789:web:abc123" // COLE SEU APP ID
+  apiKey: "AIzaSyDu3GPGVeSaH1h5i_vT-ZPUuX_Cfi826AA",
+  authDomain: "golden-vault-69wl5.firebaseapp.com",
+  projectId: "golden-vault-69wl5",
+  storageBucket: "golden-vault-69wl5.firebasestorage.app",
+  messagingSenderId: "744361826209",
+  appId: "1:744361826209:web:b6633fb45ce183694fdde0"
 };
 
 // Inicializa Firebase
