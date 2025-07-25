@@ -202,10 +202,14 @@ const handler = async (req: Request): Promise<Response> => {
     const signature = req.headers.get("x-ggcheckout-signature") || req.headers.get("signature") || "";
 
     console.log("Received webhook with signature:", signature);
+    console.log("Available headers:", Object.fromEntries(req.headers.entries()));
+    console.log("Webhook secret configured:", !!webhookSecret);
 
     // Verify webhook signature
     if (!(await verifyWebhookSignature(payload, signature))) {
       console.error("Invalid webhook signature");
+      console.error("Payload length:", payload.length);
+      console.error("Signature received:", signature);
       await logWebhook("ggcheckout", JSON.parse(payload), "error", "Invalid signature");
       
       return new Response("Unauthorized", { 
