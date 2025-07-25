@@ -253,6 +253,17 @@ const handler = async (req: Request): Promise<Response> => {
   try {
     const payload = await req.text();
     
+    // Validate payload is not empty
+    if (!payload || payload.trim() === '') {
+      console.error("Empty payload received");
+      await logWebhook("ggcheckout", {}, "error", "Empty payload received");
+      
+      return new Response(JSON.stringify({ error: "Empty payload" }), { 
+        status: 400, 
+        headers: { ...corsHeaders, "Content-Type": "application/json" }
+      });
+    }
+    
     // Get Bearer token from authorization header
     const authHeader = req.headers.get("authorization") || "";
     console.log("Received authorization header:", authHeader);
@@ -264,7 +275,15 @@ const handler = async (req: Request): Promise<Response> => {
       console.error("Invalid webhook secret token");
       console.error("Expected secret:", webhookSecret);
       console.error("Received token:", token);
-      await logWebhook("ggcheckout", JSON.parse(payload), "error", "Invalid secret token");
+      
+      let payloadForLog = {};
+      try {
+        payloadForLog = JSON.parse(payload);
+      } catch (e) {
+        payloadForLog = { raw_payload: payload };
+      }
+      
+      await logWebhook("ggcheckout", payloadForLog, "error", "Invalid secret token");
       
       return new Response("Unauthorized", { 
         status: 401, 
@@ -272,7 +291,44 @@ const handler = async (req: Request): Promise<Response> => {
       });
     }
 
-    const webhookData: GGCheckoutWebhookPayload = JSON.parse(payload);
+    let webhookData: GGCheckoutWebhookPayload;
+    try {
+      webhookData = JSON.parse(payload);
+    } catch (parseError) {
+      console.error("Failed to parse JSON payload:", parseError);
+      await logWebhook("ggcheckout", { raw_payload: payload }, "error", "Invalid JSON payload");
+      
+      return new Response(JSON.stringify({ error: "Invalid JSON payload" }), { 
+        status: 400, 
+        headers: { ...corsHeaders, "Content-Type": "application/json" }
+      });
+    }
+
+    // Validate webhook data structure
+    if (!webhookData || typeof webhookData !== 'object') {
+      console.error("Invalid webhook data structure:", webhookData);
+      await logWebhook("ggcheckout", webhookData || {}, "error", "Invalid webhook data structure");
+      
+      return new Response(JSON.stringify({ error: "Invalid webhook data structure" }), { 
+        status: 400, 
+        headers: { ...corsHeaders, "Content-Type": "application/json" }
+      });
+    }
+
+    // Validate required customer data exists before processing
+    if (!webhookData.customer?.email || !webhookData.customer?.name) {
+      console.error("Missing required customer data:", { 
+        customer: webhookData.customer,
+        hasEmail: !!webhookData.customer?.email,
+        hasName: !!webhookData.customer?.name
+      });
+      await logWebhook("ggcheckout", webhookData, "error", "Missing required customer data (email or name)");
+      
+      return new Response(JSON.stringify({ error: "Missing required customer data" }), { 
+        status: 400, 
+        headers: { ...corsHeaders, "Content-Type": "application/json" }
+      });
+    }
     console.log("Webhook data:", webhookData);
 
     // Log the webhook
