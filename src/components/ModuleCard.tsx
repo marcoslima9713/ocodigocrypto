@@ -10,6 +10,7 @@ interface Module {
   title: string;
   description: string;
   icon: React.ComponentType<{ className?: string }>;
+  image?: string;
   color: string;
   estimatedTime: string;
 }
@@ -47,6 +48,18 @@ export const ModuleCard = ({ module, isCompleted, onComplete }: ModuleCardProps)
       className="group"
     >
       <div className="card-premium h-full relative overflow-hidden">
+        {/* Imagem de capa se disponível */}
+        {module.image && (
+          <div className="relative h-48 overflow-hidden rounded-t-lg mb-4">
+            <img 
+              src={module.image} 
+              alt={module.title}
+              className="w-full h-full object-cover"
+            />
+            <div className="absolute inset-0 bg-black/20" />
+          </div>
+        )}
+        
         {/* Fundo gradiente sutil */}
         <div className={`absolute inset-0 bg-gradient-to-br ${module.color} opacity-50`} />
         

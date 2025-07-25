@@ -24,6 +24,7 @@ const modules = [
     title: 'Origens do Bitcoin',
     description: 'A verdadeira história por trás da criação do Bitcoin, os players envolvidos e como isso moldou o mercado que conhecemos hoje. Informações que poucos sabem e que são fundamentais para entender os ciclos.',
     icon: Bitcoin,
+    image: 'https://i.imgur.com/aNUqdaq.png',
     color: 'from-orange-500/20 to-orange-600/20',
     estimatedTime: '45 min'
   },
@@ -32,6 +33,7 @@ const modules = [
     title: 'Ciclos Macroeconômicos',
     description: 'Como políticas monetárias globais, decisões do FED e eventos geopolíticos criam ondas no mercado crypto. Aprenda a surfar essas ondas em vez de ser engolido por elas.',
     icon: Globe,
+    image: 'https://i.imgur.com/6P43lCR.png',
     color: 'from-blue-500/20 to-blue-600/20',
     estimatedTime: '60 min'
   },
@@ -40,6 +42,7 @@ const modules = [
     title: 'Timing de Mercado',
     description: 'Os sinais que antecedem grandes movimentos do Bitcoin. Como identificar topos e fundos usando dados macroeconômicos. O timing que faz a diferença entre lucro e prejuízo.',
     icon: Timer,
+    image: 'https://i.imgur.com/IFSgCCY.png',
     color: 'from-green-500/20 to-green-600/20',
     estimatedTime: '50 min'
   },
@@ -91,6 +94,11 @@ export default function Dashboard() {
           <div className="flex justify-between items-center h-16">
             {/* Logo/Título */}
             <div className="flex items-center">
+              <img 
+                src="https://i.imgur.com/g12bDcZ.png" 
+                alt="Academia Premium"
+                className="h-8 w-auto mr-3"
+              />
               <h1 className="text-xl font-bold text-gradient-gold">
                 {/* PERSONALIZE: Altere o nome da sua plataforma */}
                 Academia Premium
