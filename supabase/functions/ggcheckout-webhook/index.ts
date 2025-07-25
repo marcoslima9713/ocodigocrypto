@@ -182,8 +182,11 @@ async function logWebhook(webhookType: string, payload: any, status: string, err
 }
 
 const handler = async (req: Request): Promise<Response> => {
+  console.log(`[WEBHOOK] ${req.method} request received from ${req.headers.get('user-agent')}`);
+  
   // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
+    console.log("[WEBHOOK] CORS preflight request handled");
     return new Response(null, { headers: corsHeaders });
   }
 
