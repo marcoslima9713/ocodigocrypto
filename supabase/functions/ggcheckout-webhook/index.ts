@@ -20,16 +20,27 @@ const webhookSecret = Deno.env.get("GGCHECKOUT_WEBHOOK_SECRET");
 
 interface GGCheckoutWebhookPayload {
   event: string;
-  transaction_id: string;
+  transaction_id?: string;
   customer: {
     name: string;
     email: string;
   };
-  product: {
-    name: string;
+  product?: {
+    id?: string;
+    name?: string;
+    type?: string;
   };
-  amount: number;
-  status: string;
+  payment?: {
+    id?: string;
+    method?: string;
+    status?: string;
+    amount?: number;
+  };
+  amount?: number;
+  status?: string;
+  webhook?: any;
+  params?: any;
+  createdAt?: any;
 }
 
 function generateRandomPassword(length: number = 12): string {
@@ -225,20 +236,36 @@ const handler = async (req: Request): Promise<Response> => {
     // Log the webhook
     await logWebhook("ggcheckout", webhookData, "received");
 
-    // Process only payment approved events
-    if (webhookData.event === "pagamento_aprovado" || webhookData.status === "approved") {
+    console.log("Event type:", webhookData.event);
+    console.log("Payment status:", webhookData.payment?.status);
+    console.log("Payment method:", webhookData.payment?.method);
+
+    // Process payment approved events - support multiple event types
+    const isApprovedEvent = webhookData.event === "pagamento_aprovado" || 
+                           webhookData.event === "pix.paid" ||
+                           webhookData.status === "approved" ||
+                           webhookData.payment?.status === "approved";
+
+    if (isApprovedEvent) {
       console.log("Processing approved payment for:", webhookData.customer.email);
 
-      // Check if member already exists
+      // Get transaction ID - can be from different fields
+      const transactionId = webhookData.transaction_id || 
+                           webhookData.payment?.id || 
+                           webhookData.webhook?.id ||
+                           `${webhookData.customer.email}_${Date.now()}`;
+
+      console.log("Transaction ID:", transactionId);
+
+      // Check if member already exists based on email only (more flexible)
       const { data: existingMember } = await supabase
         .from("members")
         .select("*")
         .eq("email", webhookData.customer.email)
-        .eq("ggcheckout_transaction_id", webhookData.transaction_id)
-        .single();
+        .maybeSingle();
 
       if (existingMember) {
-        console.log("Member already exists for this transaction");
+        console.log("Member already exists for email:", webhookData.customer.email);
         await logWebhook("ggcheckout", webhookData, "skipped", "Member already exists");
         
         return new Response(JSON.stringify({ 
@@ -250,11 +277,18 @@ const handler = async (req: Request): Promise<Response> => {
         });
       }
 
+      // Get product name from different possible fields
+      const productName = webhookData.product?.name || 
+                         `Product_${webhookData.product?.id}` ||
+                         "Default Product";
+
+      console.log("Product name:", productName);
+
       // Create new member
       const { member, plainPassword } = await createMember(
         webhookData.customer,
-        webhookData.product.name,
-        webhookData.transaction_id
+        productName,
+        transactionId
       );
 
       console.log("Member created successfully:", member.email);
