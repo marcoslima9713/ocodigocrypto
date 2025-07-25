@@ -35,7 +35,7 @@ const modules = [{
   title: 'Análise de Fluxos',
   description: 'Como rastrear o dinheiro das instituições e whales. Onde eles colocam capital e como você pode acompanhar esses movimentos para se posicionar antes da massa.',
   icon: Eye,
-  image: '/src/assets/analise-fluxos.jpg',
+  image: 'https://i.imgur.com/6P43lCR.png',
   color: 'from-purple-500/20 to-purple-600/20',
   estimatedTime: '55 min'
 }, {
@@ -51,7 +51,7 @@ const modules = [{
   title: 'Casos Reais',
   description: 'Análise detalhada dos grandes movimentos do Bitcoin desde 2017. O que causou cada movimento e como você poderia ter identificado essas oportunidades usando macroeconomia.',
   icon: FileText,
-  image: '/src/assets/casos-reais.jpg',
+  image: 'https://i.imgur.com/IFSgCCY.png',
   color: 'from-red-500/20 to-red-600/20',
   estimatedTime: '70 min'
 }];
