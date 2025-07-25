@@ -355,14 +355,34 @@ const handler = async (req: Request): Promise<Response> => {
 
       console.log("Transaction ID:", transactionId);
 
-      // Check if member already exists based on email only (more flexible)
-      const { data: existingMember } = await supabase
+      // Check if member already exists based on transaction ID first (prevent duplicates)
+      const { data: existingMemberByTransaction } = await supabase
+        .from("members")
+        .select("*")
+        .eq("ggcheckout_transaction_id", transactionId)
+        .maybeSingle();
+
+      if (existingMemberByTransaction) {
+        console.log("Member already exists for transaction:", transactionId);
+        await logWebhook("ggcheckout", webhookData, "skipped", "Transaction already processed");
+        
+        return new Response(JSON.stringify({ 
+          success: true, 
+          message: "Transaction already processed" 
+        }), {
+          status: 200,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        });
+      }
+
+      // Also check if member already exists based on email (secondary check)
+      const { data: existingMemberByEmail } = await supabase
         .from("members")
         .select("*")
         .eq("email", webhookData.customer.email)
         .maybeSingle();
 
-      if (existingMember) {
+      if (existingMemberByEmail) {
         console.log("Member already exists for email:", webhookData.customer.email);
         await logWebhook("ggcheckout", webhookData, "skipped", "Member already exists");
         
