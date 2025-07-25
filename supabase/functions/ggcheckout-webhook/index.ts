@@ -340,9 +340,9 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Process payment approved events - support multiple event types
     const isApprovedEvent = webhookData.event === "pagamento_aprovado" || 
-                           webhookData.event === "pix.paid" ||
+                           webhookData.event === "pix.paid" ||  // pix.paid is already an approved event
                            webhookData.status === "approved" ||
-                           webhookData.payment?.status === "approved";
+                           (webhookData.payment?.status === "approved" || webhookData.payment?.status === "paid");
 
     if (isApprovedEvent) {
       console.log("Processing approved payment for:", webhookData.customer.email);
