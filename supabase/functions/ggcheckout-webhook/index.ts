@@ -218,7 +218,8 @@ async function sendWelcomeEmail(memberData: any, password: string) {
   });
 
   if (error) {
-    throw new Error(`Failed to send email: ${error.message}`);
+    console.error("Resend error object:", error);
+    throw new Error(`Failed to send email: ${error.message || JSON.stringify(error)}`);
   }
 }
 
