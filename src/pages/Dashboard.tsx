@@ -78,16 +78,10 @@ export default function Dashboard() {
           <div className="flex justify-between items-center h-16">
             {/* Logo */}
             <div className="flex items-center space-x-8">
-              <h1 className="text-2xl font-bold text-red-600">
-                Academia Premium
-              </h1>
+              <h1 className="text-2xl font-bold text-red-600">Acesso Premium</h1>
               
               {/* Navigation Menu */}
-              <nav className="hidden md:flex space-x-6">
-                <a href="#" className="text-white hover:text-gray-300 transition-colors">Início</a>
-                <a href="#" className="text-white hover:text-gray-300 transition-colors">Módulos</a>
-                
-              </nav>
+              
             </div>
 
             {/* User Menu */}
