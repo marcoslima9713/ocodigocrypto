@@ -165,7 +165,7 @@ async function sendWelcomeEmail(memberData: any, password: string) {
         
         <!-- CTA Button -->
         <div style="text-align: center; margin: 40px 0;">
-          <a href="https://YOUR_DOMAIN.lovable.app/login" 
+          <a href="https://preview--crypto-luxe-portal.lovable.app/login" 
              style="background: linear-gradient(135deg, #c9a961 0%, #f4e79d 50%, #c9a961 100%); 
                     color: #1a1a1a; 
                     padding: 18px 40px; 
