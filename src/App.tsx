@@ -13,6 +13,7 @@ import ForgotPassword from "./pages/ForgotPassword";
 
 // Páginas protegidas
 import Dashboard from "./pages/Dashboard";
+import AdminPanel from "./pages/AdminPanel";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -42,6 +43,9 @@ const App = () => (
                 </ProtectedRoute>
               } 
             />
+            
+            {/* Rota administrativa */}
+            <Route path="/admin" element={<AdminPanel />} />
             
             {/* Rota 404 */}
             <Route path="*" element={<NotFound />} />
