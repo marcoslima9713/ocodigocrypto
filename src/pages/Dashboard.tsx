@@ -269,52 +269,6 @@ export default function Dashboard() {
           </div>
         </motion.section>
 
-        {/* Webhook Monitoring Section */}
-        <motion.section 
-          initial={{ opacity: 0, y: 50 }} 
-          animate={{ opacity: 1, y: 0 }} 
-          transition={{ delay: 1.0 }}
-          className="bg-gray-900/50 rounded-lg p-8"
-        >
-          <h2 className="text-2xl font-bold text-white mb-6">Sistema GGCheckout</h2>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div>
-              <h3 className="text-lg font-semibold text-white mb-4">URL do Webhook</h3>
-              <div className="bg-gray-800 p-4 rounded-lg">
-                <code className="text-green-400 text-sm break-all">
-                  https://wvojbjkdlnvlqgjwtdaf.supabase.co/functions/v1/ggcheckout-webhook
-                </code>
-              </div>
-              <p className="text-gray-400 text-sm mt-2">Configure esta URL na GGCheckout</p>
-            </div>
-            
-            <div>
-              <h3 className="text-lg font-semibold text-white mb-4">Status do Sistema</h3>
-              <div className="flex items-center space-x-2">
-                <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
-                <span className="text-green-400">Online e Funcionando</span>
-              </div>
-              <p className="text-gray-400 text-sm mt-2">Webhook pronto para receber pagamentos</p>
-            </div>
-          </div>
-
-          <div className="mt-8 flex space-x-4">
-            <Button 
-              onClick={() => window.open('https://supabase.com/dashboard/project/wvojbjkdlnvlqgjwtdaf/functions/ggcheckout-webhook/logs', '_blank')}
-              className="bg-blue-600 hover:bg-blue-700"
-            >
-              Ver Logs
-            </Button>
-            <Button 
-              onClick={() => window.open('https://resend.com/emails', '_blank')}
-              variant="outline" 
-              className="border-gray-600 text-gray-300 hover:bg-gray-800"
-            >
-              Ver E-mails Enviados
-            </Button>
-          </div>
-        </motion.section>
       </div>
     </div>;
 }
