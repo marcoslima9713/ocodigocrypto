@@ -159,15 +159,12 @@ export default function Login() {
             </Link>
             
             <div className="border-t border-border pt-4">
-              <p className="text-sm text-muted-foreground">
-                Ainda não tem acesso?{' '}
-                <Link
-                  to="/register"
-                  className="text-primary hover:text-accent font-medium transition-colors"
-                >
-                  Criar conta
-                </Link>
-              </p>
+              <Link
+                to="/admin"
+                className="text-sm text-muted-foreground hover:text-primary transition-colors"
+              >
+                Acesso Administrativo
+              </Link>
             </div>
           </motion.div>
         </div>
