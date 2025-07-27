@@ -8,7 +8,6 @@ import { ProtectedRoute } from "@/components/ProtectedRoute";
 
 // Páginas de autenticação
 import Login from "./pages/Login";
-import Register from "./pages/Register";
 import ForgotPassword from "./pages/ForgotPassword";
 
 // Páginas protegidas
@@ -31,7 +30,6 @@ const App = () => (
             
             {/* Rotas de autenticação */}
             <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             
             {/* Rotas protegidas */}
