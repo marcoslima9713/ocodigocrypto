@@ -1,6 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.52.1";
-import { Resend } from "npm:resend@4.0.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -12,8 +11,8 @@ const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
 const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-// Initialize Resend
-const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
+// Initialize Postmark
+const postmarkApiKey = Deno.env.get("POSTMARK_API_KEY");
 
 // Get webhook secret
 const webhookSecret = Deno.env.get("GGCHECKOUT_WEBHOOK_SECRET");
@@ -210,17 +209,32 @@ async function sendWelcomeEmail(memberData: any, password: string) {
     </html>
   `;
 
-  const { error } = await resend.emails.send({
-    from: "Área de Membros <onboarding@resend.dev>",
-    to: [memberData.email],
-    subject: "Seu acesso foi liberado! 🎉",
-    html: emailHtml,
+  // Send email using Postmark API
+  const response = await fetch('https://api.postmarkapp.com/email', {
+    method: 'POST',
+    headers: {
+      'Accept': 'application/json',
+      'Content-Type': 'application/json',
+      'X-Postmark-Server-Token': postmarkApiKey!,
+    },
+    body: JSON.stringify({
+      From: 'noreply@suamarca.com',
+      To: memberData.email,
+      Subject: 'Seu acesso foi liberado! 🎉',
+      HtmlBody: emailHtml,
+      TextBody: `Olá ${memberData.full_name}! Seu acesso premium foi liberado. Login: ${memberData.email} | Senha: ${password} | Acesse: https://preview--crypto-luxe-portal.lovable.app/login`,
+      MessageStream: 'outbound'
+    }),
   });
 
-  if (error) {
-    console.error("Resend error object:", error);
-    throw new Error(`Failed to send email: ${error.message || JSON.stringify(error)}`);
+  if (!response.ok) {
+    const errorData = await response.text();
+    console.error("Postmark API error:", errorData);
+    throw new Error(`Failed to send email via Postmark: ${response.status} - ${errorData}`);
   }
+
+  const result = await response.json();
+  console.log("Email sent successfully via Postmark:", result);
 }
 
 async function logWebhook(webhookType: string, payload: any, status: string, errorMessage?: string) {
