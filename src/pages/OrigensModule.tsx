@@ -20,7 +20,7 @@ const lessons: Lesson[] = [
   {
     id: 'aula-1',
     title: 'O Que São Criptomoedas? | Aula 1 do Curso para Iniciantes',
-    description: 'Bem-vindo à primeira aula do curso "Introdução às Criptomoedas"! Neste vídeo, você aprenderá os conceitos fundamentais para quem está começando. Entenda de forma simples e direta o que são as criptomoedas, suas principais características como descentralização e transparência, e por que elas estão impactando o sistema financeiro.',
+    description: 'Bem-vindo à primeira aula do curso! Entenda de forma simples e direta o que são as criptomoedas, suas principais características como descentralização e transparência, e por que elas estão impactando o sistema financeiro.',
     duration: '12 min',
     isCompleted: false
   },
