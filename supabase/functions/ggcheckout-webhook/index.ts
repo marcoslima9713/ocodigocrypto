@@ -11,8 +11,10 @@ const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
 const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-// Initialize Postmark
-const postmarkApiKey = Deno.env.get("POSTMARK_API_KEY");
+// Initialize AWS SES
+const awsAccessKeyId = Deno.env.get("AWS_ACCESS_KEY_ID");
+const awsSecretAccessKey = Deno.env.get("AWS_SECRET_ACCESS_KEY");
+const awsRegion = Deno.env.get("AWS_REGION");
 
 // Get webhook secret
 const webhookSecret = Deno.env.get("GGCHECKOUT_WEBHOOK_SECRET");
@@ -119,6 +121,59 @@ async function createMember(customerData: any, productName: string, transactionI
   return { member, plainPassword: password };
 }
 
+// AWS SES signature generation
+async function generateAwsSignature(method: string, url: string, headers: Record<string, string>, payload: string): Promise<string> {
+  const encoder = new TextEncoder();
+  
+  // Create canonical request
+  const canonicalHeaders = Object.keys(headers)
+    .sort()
+    .map(key => `${key.toLowerCase()}:${headers[key]}\n`)
+    .join('');
+  
+  const signedHeaders = Object.keys(headers)
+    .sort()
+    .map(key => key.toLowerCase())
+    .join(';');
+  
+  const hashedPayload = Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', encoder.encode(payload))))
+    .map(b => b.toString(16).padStart(2, '0'))
+    .join('');
+  
+  const canonicalRequest = `${method}\n${new URL(url).pathname}\n${new URL(url).search.slice(1)}\n${canonicalHeaders}\n${signedHeaders}\n${hashedPayload}`;
+  
+  // Create string to sign
+  const algorithm = 'AWS4-HMAC-SHA256';
+  const timestamp = headers['x-amz-date'];
+  const credentialScope = `${timestamp.slice(0, 8)}/${awsRegion}/ses/aws4_request`;
+  
+  const hashedCanonicalRequest = Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', encoder.encode(canonicalRequest))))
+    .map(b => b.toString(16).padStart(2, '0'))
+    .join('');
+  
+  const stringToSign = `${algorithm}\n${timestamp}\n${credentialScope}\n${hashedCanonicalRequest}`;
+  
+  // Calculate signature
+  const dateKey = await crypto.subtle.importKey('raw', encoder.encode(`AWS4${awsSecretAccessKey}`), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+  const dateSignature = await crypto.subtle.sign('HMAC', dateKey, encoder.encode(timestamp.slice(0, 8)));
+  
+  const regionKey = await crypto.subtle.importKey('raw', new Uint8Array(dateSignature), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+  const regionSignature = await crypto.subtle.sign('HMAC', regionKey, encoder.encode(awsRegion));
+  
+  const serviceKey = await crypto.subtle.importKey('raw', new Uint8Array(regionSignature), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+  const serviceSignature = await crypto.subtle.sign('HMAC', serviceKey, encoder.encode('ses'));
+  
+  const signingKey = await crypto.subtle.importKey('raw', new Uint8Array(serviceSignature), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+  const signature = await crypto.subtle.sign('HMAC', signingKey, encoder.encode('aws4_request'));
+  
+  const finalKey = await crypto.subtle.importKey('raw', new Uint8Array(signature), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+  const finalSignature = await crypto.subtle.sign('HMAC', finalKey, encoder.encode(stringToSign));
+  
+  return Array.from(new Uint8Array(finalSignature))
+    .map(b => b.toString(16).padStart(2, '0'))
+    .join('');
+}
+
 async function sendWelcomeEmail(memberData: any, password: string) {
   const emailHtml = `
     <!DOCTYPE html>
@@ -209,32 +264,82 @@ async function sendWelcomeEmail(memberData: any, password: string) {
     </html>
   `;
 
-  // Send email using Postmark API
-  const response = await fetch('https://api.postmarkapp.com/email', {
-    method: 'POST',
-    headers: {
-      'Accept': 'application/json',
-      'Content-Type': 'application/json',
-      'X-Postmark-Server-Token': postmarkApiKey!,
+  // Prepare email data for SES
+  const emailData = {
+    Source: 'noreply@investidorcrypto.com',
+    Destination: {
+      ToAddresses: [memberData.email]
     },
-    body: JSON.stringify({
-      From: 'noreply@investidorcrypto.com',
-      To: memberData.email,
-      Subject: 'Seu acesso foi liberado! 🎉',
-      HtmlBody: emailHtml,
-      TextBody: `Olá ${memberData.full_name}! Seu acesso premium foi liberado. Login: ${memberData.email} | Senha: ${password} | Acesse: https://preview--crypto-luxe-portal.lovable.app/login`,
-      MessageStream: 'outbound'
-    }),
+    Message: {
+      Subject: {
+        Data: 'Seu acesso foi liberado! 🎉',
+        Charset: 'UTF-8'
+      },
+      Body: {
+        Html: {
+          Data: emailHtml,
+          Charset: 'UTF-8'
+        },
+        Text: {
+          Data: `Olá ${memberData.full_name}! Seu acesso premium foi liberado. Login: ${memberData.email} | Senha: ${password} | Acesse: https://preview--crypto-luxe-portal.lovable.app/login`,
+          Charset: 'UTF-8'
+        }
+      }
+    }
+  };
+
+  // Convert to form data format for SES API
+  const formData = new URLSearchParams();
+  formData.append('Action', 'SendEmail');
+  formData.append('Version', '2010-12-01');
+  formData.append('Source', emailData.Source);
+  formData.append('Destination.ToAddresses.member.1', memberData.email);
+  formData.append('Message.Subject.Data', emailData.Message.Subject.Data);
+  formData.append('Message.Subject.Charset', 'UTF-8');
+  formData.append('Message.Body.Html.Data', emailData.Message.Body.Html.Data);
+  formData.append('Message.Body.Html.Charset', 'UTF-8');
+  formData.append('Message.Body.Text.Data', emailData.Message.Body.Text.Data);
+  formData.append('Message.Body.Text.Charset', 'UTF-8');
+
+  const payload = formData.toString();
+  const url = `https://email.${awsRegion}.amazonaws.com/`;
+  
+  // Create timestamp
+  const now = new Date();
+  const timestamp = now.toISOString().replace(/[:\-]|\.\d{3}/g, '').slice(0, 15) + 'Z';
+  
+  // Prepare headers
+  const headers = {
+    'Authorization': '',
+    'Content-Type': 'application/x-www-form-urlencoded',
+    'Host': `email.${awsRegion}.amazonaws.com`,
+    'X-Amz-Date': timestamp
+  };
+  
+  // Generate signature
+  const signature = await generateAwsSignature('POST', url, headers, payload);
+  
+  // Create authorization header
+  const credentialScope = `${timestamp.slice(0, 8)}/${awsRegion}/ses/aws4_request`;
+  const signedHeaders = Object.keys(headers).map(key => key.toLowerCase()).sort().join(';');
+  
+  headers['Authorization'] = `AWS4-HMAC-SHA256 Credential=${awsAccessKeyId}/${credentialScope}, SignedHeaders=${signedHeaders}, Signature=${signature}`;
+  
+  // Send email using AWS SES
+  const response = await fetch(url, {
+    method: 'POST',
+    headers,
+    body: payload
   });
 
   if (!response.ok) {
     const errorData = await response.text();
-    console.error("Postmark API error:", errorData);
-    throw new Error(`Failed to send email via Postmark: ${response.status} - ${errorData}`);
+    console.error("AWS SES API error:", errorData);
+    throw new Error(`Failed to send email via AWS SES: ${response.status} - ${errorData}`);
   }
 
-  const result = await response.json();
-  console.log("Email sent successfully via Postmark:", result);
+  const result = await response.text();
+  console.log("Email sent successfully via AWS SES:", result);
 }
 
 async function logWebhook(webhookType: string, payload: any, status: string, errorMessage?: string) {
