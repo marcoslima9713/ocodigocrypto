@@ -10,55 +10,17 @@ interface Lesson {
   id: string;
   title: string;
   description: string;
-  duration: string;
+  duration?: string;
   videoUrl?: string;
-  videoPath?: string;
+  order_index: number;
   isCompleted: boolean;
 }
-
-const lessons: Lesson[] = [
-  {
-    id: 'aula-1',
-    title: 'O Que São Criptomoedas? | Aula 1 do Curso para Iniciantes',
-    description: 'Bem-vindo à primeira aula do curso! Entenda de forma simples e direta o que são as criptomoedas, suas principais características como descentralização e transparência, e por que elas estão impactando o sistema financeiro.',
-    duration: '12 min',
-    isCompleted: false
-  },
-  {
-    id: 'aula-2', 
-    title: 'Os Primeiros Adotantes',
-    description: 'Como desenvolvedores e cypherpunks moldaram o Bitcoin nos primeiros anos. As decisões que definiram o futuro.',
-    duration: '9 min',
-    isCompleted: false
-  },
-  {
-    id: 'aula-3',
-    title: 'O Primeiro Ciclo de Alta',
-    description: 'De centavos a dólares: como o primeiro bull run revelou o potencial disruptivo do Bitcoin.',
-    duration: '11 min', 
-    isCompleted: false
-  },
-  {
-    id: 'aula-4',
-    title: 'Instituições Entram em Cena',
-    description: 'Como empresas e governos começaram a prestar atenção. O momento em que tudo mudou.',
-    duration: '8 min',
-    isCompleted: false
-  },
-  {
-    id: 'aula-5',
-    title: 'Lições para o Futuro',
-    description: 'O que os primeiros ciclos nos ensinam sobre os próximos movimentos do Bitcoin.',
-    duration: '5 min',
-    isCompleted: false
-  }
-];
 
 export default function OrigensModule() {
   const navigate = useNavigate();
   const [currentLesson, setCurrentLesson] = useState<Lesson | null>(null);
   const [completedLessons, setCompletedLessons] = useState<string[]>([]);
-  const [videoLessons, setVideoLessons] = useState<any[]>([]);
+  const [lessons, setLessons] = useState<Lesson[]>([]);
   const [isLoadingVideo, setIsLoadingVideo] = useState(false);
 
   // Carregar vídeos do Supabase
@@ -71,7 +33,17 @@ export default function OrigensModule() {
         .order('order_index');
       
       if (data) {
-        setVideoLessons(data);
+        // Converter dados do Supabase para o formato Lesson
+        const convertedLessons: Lesson[] = data.map(video => ({
+          id: video.id,
+          title: video.title,
+          description: video.description || '',
+          duration: video.duration ? `${Math.ceil(video.duration / 60)} min` : '',
+          order_index: video.order_index,
+          isCompleted: false
+        }));
+        
+        setLessons(convertedLessons);
       }
     };
 
@@ -81,35 +53,34 @@ export default function OrigensModule() {
   const handleWatchLesson = async (lesson: Lesson) => {
     setIsLoadingVideo(true);
     console.log('🎬 Iniciando carregamento da aula:', lesson.title);
-    console.log('📋 VideoLessons disponíveis:', videoLessons);
     
-    // Se há vídeos do Supabase para esta aula, carregar o vídeo
-    const lessonIndex = lessons.indexOf(lesson);
-    console.log('📊 Índice da aula:', lessonIndex);
+    // Buscar dados completos do vídeo no Supabase
+    const { data: videoData, error } = await supabase
+      .from('video_lessons')
+      .select('*')
+      .eq('id', lesson.id)
+      .single();
     
-    const videoLesson = videoLessons.find(v => v.order_index === lessonIndex);
-    console.log('🎥 VideoLesson encontrado:', videoLesson);
-    
-    if (videoLesson) {
+    if (videoData && !error) {
       try {
-        console.log('📁 Tentando criar URL assinada para:', videoLesson.file_path);
-        const { data, error } = await supabase.storage
+        console.log('📁 Tentando criar URL assinada para:', videoData.file_path);
+        const { data: urlData, error: urlError } = await supabase.storage
           .from('video-lessons')
-          .createSignedUrl(videoLesson.file_path, 3600); // URL válida por 1 hora
+          .createSignedUrl(videoData.file_path, 3600); // URL válida por 1 hora
         
-        console.log('🔗 Resposta da URL assinada:', { data, error });
+        console.log('🔗 Resposta da URL assinada:', { data: urlData, error: urlError });
         
-        if (data?.signedUrl) {
-          lesson.videoUrl = data.signedUrl;
+        if (urlData?.signedUrl) {
+          lesson.videoUrl = urlData.signedUrl;
           console.log('✅ URL do vídeo definida:', lesson.videoUrl);
         } else {
-          console.error('❌ Erro: Não foi possível gerar URL assinada', error);
+          console.error('❌ Erro: Não foi possível gerar URL assinada', urlError);
         }
       } catch (error) {
         console.error('❌ Erro ao carregar vídeo:', error);
       }
     } else {
-      console.log('⚠️ Nenhum videoLesson encontrado para o índice:', lessonIndex);
+      console.log('⚠️ Erro ao buscar dados do vídeo:', error);
     }
     
     setCurrentLesson(lesson);
@@ -123,10 +94,8 @@ export default function OrigensModule() {
     }, 1000);
   };
 
-  const totalDuration = lessons.reduce((acc, lesson) => {
-    const mins = parseInt(lesson.duration.split(' ')[0]);
-    return acc + mins;
-  }, 0);
+  // Calcular duração total estimada
+  const totalDuration = lessons.length * 8; // Estimativa de 8 min por aula
 
   return (
     <div className="min-h-screen bg-black">
