@@ -80,21 +80,36 @@ export default function OrigensModule() {
 
   const handleWatchLesson = async (lesson: Lesson) => {
     setIsLoadingVideo(true);
+    console.log('🎬 Iniciando carregamento da aula:', lesson.title);
+    console.log('📋 VideoLessons disponíveis:', videoLessons);
     
     // Se há vídeos do Supabase para esta aula, carregar o vídeo
-    const videoLesson = videoLessons.find(v => v.order_index === lessons.indexOf(lesson));
+    const lessonIndex = lessons.indexOf(lesson);
+    console.log('📊 Índice da aula:', lessonIndex);
+    
+    const videoLesson = videoLessons.find(v => v.order_index === lessonIndex);
+    console.log('🎥 VideoLesson encontrado:', videoLesson);
+    
     if (videoLesson) {
       try {
-        const { data } = await supabase.storage
+        console.log('📁 Tentando criar URL assinada para:', videoLesson.file_path);
+        const { data, error } = await supabase.storage
           .from('video-lessons')
           .createSignedUrl(videoLesson.file_path, 3600); // URL válida por 1 hora
         
+        console.log('🔗 Resposta da URL assinada:', { data, error });
+        
         if (data?.signedUrl) {
           lesson.videoUrl = data.signedUrl;
+          console.log('✅ URL do vídeo definida:', lesson.videoUrl);
+        } else {
+          console.error('❌ Erro: Não foi possível gerar URL assinada', error);
         }
       } catch (error) {
-        console.error('Erro ao carregar vídeo:', error);
+        console.error('❌ Erro ao carregar vídeo:', error);
       }
+    } else {
+      console.log('⚠️ Nenhum videoLesson encontrado para o índice:', lessonIndex);
     }
     
     setCurrentLesson(lesson);
