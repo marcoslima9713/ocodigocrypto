@@ -12,6 +12,7 @@ import ForgotPassword from "./pages/ForgotPassword";
 
 // Páginas protegidas
 import Dashboard from "./pages/Dashboard";
+import OrigensModule from "./pages/OrigensModule";
 import AdminPanel from "./pages/AdminPanel";
 import NotFound from "./pages/NotFound";
 
@@ -38,6 +39,15 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <Dashboard />
+                </ProtectedRoute>
+              } 
+            />
+            
+            <Route 
+              path="/modulo/origens-bitcoin" 
+              element={
+                <ProtectedRoute>
+                  <OrigensModule />
                 </ProtectedRoute>
               } 
             />

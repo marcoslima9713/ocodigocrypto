@@ -4,6 +4,7 @@ import { Bitcoin, Globe, Timer, Eye, Wallet, FileText, LogOut, User, Play, Info,
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { ModuleCard } from '@/components/ModuleCard';
+import { useNavigate } from 'react-router-dom';
 
 // PERSONALIZE: Altere os módulos conforme seu projeto
 const modules = [{
@@ -61,11 +62,16 @@ export default function Dashboard() {
     userProgress,
     logout
   } = useAuth();
+  const navigate = useNavigate();
   const completedCount = userProgress?.completedModules.length || 0;
   const featuredModule = modules[0]; // Módulo em destaque
 
   const handleLogout = async () => {
     await logout();
+  };
+
+  const handleWatchNow = () => {
+    navigate('/modulo/origens-bitcoin');
   };
   return <div className="min-h-screen bg-black">
       {/* Header Netflix Style */}
@@ -129,7 +135,10 @@ export default function Dashboard() {
             </p>
             
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
-              <Button className="bg-white text-black hover:bg-gray-200 px-6 sm:px-8 py-2.5 sm:py-3 text-base sm:text-lg font-semibold">
+              <Button 
+                onClick={handleWatchNow}
+                className="bg-white text-black hover:bg-gray-200 px-6 sm:px-8 py-2.5 sm:py-3 text-base sm:text-lg font-semibold"
+              >
                 <Play className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
                 Assistir Agora
               </Button>
