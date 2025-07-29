@@ -146,7 +146,12 @@ async function generateAwsSignature(method: string, url: string, headers: Record
   
   // Create string to sign
   const algorithm = 'AWS4-HMAC-SHA256';
-  const timestamp = headers['x-amz-date'];
+  const timestamp = headers['X-Amz-Date'] || headers['x-amz-date'];
+  
+  if (!timestamp) {
+    throw new Error('Missing X-Amz-Date header');
+  }
+  
   const credentialScope = `${timestamp.slice(0, 8)}/${awsRegion}/ses/aws4_request`;
   
   const hashedCanonicalRequest = Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', encoder.encode(canonicalRequest))))
