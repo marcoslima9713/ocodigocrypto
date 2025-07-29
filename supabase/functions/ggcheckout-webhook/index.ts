@@ -187,86 +187,133 @@ async function sendWelcomeEmail(memberData: any, password: string) {
     <html>
     <head>
       <meta charset="utf-8">
-      <title>Bem-vindo à Área Premium! ✨</title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>🚀 ACESSO LIBERADO</title>
+      <!--[if mso]>
+      <noscript>
+        <xml>
+          <o:OfficeDocumentSettings>
+            <o:AllowPNG/>
+            <o:PixelsPerInch>96</o:PixelsPerInch>
+          </o:OfficeDocumentSettings>
+        </xml>
+      </noscript>
+      <![endif]-->
+      <style>
+        @media only screen and (max-width: 600px) {
+          .mobile-hidden { display: none !important; }
+          .mobile-center { text-align: center !important; }
+          .mobile-full { width: 100% !important; }
+          .mobile-padding { padding: 20px !important; }
+          .mobile-text { font-size: 16px !important; }
+          .mobile-button { padding: 15px 25px !important; font-size: 16px !important; }
+        }
+      </style>
     </head>
-    <body style="font-family: 'Georgia', serif; line-height: 1.6; color: #2c2c2c; max-width: 650px; margin: 0 auto; padding: 0; background: #1a1a1a;">
-      <!-- Header with Premium Golden Design -->
-      <div style="background: linear-gradient(135deg, #c9a961 0%, #f4e79d 50%, #c9a961 100%); color: #1a1a1a; padding: 40px 30px; text-align: center; position: relative; overflow: hidden;">
-        <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="%23ffffff" opacity="0.1"/><circle cx="75" cy="75" r="1" fill="%23ffffff" opacity="0.1"/><circle cx="50" cy="50" r="0.5" fill="%23ffffff" opacity="0.05"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>'); opacity: 0.3;"></div>
-        <div style="position: relative; z-index: 1;">
-          <h1 style="margin: 0; font-size: 36px; font-weight: bold; text-shadow: 0 2px 4px rgba(0,0,0,0.1); letter-spacing: 1px;">✨ BEM-VINDO AO PREMIUM</h1>
-          <p style="margin: 15px 0 0 0; font-size: 20px; opacity: 0.9; font-style: italic;">Seu acesso exclusivo foi liberado!</p>
-        </div>
-      </div>
-      
-      <!-- Main Content -->
-      <div style="background: linear-gradient(135deg, #2c2c2c 0%, #3d3d3d 100%); padding: 40px 30px; color: #f5f5f5;">
-        <div style="text-align: center; margin-bottom: 30px;">
-          <h2 style="color: #f4e79d; font-size: 24px; margin: 0 0 10px 0; font-weight: normal;">Olá, <span style="color: #c9a961; font-weight: bold;">${memberData.full_name}</span></h2>
-          <p style="font-size: 16px; margin: 0; opacity: 0.9;">
-            Obrigado por adquirir o <strong style="color: #f4e79d;">${memberData.product_name}</strong>
-          </p>
-        </div>
-        
-        <!-- Access Credentials Card -->
-        <div style="background: linear-gradient(135deg, #1a1a1a 0%, #2c2c2c 100%); padding: 30px; border-radius: 15px; border: 2px solid #c9a961; margin: 30px 0; box-shadow: 0 8px 25px rgba(201, 169, 97, 0.2);">
-          <h3 style="margin-top: 0; color: #f4e79d; font-size: 20px; text-align: center; margin-bottom: 25px;">🔑 Seus Dados de Acesso Premium</h3>
-          
-          <div style="background: rgba(201, 169, 97, 0.1); padding: 20px; border-radius: 10px; border-left: 4px solid #c9a961;">
-            <p style="margin: 0 0 15px 0; font-size: 16px;">
-              <span style="color: #f4e79d; font-weight: bold;">📧 Login:</span><br>
-              <span style="color: #ffffff; font-size: 18px; font-family: monospace; background: rgba(255,255,255,0.1); padding: 8px 12px; border-radius: 6px; display: inline-block; margin-top: 5px;">${memberData.email}</span>
-            </p>
-            <p style="margin: 0; font-size: 16px;">
-              <span style="color: #f4e79d; font-weight: bold;">🔐 Senha:</span><br>
-              <span style="color: #ffffff; font-size: 18px; font-family: monospace; background: rgba(255,255,255,0.1); padding: 8px 12px; border-radius: 6px; display: inline-block; margin-top: 5px; letter-spacing: 1px;">${password}</span>
-            </p>
-          </div>
-        </div>
-        
-        <!-- CTA Button -->
-        <div style="text-align: center; margin: 40px 0;">
-          <a href="https://preview--crypto-luxe-portal.lovable.app/login" 
-             style="background: linear-gradient(135deg, #c9a961 0%, #f4e79d 50%, #c9a961 100%); 
-                    color: #1a1a1a; 
-                    padding: 18px 40px; 
-                    text-decoration: none; 
-                    border-radius: 50px; 
-                    font-weight: bold; 
-                    display: inline-block; 
-                    font-size: 18px; 
-                    text-transform: uppercase; 
-                    letter-spacing: 1px;
-                    box-shadow: 0 8px 25px rgba(201, 169, 97, 0.3);
-                    transition: all 0.3s ease;">
-            ✨ ACESSAR ÁREA PREMIUM
-          </a>
-        </div>
-        
-        <!-- Divider -->
-        <div style="border-top: 1px solid #c9a961; margin: 40px 0; opacity: 0.5;"></div>
-        
-        <!-- Security Notice -->
-        <div style="background: rgba(201, 169, 97, 0.05); padding: 25px; border-radius: 10px; border: 1px solid rgba(201, 169, 97, 0.2); text-align: center;">
-          <p style="color: #f4e79d; font-size: 16px; margin: 0 0 10px 0; font-weight: bold;">
-            🛡️ IMPORTANTE - ACESSO SEGURO
-          </p>
-          <p style="color: #f5f5f5; font-size: 14px; margin: 0; opacity: 0.9;">
-            Guarde seus dados de acesso em local seguro. Este é seu passaporte para o conteúdo premium.<br>
-            <span style="color: #c9a961;">Em caso de dúvidas, nossa equipe está pronta para ajudar.</span>
-          </p>
-        </div>
-        
-        <!-- Footer -->
-        <div style="text-align: center; margin-top: 40px; padding-top: 30px; border-top: 1px solid rgba(201, 169, 97, 0.3);">
-          <p style="color: #c9a961; font-size: 16px; margin: 0 0 10px 0; font-weight: bold;">
-            Aproveite sua jornada premium! 🚀
-          </p>
-          <p style="color: #f5f5f5; font-size: 14px; margin: 0; opacity: 0.8;">
-            <strong style="color: #f4e79d;">Equipe Premium</strong>
-          </p>
-        </div>
-      </div>
+    <body style="margin: 0; padding: 0; background-color: #121212; font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, 'Roboto', 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #FFFFFF; -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%;">
+      <table role="presentation" style="width: 100%; border-collapse: collapse; background-color: #121212;">
+        <tr>
+          <td align="center" style="padding: 0;">
+            <table role="presentation" style="max-width: 600px; width: 100%; border-collapse: collapse; background-color: #121212;">
+              
+              <!-- Header -->
+              <tr>
+                <td style="background-color: #1C1C1C; padding: 40px 30px; text-align: center; border-bottom: 3px solid #FF6A00;" class="mobile-padding">
+                  <h1 style="margin: 0; font-size: 32px; font-weight: 700; color: #FFFFFF; letter-spacing: 2px; text-transform: uppercase;" class="mobile-text">
+                    🚀 ACESSO LIBERADO
+                  </h1>
+                  <p style="margin: 15px 0 0 0; font-size: 18px; color: #FF6A00; font-weight: 500;" class="mobile-text">
+                    Bem-vindo ao seu conteúdo exclusivo
+                  </p>
+                </td>
+              </tr>
+              
+              <!-- Greeting Block -->
+              <tr>
+                <td style="background-color: #121212; padding: 40px 30px 20px;" class="mobile-padding">
+                  <h2 style="margin: 0 0 20px 0; font-size: 24px; color: #FFFFFF; font-weight: 600;" class="mobile-text">
+                    Olá, ${memberData.full_name} 👋
+                  </h2>
+                  <p style="margin: 0; font-size: 16px; color: #FFFFFF; line-height: 1.6;" class="mobile-text">
+                    Obrigado por adquirir o acesso ao nosso conteúdo premium. Aqui estão suas credenciais de entrada:
+                  </p>
+                </td>
+              </tr>
+              
+              <!-- Credentials Card -->
+              <tr>
+                <td style="background-color: #121212; padding: 0 30px 30px;" class="mobile-padding">
+                  <table role="presentation" style="width: 100%; border-collapse: collapse; background-color: #1C1C1C; border-radius: 12px; border: 2px solid #FF6A00;">
+                    <tr>
+                      <td style="padding: 30px;" class="mobile-padding">
+                        <h3 style="margin: 0 0 25px 0; font-size: 20px; color: #FF6A00; font-weight: 600; text-align: center;" class="mobile-text">
+                          🔐 Suas Credenciais
+                        </h3>
+                        
+                        <div style="margin-bottom: 20px;">
+                          <p style="margin: 0 0 8px 0; font-size: 16px; color: #FFFFFF; font-weight: 600;">
+                            📧 Login:
+                          </p>
+                          <div style="background-color: #121212; padding: 12px 16px; border-radius: 8px; border: 1px solid #333333;">
+                            <span style="color: #FFFFFF; font-size: 16px; font-family: 'Courier New', Consolas, monospace; word-break: break-all;">${memberData.email}</span>
+                          </div>
+                        </div>
+                        
+                        <div>
+                          <p style="margin: 0 0 8px 0; font-size: 16px; color: #FFFFFF; font-weight: 600;">
+                            🔐 Senha:
+                          </p>
+                          <div style="background-color: #121212; padding: 12px 16px; border-radius: 8px; border: 1px solid #333333;">
+                            <span style="color: #FFFFFF; font-size: 16px; font-family: 'Courier New', Consolas, monospace; letter-spacing: 2px; word-break: break-all;">${password}</span>
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+              
+              <!-- Access Button -->
+              <tr>
+                <td style="background-color: #121212; padding: 0 30px 40px; text-align: center;" class="mobile-padding">
+                  <table role="presentation" style="margin: 0 auto;">
+                    <tr>
+                      <td style="border-radius: 8px; background-color: #FF6A00;">
+                        <a href="https://preview--crypto-luxe-portal.lovable.app/login" 
+                           style="display: inline-block; padding: 18px 32px; color: #FFFFFF; text-decoration: none; font-weight: 600; font-size: 16px; border-radius: 8px; text-transform: uppercase; letter-spacing: 1px;" 
+                           class="mobile-button">
+                          🔗 ACESSAR ÁREA EXCLUSIVA
+                        </a>
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+              
+              <!-- Security Notice -->
+              <tr>
+                <td style="background-color: #121212; padding: 0 30px 30px;" class="mobile-padding">
+                  <div style="background-color: #1C1C1C; padding: 20px; border-radius: 8px; border-left: 4px solid #FF6A00;">
+                    <p style="margin: 0; font-size: 14px; color: #CCCCCC; line-height: 1.5;" class="mobile-text">
+                      ⚠️ Guarde seus dados com segurança. Para suporte, entre em contato conosco.
+                    </p>
+                  </div>
+                </td>
+              </tr>
+              
+              <!-- Footer -->
+              <tr>
+                <td style="background-color: #1C1C1C; padding: 30px; text-align: center; border-top: 1px solid #333333;" class="mobile-padding">
+                  <p style="margin: 0; font-size: 12px; color: #888888; font-weight: 400;">
+                    © 2025 Equipe . Todos os direitos reservados.
+                  </p>
+                </td>
+              </tr>
+              
+            </table>
+          </td>
+        </tr>
+      </table>
     </body>
     </html>
   `;
@@ -300,8 +347,8 @@ async function sendWelcomeEmail(memberData: any, password: string) {
   formData.append('Action', 'SendEmail');
   formData.append('Version', '2010-12-01');
   formData.append('Source', emailData.Source);
-  formData.append('Destination.ToAddresses.member.1', memberData.email);
-  formData.append('Message.Subject.Data', emailData.Message.Subject.Data);
+  formData.append('Destination.ToAddresses.1', memberData.email);
+  formData.append('Message.Subject.Data', '🚀 ACESSO LIBERADO - Suas credenciais estão prontas!');
   formData.append('Message.Subject.Charset', 'UTF-8');
   formData.append('Message.Body.Html.Data', emailData.Message.Body.Html.Data);
   formData.append('Message.Body.Html.Charset', 'UTF-8');
