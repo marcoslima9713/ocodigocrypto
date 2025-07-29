@@ -326,7 +326,7 @@ async function sendWelcomeEmail(memberData: any, password: string) {
     },
     Message: {
       Subject: {
-        Data: 'Seu acesso foi liberado! 🎉',
+        Data: '🚀 ACESSO LIBERADO - Suas credenciais estão prontas!',
         Charset: 'UTF-8'
       },
       Body: {
@@ -342,18 +342,18 @@ async function sendWelcomeEmail(memberData: any, password: string) {
     }
   };
 
-  // Convert to form data format for SES API
+  // Convert to form data format for SES API - Fixed format
   const formData = new URLSearchParams();
   formData.append('Action', 'SendEmail');
   formData.append('Version', '2010-12-01');
   formData.append('Source', emailData.Source);
-  formData.append('Destination.ToAddresses.1', memberData.email);
-  formData.append('Message.Subject.Data', '🚀 ACESSO LIBERADO - Suas credenciais estão prontas!');
-  formData.append('Message.Subject.Charset', 'UTF-8');
+  formData.append('Destination.ToAddresses.member.1', memberData.email);
+  formData.append('Message.Subject.Data', emailData.Message.Subject.Data);
+  formData.append('Message.Subject.Charset', emailData.Message.Subject.Charset);
   formData.append('Message.Body.Html.Data', emailData.Message.Body.Html.Data);
-  formData.append('Message.Body.Html.Charset', 'UTF-8');
+  formData.append('Message.Body.Html.Charset', emailData.Message.Body.Html.Charset);
   formData.append('Message.Body.Text.Data', emailData.Message.Body.Text.Data);
-  formData.append('Message.Body.Text.Charset', 'UTF-8');
+  formData.append('Message.Body.Text.Charset', emailData.Message.Body.Text.Charset);
 
   const payload = formData.toString();
   const url = `https://email.${awsRegion}.amazonaws.com/`;
