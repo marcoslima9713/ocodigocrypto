@@ -311,13 +311,12 @@ async function sendWelcomeEmail(memberData: any, password: string) {
   const payload = formData.toString();
   const url = `https://email.${awsRegion}.amazonaws.com/`;
   
-  // Create timestamp
+  // Create timestamp in correct AWS format
   const now = new Date();
-  const timestamp = now.toISOString().replace(/[:\-]|\.\d{3}/g, '').slice(0, 15) + 'Z';
+  const timestamp = now.toISOString().replace(/[:\-]|\.\d{3}/g, '');
   
-  // Prepare headers
+  // Prepare headers for signature calculation (without Authorization)
   const headers = {
-    'Authorization': '',
     'Content-Type': 'application/x-www-form-urlencoded',
     'Host': `email.${awsRegion}.amazonaws.com`,
     'X-Amz-Date': timestamp
@@ -330,6 +329,7 @@ async function sendWelcomeEmail(memberData: any, password: string) {
   const credentialScope = `${timestamp.slice(0, 8)}/${awsRegion}/ses/aws4_request`;
   const signedHeaders = Object.keys(headers).map(key => key.toLowerCase()).sort().join(';');
   
+  // Add authorization header AFTER calculating signature
   headers['Authorization'] = `AWS4-HMAC-SHA256 Credential=${awsAccessKeyId}/${credentialScope}, SignedHeaders=${signedHeaders}, Signature=${signature}`;
   
   // Send email using AWS SES
