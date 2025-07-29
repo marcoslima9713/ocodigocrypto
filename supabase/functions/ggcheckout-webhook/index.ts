@@ -140,7 +140,9 @@ async function generateAwsSignature(method: string, url: string, headers: Record
     .map(b => b.toString(16).padStart(2, '0'))
     .join('');
   
-  const canonicalRequest = `${method}\n${new URL(url).pathname}\n${new URL(url).search.slice(1)}\n${canonicalHeaders}\n${signedHeaders}\n${hashedPayload}`;
+  const urlObj = new URL(url);
+  const queryString = urlObj.search ? urlObj.search.slice(1) : '';
+  const canonicalRequest = `${method}\n${urlObj.pathname}\n${queryString}\n${canonicalHeaders}\n${signedHeaders}\n${hashedPayload}`;
   
   // Create string to sign
   const algorithm = 'AWS4-HMAC-SHA256';
