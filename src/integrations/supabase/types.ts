@@ -50,6 +50,51 @@ export type Database = {
         }
         Relationships: []
       }
+      video_lessons: {
+        Row: {
+          created_at: string
+          description: string | null
+          duration: number | null
+          file_path: string
+          file_size: number | null
+          id: string
+          is_public: boolean | null
+          module_id: string | null
+          order_index: number | null
+          thumbnail_path: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          duration?: number | null
+          file_path: string
+          file_size?: number | null
+          id?: string
+          is_public?: boolean | null
+          module_id?: string | null
+          order_index?: number | null
+          thumbnail_path?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          duration?: number | null
+          file_path?: string
+          file_size?: number | null
+          id?: string
+          is_public?: boolean | null
+          module_id?: string | null
+          order_index?: number | null
+          thumbnail_path?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       webhook_logs: {
         Row: {
           created_at: string
