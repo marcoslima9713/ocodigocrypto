@@ -3,7 +3,8 @@ import { motion } from 'framer-motion';
 import { ArrowLeft, Play, Clock, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 
 interface Lesson {
   id: string;
@@ -11,6 +12,7 @@ interface Lesson {
   description: string;
   duration: string;
   videoUrl?: string;
+  videoPath?: string;
   isCompleted: boolean;
 }
 
@@ -56,9 +58,48 @@ export default function OrigensModule() {
   const navigate = useNavigate();
   const [currentLesson, setCurrentLesson] = useState<Lesson | null>(null);
   const [completedLessons, setCompletedLessons] = useState<string[]>([]);
+  const [videoLessons, setVideoLessons] = useState<any[]>([]);
+  const [isLoadingVideo, setIsLoadingVideo] = useState(false);
 
-  const handleWatchLesson = (lesson: Lesson) => {
+  // Carregar vídeos do Supabase
+  useEffect(() => {
+    const fetchVideoLessons = async () => {
+      const { data, error } = await supabase
+        .from('video_lessons')
+        .select('*')
+        .eq('module_id', 'origens-bitcoin')
+        .order('order_index');
+      
+      if (data) {
+        setVideoLessons(data);
+      }
+    };
+
+    fetchVideoLessons();
+  }, []);
+
+  const handleWatchLesson = async (lesson: Lesson) => {
+    setIsLoadingVideo(true);
+    
+    // Se há vídeos do Supabase para esta aula, carregar o vídeo
+    const videoLesson = videoLessons.find(v => v.order_index === lessons.indexOf(lesson));
+    if (videoLesson) {
+      try {
+        const { data } = await supabase.storage
+          .from('video-lessons')
+          .createSignedUrl(videoLesson.file_path, 3600); // URL válida por 1 hora
+        
+        if (data?.signedUrl) {
+          lesson.videoUrl = data.signedUrl;
+        }
+      } catch (error) {
+        console.error('Erro ao carregar vídeo:', error);
+      }
+    }
+    
     setCurrentLesson(lesson);
+    setIsLoadingVideo(false);
+    
     // Simula conclusão da aula após "assistir"
     setTimeout(() => {
       if (!completedLessons.includes(lesson.id)) {
@@ -163,7 +204,9 @@ export default function OrigensModule() {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-4">
                       <div className="flex-shrink-0">
-                        {isCompleted ? (
+                        {isLoadingVideo && currentLesson?.id === lesson.id ? (
+                          <div className="w-12 h-12 border-2 border-red-600 border-t-transparent rounded-full animate-spin" />
+                        ) : isCompleted ? (
                           <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center">
                             <CheckCircle className="w-6 h-6 text-white" />
                           </div>
@@ -276,14 +319,31 @@ export default function OrigensModule() {
               </Button>
             </div>
             
-            <div className="bg-black aspect-video rounded mb-4 flex items-center justify-center">
-              <div className="text-white text-center">
-                <Play className="w-16 h-16 mx-auto mb-4" />
-                <p>Simulação de Player de Vídeo</p>
-                <p className="text-sm text-gray-400 mt-2">
-                  Aqui seria exibido o vídeo da aula: {currentLesson.title}
-                </p>
-              </div>
+            <div className="bg-black aspect-video rounded mb-4 flex items-center justify-center relative overflow-hidden">
+              {currentLesson?.videoUrl ? (
+                <video
+                  controls
+                  autoPlay
+                  className="w-full h-full object-contain"
+                  onEnded={() => {
+                    // Marcar como concluída quando o vídeo terminar
+                    if (!completedLessons.includes(currentLesson.id)) {
+                      setCompletedLessons(prev => [...prev, currentLesson.id]);
+                    }
+                  }}
+                >
+                  <source src={currentLesson.videoUrl} type="video/mp4" />
+                  Seu navegador não suporta a reprodução de vídeo.
+                </video>
+              ) : (
+                <div className="text-white text-center">
+                  <Play className="w-16 h-16 mx-auto mb-4" />
+                  <p>Carregando vídeo...</p>
+                  <p className="text-sm text-gray-400 mt-2">
+                    {currentLesson.title}
+                  </p>
+                </div>
+              )}
             </div>
             
             <p className="text-gray-400 text-sm">
