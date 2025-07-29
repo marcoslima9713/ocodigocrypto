@@ -300,7 +300,7 @@ async function sendWelcomeEmail(memberData: any, password: string) {
   formData.append('Action', 'SendEmail');
   formData.append('Version', '2010-12-01');
   formData.append('Source', emailData.Source);
-  formData.append('Destination.ToAddresses.1', memberData.email);
+  formData.append('Destination.ToAddresses.member.1', memberData.email);
   formData.append('Message.Subject.Data', emailData.Message.Subject.Data);
   formData.append('Message.Subject.Charset', 'UTF-8');
   formData.append('Message.Body.Html.Data', emailData.Message.Body.Html.Data);
