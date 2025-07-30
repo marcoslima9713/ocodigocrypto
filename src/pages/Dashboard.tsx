@@ -123,10 +123,15 @@ export default function Dashboard() {
   const handleLogout = async () => {
     await logout();
   };
+  
   const handleWatchNow = () => {
     if (displayModules.length > 0) {
       navigate(`/modulo/${displayModules[0].id}`);
     }
+  };
+
+  const handleModuleClick = (moduleId: string) => {
+    navigate(`/modulo/${moduleId}`);
   };
   if (loading) {
     return <div className="min-h-screen bg-black flex items-center justify-center">
@@ -262,7 +267,7 @@ export default function Dashboard() {
           }} transition={{
             delay: 0.6 + index * 0.1
           }} className="flex-shrink-0 w-64 sm:w-80">
-                <div className="relative group cursor-pointer">
+                <div className="relative group cursor-pointer" onClick={() => handleModuleClick(module.id)}>
                   <img src={module.image} alt={module.title} className="w-full h-36 sm:h-44 object-cover rounded-lg transition-transform duration-300 group-hover:scale-105" />
                   <div className="absolute inset-0 bg-black/0 group-hover:bg-black/50 transition-colors duration-300 rounded-lg flex items-center justify-center">
                     <Play className="w-8 h-8 sm:w-12 sm:h-12 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
@@ -306,7 +311,7 @@ export default function Dashboard() {
             y: 0
           }} transition={{
             delay: 0.8 + index * 0.1
-          }} className="relative group cursor-pointer">
+          }} className="relative group cursor-pointer" onClick={() => handleModuleClick(module.id)}>
                 <img src={module.image} alt={module.title} className="w-full h-24 sm:h-32 object-cover rounded-lg transition-transform duration-300 group-hover:scale-105" />
                 <div className="absolute inset-0 bg-black/0 group-hover:bg-black/50 transition-colors duration-300 rounded-lg flex items-center justify-center">
                   <Play className="w-6 h-6 sm:w-8 sm:h-8 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
