@@ -35,6 +35,7 @@ export const ModuleCard = ({ module, isCompleted, onComplete }: ModuleCardProps)
       // Mapear IDs dos módulos para suas rotas
       const moduleRoutes: Record<string, string> = {
         'origens-bitcoin': '/modulo/origens-bitcoin',
+        'ciclo-de-juros-e-spx500': '/modulo/ciclo-de-juros-e-spx500',
         'blockchain-tech': '/modulo/blockchain-tech',
         'wallet-security': '/modulo/wallet-security',
         'crypto-trading': '/modulo/crypto-trading',
@@ -49,11 +50,7 @@ export const ModuleCard = ({ module, isCompleted, onComplete }: ModuleCardProps)
         navigate(route);
       } else {
         console.warn(`Rota não encontrada para o módulo: ${module.id}`);
-        // Fallback: marcar como completo se não houver rota
-        if (!isCompleted) {
-          await markModuleComplete(module.id);
-        }
-        onComplete();
+        alert(`O módulo "${module.title}" ainda não está disponível. Em breve!`);
       }
     } catch (error) {
       console.error('Erro ao navegar para o módulo:', error);

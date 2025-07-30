@@ -2,7 +2,7 @@
 import { motion } from 'framer-motion';
 import { ArrowLeft, Play, Clock, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -18,68 +18,90 @@ interface Lesson {
 
 export default function OrigensModule() {
   const navigate = useNavigate();
+  const { '*': moduleId } = useParams();
   const [currentLesson, setCurrentLesson] = useState<Lesson | null>(null);
   const [completedLessons, setCompletedLessons] = useState<string[]>([]);
   const [lessons, setLessons] = useState<Lesson[]>([]);
+  const [moduleData, setModuleData] = useState<any>(null);
   const [isLoadingVideo, setIsLoadingVideo] = useState(false);
 
-  // Carregar vídeos do Supabase
+  // Carregar módulo e vídeos do Supabase
   useEffect(() => {
-    const fetchVideoLessons = async () => {
-      console.log('🔄 Carregando vídeos do módulo origens-bitcoin...');
-      
-      // Sempre buscar dados frescos do Supabase
-      const { data, error } = await supabase
-        .from('video_lessons')
-        .select('*')
-        .eq('module_id', 'origens-bitcoin')
-        .eq('status', 'publicado')  // Filtrar apenas vídeos publicados
-        .order('order_index');
-      
-      console.log('📊 Dados carregados do Supabase:', { data, error });
-      
-      if (data && !error) {
-        // Converter dados do Supabase para o formato Lesson
-        const convertedLessons: Lesson[] = data.map(video => ({
-          id: video.id,
-          title: video.title,
-          description: video.description || '',
-          duration: video.duration ? `${Math.ceil(video.duration / 60)} min` : '',
-          order_index: video.order_index || 0,
-          isCompleted: false
-        }));
+    const currentModuleId = window.location.pathname.split('/').pop();
+    console.log('🔄 Carregando dados do módulo:', currentModuleId);
+    
+    const fetchModuleData = async () => {
+      try {
+        // Buscar dados do módulo
+        const { data: moduleInfo, error: moduleError } = await supabase
+          .from('modules')
+          .select('*')
+          .eq('id', currentModuleId)
+          .single();
         
-        console.log('✅ Lições convertidas:', convertedLessons);
-        setLessons(convertedLessons);
-      } else {
-        console.error('❌ Erro ao carregar vídeos:', error);
+        if (moduleError) {
+          console.error('❌ Erro ao carregar módulo:', moduleError);
+          return;
+        }
+        
+        setModuleData(moduleInfo);
+        console.log('📊 Dados do módulo carregados:', moduleInfo);
+        
+        // Buscar vídeos do módulo
+        const { data: videosData, error: videosError } = await supabase
+          .from('video_lessons')
+          .select('*')
+          .eq('module_id', currentModuleId)
+          .eq('status', 'publicado')
+          .order('order_index');
+        
+        console.log('📊 Dados dos vídeos carregados:', { data: videosData, error: videosError });
+        
+        if (videosData && !videosError) {
+          const convertedLessons: Lesson[] = videosData.map(video => ({
+            id: video.id,
+            title: video.title,
+            description: video.description || '',
+            duration: video.duration ? `${Math.ceil(video.duration / 60)} min` : '',
+            order_index: video.order_index || 0,
+            isCompleted: false
+          }));
+          
+          console.log('✅ Lições convertidas:', convertedLessons);
+          setLessons(convertedLessons);
+        } else {
+          console.error('❌ Erro ao carregar vídeos:', videosError);
+        }
+      } catch (error) {
+        console.error('❌ Erro geral ao carregar dados:', error);
       }
     };
 
-    fetchVideoLessons();
-    
-    // Adicionar listener para mudanças em tempo real
-    const channel = supabase
-      .channel('video_lessons_changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'video_lessons',
-          filter: 'module_id=eq.origens-bitcoin'
-        },
-        (payload) => {
-          console.log('🔔 Mudança detectada na tabela video_lessons:', payload);
-          // Recarregar os vídeos quando houver mudanças
-          fetchVideoLessons();
-        }
-      )
-      .subscribe();
+    if (currentModuleId) {
+      fetchModuleData();
+      
+      // Listener para mudanças em tempo real
+      const channel = supabase
+        .channel('video_lessons_changes')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'video_lessons',
+            filter: `module_id=eq.${currentModuleId}`
+          },
+          (payload) => {
+            console.log('🔔 Mudança detectada na tabela video_lessons:', payload);
+            fetchModuleData();
+          }
+        )
+        .subscribe();
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
+      return () => {
+        supabase.removeChannel(channel);
+      };
+    }
   }, []);
 
   const handleWatchLesson = async (lesson: Lesson) => {
@@ -181,10 +203,10 @@ export default function OrigensModule() {
             transition={{ delay: 0.3 }}
           >
             <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-white mb-4">
-              Origens do Bitcoin
+              {moduleData?.name || 'Carregando...'}
             </h1>
             <p className="text-lg text-gray-300 mb-6 leading-relaxed">
-              A verdadeira história por trás da criação do Bitcoin, os players envolvidos e como isso moldou o mercado que conhecemos hoje.
+              {moduleData?.description || 'Carregando descrição do módulo...'}
             </p>
             <div className="flex items-center space-x-6 text-gray-300">
               <div className="flex items-center">

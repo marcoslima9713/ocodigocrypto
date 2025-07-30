@@ -52,6 +52,15 @@ const App = () => (
               } 
             />
             
+            <Route 
+              path="/modulo/ciclo-de-juros-e-spx500" 
+              element={
+                <ProtectedRoute>
+                  <OrigensModule />
+                </ProtectedRoute>
+              } 
+            />
+            
             {/* Rota administrativa */}
             <Route path="/admin" element={<AdminPanel />} />
             
