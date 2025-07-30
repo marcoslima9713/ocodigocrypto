@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Check, Clock, Play, Lock } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 
 interface Module {
@@ -24,21 +25,41 @@ interface ModuleCardProps {
 export const ModuleCard = ({ module, isCompleted, onComplete }: ModuleCardProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const { markModuleComplete } = useAuth();
+  const navigate = useNavigate();
   const IconComponent = module.icon;
 
   const handleStartModule = async () => {
     setIsLoading(true);
     
-    // Simula abertura do módulo (aqui você pode implementar navegação ou modal)
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    // Marca como completo após "assistir"
-    if (!isCompleted) {
-      await markModuleComplete(module.id);
+    try {
+      // Mapear IDs dos módulos para suas rotas
+      const moduleRoutes: Record<string, string> = {
+        'origens-bitcoin': '/modulo/origens-bitcoin',
+        'blockchain-tech': '/modulo/blockchain-tech',
+        'wallet-security': '/modulo/wallet-security',
+        'crypto-trading': '/modulo/crypto-trading',
+        'investment': '/modulo/investment',
+        'advanced': '/modulo/advanced'
+      };
+      
+      const route = moduleRoutes[module.id];
+      
+      if (route) {
+        // Navegar para a página do módulo
+        navigate(route);
+      } else {
+        console.warn(`Rota não encontrada para o módulo: ${module.id}`);
+        // Fallback: marcar como completo se não houver rota
+        if (!isCompleted) {
+          await markModuleComplete(module.id);
+        }
+        onComplete();
+      }
+    } catch (error) {
+      console.error('Erro ao navegar para o módulo:', error);
+    } finally {
+      setIsLoading(false);
     }
-    
-    setIsLoading(false);
-    onComplete();
   };
 
   return (
