@@ -53,6 +53,7 @@ export default function OrigensModule() {
   const handleWatchLesson = async (lesson: Lesson) => {
     setIsLoadingVideo(true);
     console.log('🎬 Iniciando carregamento da aula:', lesson.title);
+    console.log('🔑 Lesson ID:', lesson.id);
     
     // Buscar dados completos do vídeo no Supabase
     const { data: videoData, error } = await supabase
@@ -61,9 +62,13 @@ export default function OrigensModule() {
       .eq('id', lesson.id)
       .single();
     
+    console.log('📊 Resposta da query do vídeo:', { videoData, error });
+    
     if (videoData && !error) {
       try {
         console.log('📁 Tentando criar URL assinada para:', videoData.file_path);
+        console.log('🪣 Bucket: video-lessons');
+        
         const { data: urlData, error: urlError } = await supabase.storage
           .from('video-lessons')
           .createSignedUrl(videoData.file_path, 3600); // URL válida por 1 hora
@@ -75,12 +80,14 @@ export default function OrigensModule() {
           console.log('✅ URL do vídeo definida:', lesson.videoUrl);
         } else {
           console.error('❌ Erro: Não foi possível gerar URL assinada', urlError);
+          console.log('📋 Detalhes do erro:', JSON.stringify(urlError, null, 2));
         }
       } catch (error) {
         console.error('❌ Erro ao carregar vídeo:', error);
       }
     } else {
       console.log('⚠️ Erro ao buscar dados do vídeo:', error);
+      console.log('📋 Detalhes do erro da query:', JSON.stringify(error, null, 2));
     }
     
     setCurrentLesson(lesson);
