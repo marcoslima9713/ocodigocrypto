@@ -212,7 +212,7 @@ export default function Dashboard() {
                     <DialogDescription className="text-gray-300 space-y-3">
                       <p>
                         Este curso foi cuidadosamente desenvolvido e gravado por <span className="text-white font-semibold">Marcos Lima</span>, 
-                        especialista em criptomoedas e investimentos digitais.
+                        entusiasta em criptomoedas e investimentos digitais.
                       </p>
                       <p>
                         Com uma abordagem prática e didática, você aprenderá tudo sobre Bitcoin, desde os conceitos básicos 
