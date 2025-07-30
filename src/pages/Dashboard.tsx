@@ -5,57 +5,42 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { ModuleCard } from '@/components/ModuleCard';
 import { useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 
-// PERSONALIZE: Altere os módulos conforme seu projeto
-const modules = [{
-  id: 'modulo-1',
-  title: 'Origens do Bitcoin',
-  description: 'A verdadeira história por trás da criação do Bitcoin, os players envolvidos e como isso moldou o mercado que conhecemos hoje. Informações que poucos sabem e que são fundamentais para entender os ciclos.',
-  icon: Bitcoin,
-  image: 'https://i.imgur.com/aNUqdaq.png',
-  color: 'from-orange-500/20 to-orange-600/20',
-  estimatedTime: '45 min'
-}, {
-  id: 'modulo-2',
-  title: 'Ciclos Macroeconômicos',
-  description: 'Como políticas monetárias globais, decisões do FED e eventos geopolíticos criam ondas no mercado crypto. Aprenda a surfar essas ondas em vez de ser engolido por elas.',
-  icon: Globe,
-  image: 'https://i.imgur.com/6P43lCR.png',
-  color: 'from-blue-500/20 to-blue-600/20',
-  estimatedTime: '60 min'
-}, {
-  id: 'modulo-3',
-  title: 'Timing de Mercado',
-  description: 'Os sinais que antecedem grandes movimentos do Bitcoin. Como identificar topos e fundos usando dados macroeconômicos. O timing que faz a diferença entre lucro e prejuízo.',
-  icon: Timer,
-  image: 'https://i.imgur.com/IFSgCCY.png',
-  color: 'from-green-500/20 to-green-600/20',
-  estimatedTime: '50 min'
-}, {
-  id: 'modulo-4',
-  title: 'Análise de Fluxos',
-  description: 'Como rastrear o dinheiro das instituições e whales. Onde eles colocam capital e como você pode acompanhar esses movimentos para se posicionar antes da massa.',
-  icon: Eye,
-  image: 'https://i.imgur.com/wwWXpSw.png',
-  color: 'from-purple-500/20 to-purple-600/20',
-  estimatedTime: '55 min'
-}, {
-  id: 'modulo-5',
-  title: 'Gestão de Capital',
-  description: 'Como alocar capital de forma inteligente, quando aumentar posições e quando reduzir exposição. A diferença entre trading e investimento estratégico de longo prazo.',
-  icon: Wallet,
-  image: 'https://i.imgur.com/aNUqdaq.png',
-  color: 'from-indigo-500/20 to-indigo-600/20',
-  estimatedTime: '40 min'
-}, {
-  id: 'modulo-6',
-  title: 'Casos Reais',
-  description: 'Análise detalhada dos grandes movimentos do Bitcoin desde 2017. O que causou cada movimento e como você poderia ter identificado essas oportunidades usando macroeconomia.',
-  icon: FileText,
-  image: 'https://i.imgur.com/gao1f1l.png',
-  color: 'from-red-500/20 to-red-600/20',
-  estimatedTime: '70 min'
-}];
+interface Module {
+  id: string;
+  name: string;
+  description: string;
+  order_index: number;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+interface VideoLesson {
+  id: string;
+  title: string;
+  description: string;
+  module_id: string;
+  estimated_minutes: number;
+  thumbnail_path?: string;
+  order_index: number;
+  is_public: boolean;
+  status: string;
+}
+
+// Ícones padrão para módulos
+const moduleIcons = [Bitcoin, Globe, Timer, Eye, Wallet, FileText];
+const moduleColors = [
+  'from-orange-500/20 to-orange-600/20',
+  'from-blue-500/20 to-blue-600/20', 
+  'from-green-500/20 to-green-600/20',
+  'from-purple-500/20 to-purple-600/20',
+  'from-indigo-500/20 to-indigo-600/20',
+  'from-red-500/20 to-red-600/20'
+];
+
 export default function Dashboard() {
   const {
     currentUser,
@@ -63,16 +48,112 @@ export default function Dashboard() {
     logout
   } = useAuth();
   const navigate = useNavigate();
+  const [modules, setModules] = useState<Module[]>([]);
+  const [videoLessons, setVideoLessons] = useState<VideoLesson[]>([]);
+  const [loading, setLoading] = useState(true);
+
   const completedCount = userProgress?.completedModules.length || 0;
-  const featuredModule = modules[0]; // Módulo em destaque
+
+  useEffect(() => {
+    fetchModulesAndVideos();
+
+    // Listener para atualizações em tempo real
+    const moduleSubscription = supabase
+      .channel('modules_changes')
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'modules'
+      }, () => {
+        fetchModulesAndVideos();
+      })
+      .subscribe();
+
+    const videosSubscription = supabase
+      .channel('videos_changes')
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'video_lessons'
+      }, () => {
+        fetchModulesAndVideos();
+      })
+      .subscribe();
+
+    return () => {
+      moduleSubscription.unsubscribe();
+      videosSubscription.unsubscribe();
+    };
+  }, []);
+
+  const fetchModulesAndVideos = async () => {
+    try {
+      // Buscar módulos ativos
+      const { data: modulesData, error: modulesError } = await supabase
+        .from('modules')
+        .select('*')
+        .eq('is_active', true)
+        .order('order_index');
+
+      if (modulesError) throw modulesError;
+
+      // Buscar vídeos públicos
+      const { data: videosData, error: videosError } = await supabase
+        .from('video_lessons')
+        .select('*')
+        .eq('is_public', true)
+        .eq('status', 'publicado')
+        .order('order_index');
+
+      if (videosError) throw videosError;
+
+      setModules(modulesData || []);
+      setVideoLessons(videosData || []);
+    } catch (error) {
+      console.error('Erro ao buscar dados:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Transformar módulos em formato compatível com o layout
+  const displayModules = modules.map((module, index) => ({
+    id: module.id,
+    title: module.name,
+    description: module.description,
+    icon: moduleIcons[index % moduleIcons.length],
+    image: `https://i.imgur.com/placeholder${index + 1}.png`, // Placeholder - pode ser substituído por thumbnails reais
+    color: moduleColors[index % moduleColors.length],
+    estimatedTime: `${Math.round(videoLessons.filter(v => v.module_id === module.id).reduce((total, video) => total + (video.estimated_minutes || 0), 0))} min`
+  }));
+
+  const featuredModule = displayModules[0] || {
+    id: 'default',
+    title: 'Bem-vindo!',
+    description: 'Comece sua jornada de aprendizado com nossos módulos exclusivos.',
+    icon: Bitcoin,
+    image: 'https://i.imgur.com/aNUqdaq.png',
+    color: 'from-orange-500/20 to-orange-600/20',
+    estimatedTime: '0 min'
+  };
 
   const handleLogout = async () => {
     await logout();
   };
 
   const handleWatchNow = () => {
-    navigate('/modulo/origens-bitcoin');
+    if (displayModules.length > 0) {
+      navigate(`/modulo/${displayModules[0].id}`);
+    }
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <div className="text-white text-xl">Carregando...</div>
+      </div>
+    );
+  }
   return <div className="min-h-screen bg-black">
       {/* Header Netflix Style */}
       <motion.header initial={{
@@ -171,7 +252,7 @@ export default function Dashboard() {
           </div>
           
           <div className="flex space-x-3 sm:space-x-4 overflow-x-auto pb-4 -mx-4 px-4 sm:mx-0 sm:px-0">
-            {modules.slice(0, 4).map((module, index) => <motion.div key={module.id} initial={{
+            {displayModules.slice(0, 4).map((module, index) => <motion.div key={module.id} initial={{
             opacity: 0,
             x: 50
           }} animate={{
@@ -216,7 +297,7 @@ export default function Dashboard() {
           </div>
           
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4">
-            {modules.map((module, index) => <motion.div key={module.id} initial={{
+            {displayModules.map((module, index) => <motion.div key={module.id} initial={{
             opacity: 0,
             y: 50
           }} animate={{
@@ -264,14 +345,14 @@ export default function Dashboard() {
             
             <div className="text-center">
               <div className="text-2xl sm:text-3xl lg:text-4xl font-bold text-red-600 mb-2">
-                {modules.length - completedCount}
+                {displayModules.length - completedCount}
               </div>
               <div className="text-gray-400 text-sm sm:text-base">Módulos Restantes</div>
             </div>
             
             <div className="text-center">
               <div className="text-2xl sm:text-3xl lg:text-4xl font-bold text-red-600 mb-2">
-                {Math.round(completedCount / modules.length * 100)}%
+                {displayModules.length > 0 ? Math.round(completedCount / displayModules.length * 100) : 0}%
               </div>
               <div className="text-gray-400 text-sm sm:text-base">Progresso Total</div>
             </div>
