@@ -8,14 +8,14 @@ import { useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
-// Import das imagens
-import bitcoinHero from '@/assets/bitcoin-hero.jpg';
-import moduleBitcoinOrigins from '@/assets/module-bitcoin-origins.jpg';
-import moduleCryptoTrading from '@/assets/module-crypto-trading.jpg';
-import moduleBlockchainTech from '@/assets/module-blockchain-tech.jpg';
-import moduleWalletSecurity from '@/assets/module-wallet-security.jpg';
-import moduleInvestment from '@/assets/module-investment.jpg';
-import moduleAdvanced from '@/assets/module-advanced.jpg';
+// URLs das imagens enviadas pelo usuário
+const bitcoinLogoUrl = '/lovable-uploads/210bfef1-70e7-47d1-852d-e3861dca17b2.png';
+const origensUrl = '/lovable-uploads/4dfe53fa-27f3-4715-921d-e467cf2c5f75.png';
+const ciclosUrl = '/lovable-uploads/4e9eee5a-5e64-42a8-bbc4-a937a029b016.png';
+const oportunidadesUrl = '/lovable-uploads/5c736e41-daae-472c-87ed-70b134a91c9c.png';
+const analiseUrl = '/lovable-uploads/2419164b-85e4-49b5-a8c6-02743a5196f7.png';
+const lucroUrl = '/lovable-uploads/bc513e15-b1d6-46a7-9047-554b60f1f2d5.png';
+const gestaoUrl = '/lovable-uploads/07a20695-9548-4c22-ab32-6933d3662a15.png';
 
 interface Module {
   id: string;
@@ -39,15 +39,15 @@ interface VideoLesson {
   status: string;
 }
 
-// Ícones e imagens padrão para módulos
+// Ícones e imagens dos módulos
 const moduleIcons = [Bitcoin, Globe, Timer, Eye, Wallet, FileText];
 const moduleImages = [
-  moduleBitcoinOrigins,
-  moduleCryptoTrading,
-  moduleBlockchainTech,
-  moduleWalletSecurity,
-  moduleInvestment,
-  moduleAdvanced
+  origensUrl,
+  ciclosUrl,
+  oportunidadesUrl,
+  analiseUrl,
+  lucroUrl,
+  gestaoUrl
 ];
 const moduleColors = [
   'from-orange-500/20 to-orange-600/20',
@@ -149,7 +149,7 @@ export default function Dashboard() {
     title: 'Bem-vindo!',
     description: 'Comece sua jornada de aprendizado com nossos módulos exclusivos.',
     icon: Bitcoin,
-    image: bitcoinHero,
+    image: origensUrl, // Usando a primeira imagem como hero
     color: 'from-orange-500/20 to-orange-600/20',
     estimatedTime: '0 min'
   };
