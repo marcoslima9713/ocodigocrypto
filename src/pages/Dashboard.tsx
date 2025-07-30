@@ -17,7 +17,6 @@ const oportunidadesUrl = '/lovable-uploads/5c736e41-daae-472c-87ed-70b134a91c9c.
 const analiseUrl = '/lovable-uploads/2419164b-85e4-49b5-a8c6-02743a5196f7.png';
 const lucroUrl = '/lovable-uploads/bc513e15-b1d6-46a7-9047-554b60f1f2d5.png';
 const gestaoUrl = '/lovable-uploads/07a20695-9548-4c22-ab32-6933d3662a15.png';
-
 interface Module {
   id: string;
   name: string;
@@ -27,7 +26,6 @@ interface Module {
   created_at: string;
   updated_at: string;
 }
-
 interface VideoLesson {
   id: string;
   title: string;
@@ -42,23 +40,8 @@ interface VideoLesson {
 
 // Ícones e imagens dos módulos
 const moduleIcons = [Bitcoin, Globe, Timer, Eye, Wallet, FileText];
-const moduleImages = [
-  origensUrl,
-  ciclosUrl,
-  oportunidadesUrl,
-  analiseUrl,
-  lucroUrl,
-  gestaoUrl
-];
-const moduleColors = [
-  'from-orange-500/20 to-orange-600/20',
-  'from-blue-500/20 to-blue-600/20', 
-  'from-green-500/20 to-green-600/20',
-  'from-purple-500/20 to-purple-600/20',
-  'from-indigo-500/20 to-indigo-600/20',
-  'from-red-500/20 to-red-600/20'
-];
-
+const moduleImages = [origensUrl, ciclosUrl, oportunidadesUrl, analiseUrl, lucroUrl, gestaoUrl];
+const moduleColors = ['from-orange-500/20 to-orange-600/20', 'from-blue-500/20 to-blue-600/20', 'from-green-500/20 to-green-600/20', 'from-purple-500/20 to-purple-600/20', 'from-indigo-500/20 to-indigo-600/20', 'from-red-500/20 to-red-600/20'];
 export default function Dashboard() {
   const {
     currentUser,
@@ -69,62 +52,45 @@ export default function Dashboard() {
   const [modules, setModules] = useState<Module[]>([]);
   const [videoLessons, setVideoLessons] = useState<VideoLesson[]>([]);
   const [loading, setLoading] = useState(true);
-
   const completedCount = userProgress?.completedModules.length || 0;
-
   useEffect(() => {
     fetchModulesAndVideos();
 
     // Listener para atualizações em tempo real
-    const moduleSubscription = supabase
-      .channel('modules_changes')
-      .on('postgres_changes', {
-        event: '*',
-        schema: 'public',
-        table: 'modules'
-      }, () => {
-        fetchModulesAndVideos();
-      })
-      .subscribe();
-
-    const videosSubscription = supabase
-      .channel('videos_changes')
-      .on('postgres_changes', {
-        event: '*',
-        schema: 'public',
-        table: 'video_lessons'
-      }, () => {
-        fetchModulesAndVideos();
-      })
-      .subscribe();
-
+    const moduleSubscription = supabase.channel('modules_changes').on('postgres_changes', {
+      event: '*',
+      schema: 'public',
+      table: 'modules'
+    }, () => {
+      fetchModulesAndVideos();
+    }).subscribe();
+    const videosSubscription = supabase.channel('videos_changes').on('postgres_changes', {
+      event: '*',
+      schema: 'public',
+      table: 'video_lessons'
+    }, () => {
+      fetchModulesAndVideos();
+    }).subscribe();
     return () => {
       moduleSubscription.unsubscribe();
       videosSubscription.unsubscribe();
     };
   }, []);
-
   const fetchModulesAndVideos = async () => {
     try {
       // Buscar módulos ativos
-      const { data: modulesData, error: modulesError } = await supabase
-        .from('modules')
-        .select('*')
-        .eq('is_active', true)
-        .order('order_index');
-
+      const {
+        data: modulesData,
+        error: modulesError
+      } = await supabase.from('modules').select('*').eq('is_active', true).order('order_index');
       if (modulesError) throw modulesError;
 
       // Buscar vídeos públicos
-      const { data: videosData, error: videosError } = await supabase
-        .from('video_lessons')
-        .select('*')
-        .eq('is_public', true)
-        .eq('status', 'publicado')
-        .order('order_index');
-
+      const {
+        data: videosData,
+        error: videosError
+      } = await supabase.from('video_lessons').select('*').eq('is_public', true).eq('status', 'publicado').order('order_index');
       if (videosError) throw videosError;
-
       setModules(modulesData || []);
       setVideoLessons(videosData || []);
     } catch (error) {
@@ -144,33 +110,28 @@ export default function Dashboard() {
     color: moduleColors[index % moduleColors.length],
     estimatedTime: `${Math.round(videoLessons.filter(v => v.module_id === module.id).reduce((total, video) => total + (video.estimated_minutes || 0), 0))} min`
   }));
-
   const featuredModule = displayModules[0] || {
     id: 'default',
     title: 'Bem-vindo!',
     description: 'Comece sua jornada de aprendizado com nossos módulos exclusivos.',
     icon: Bitcoin,
-    image: origensUrl, // Usando a primeira imagem como hero
+    image: origensUrl,
+    // Usando a primeira imagem como hero
     color: 'from-orange-500/20 to-orange-600/20',
     estimatedTime: '0 min'
   };
-
   const handleLogout = async () => {
     await logout();
   };
-
   const handleWatchNow = () => {
     if (displayModules.length > 0) {
       navigate(`/modulo/${displayModules[0].id}`);
     }
   };
-
   if (loading) {
-    return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
+    return <div className="min-h-screen bg-black flex items-center justify-center">
         <div className="text-white text-xl">Carregando...</div>
-      </div>
-    );
+      </div>;
   }
   return <div className="min-h-screen bg-black">
       {/* Header Netflix Style */}
@@ -234,10 +195,7 @@ export default function Dashboard() {
             </p>
             
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
-              <Button 
-                onClick={handleWatchNow}
-                className="bg-white text-black hover:bg-gray-200 px-6 sm:px-8 py-2.5 sm:py-3 text-base sm:text-lg font-semibold"
-              >
+              <Button onClick={handleWatchNow} className="bg-white text-black hover:bg-gray-200 px-6 sm:px-8 py-2.5 sm:py-3 text-base sm:text-lg font-semibold">
                 <Play className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
                 Assistir Agora
               </Button>
@@ -270,9 +228,7 @@ export default function Dashboard() {
               </Dialog>
             </div>
             
-            <p className="text-gray-400 text-sm sm:text-base mt-4">
-              Curso gravado por <span className="text-white font-medium">Marcos Lima</span>
-            </p>
+            
           </motion.div>
         </div>
       </motion.section>
