@@ -8,6 +8,15 @@ import { useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
+// Import das imagens
+import bitcoinHero from '@/assets/bitcoin-hero.jpg';
+import moduleBitcoinOrigins from '@/assets/module-bitcoin-origins.jpg';
+import moduleCryptoTrading from '@/assets/module-crypto-trading.jpg';
+import moduleBlockchainTech from '@/assets/module-blockchain-tech.jpg';
+import moduleWalletSecurity from '@/assets/module-wallet-security.jpg';
+import moduleInvestment from '@/assets/module-investment.jpg';
+import moduleAdvanced from '@/assets/module-advanced.jpg';
+
 interface Module {
   id: string;
   name: string;
@@ -30,8 +39,16 @@ interface VideoLesson {
   status: string;
 }
 
-// Ícones padrão para módulos
+// Ícones e imagens padrão para módulos
 const moduleIcons = [Bitcoin, Globe, Timer, Eye, Wallet, FileText];
+const moduleImages = [
+  moduleBitcoinOrigins,
+  moduleCryptoTrading,
+  moduleBlockchainTech,
+  moduleWalletSecurity,
+  moduleInvestment,
+  moduleAdvanced
+];
 const moduleColors = [
   'from-orange-500/20 to-orange-600/20',
   'from-blue-500/20 to-blue-600/20', 
@@ -122,7 +139,7 @@ export default function Dashboard() {
     title: module.name,
     description: module.description,
     icon: moduleIcons[index % moduleIcons.length],
-    image: `https://i.imgur.com/placeholder${index + 1}.png`, // Placeholder - pode ser substituído por thumbnails reais
+    image: moduleImages[index % moduleImages.length],
     color: moduleColors[index % moduleColors.length],
     estimatedTime: `${Math.round(videoLessons.filter(v => v.module_id === module.id).reduce((total, video) => total + (video.estimated_minutes || 0), 0))} min`
   }));
@@ -132,7 +149,7 @@ export default function Dashboard() {
     title: 'Bem-vindo!',
     description: 'Comece sua jornada de aprendizado com nossos módulos exclusivos.',
     icon: Bitcoin,
-    image: 'https://i.imgur.com/aNUqdaq.png',
+    image: bitcoinHero,
     color: 'from-orange-500/20 to-orange-600/20',
     estimatedTime: '0 min'
   };
