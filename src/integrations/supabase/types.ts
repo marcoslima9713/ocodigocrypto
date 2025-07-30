@@ -50,17 +50,50 @@ export type Database = {
         }
         Relationships: []
       }
+      modules: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          order_index: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id: string
+          is_active?: boolean | null
+          name: string
+          order_index?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          order_index?: number | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       video_lessons: {
         Row: {
           created_at: string
           description: string | null
+          difficulty_level: string | null
           duration: number | null
+          estimated_minutes: number | null
           file_path: string
           file_size: number | null
           id: string
           is_public: boolean | null
           module_id: string | null
           order_index: number | null
+          status: string | null
           thumbnail_path: string | null
           title: string
           updated_at: string
@@ -68,13 +101,16 @@ export type Database = {
         Insert: {
           created_at?: string
           description?: string | null
+          difficulty_level?: string | null
           duration?: number | null
+          estimated_minutes?: number | null
           file_path: string
           file_size?: number | null
           id?: string
           is_public?: boolean | null
           module_id?: string | null
           order_index?: number | null
+          status?: string | null
           thumbnail_path?: string | null
           title: string
           updated_at?: string
@@ -82,13 +118,16 @@ export type Database = {
         Update: {
           created_at?: string
           description?: string | null
+          difficulty_level?: string | null
           duration?: number | null
+          estimated_minutes?: number | null
           file_path?: string
           file_size?: number | null
           id?: string
           is_public?: boolean | null
           module_id?: string | null
           order_index?: number | null
+          status?: string | null
           thumbnail_path?: string | null
           title?: string
           updated_at?: string
