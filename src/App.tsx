@@ -13,6 +13,7 @@ import ForgotPassword from "./pages/ForgotPassword";
 // Páginas protegidas
 import Dashboard from "./pages/Dashboard";
 import OrigensModule from "./pages/OrigensModule";
+import CicloJurosModule from "./pages/CicloJurosModule";
 import AdminPanel from "./pages/AdminPanel";
 import NotFound from "./pages/NotFound";
 
@@ -56,7 +57,7 @@ const App = () => (
               path="/modulo/ciclo-de-juros-e-spx500" 
               element={
                 <ProtectedRoute>
-                  <OrigensModule />
+                  <CicloJurosModule />
                 </ProtectedRoute>
               } 
             />
