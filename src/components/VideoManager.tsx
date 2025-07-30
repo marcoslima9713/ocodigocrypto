@@ -178,11 +178,6 @@ const VideoManager: React.FC = () => {
       // Forçar recarregamento dos dados
       await fetchData();
       
-      // Forçar atualização da página para limpar qualquer cache
-      setTimeout(() => {
-        window.location.reload();
-      }, 1000);
-      
     } catch (error) {
       console.error('❌ Erro ao salvar vídeo:', error);
       toast({
