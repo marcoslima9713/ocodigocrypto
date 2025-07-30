@@ -245,6 +245,10 @@ export default function Dashboard() {
                 Mais
               </Button>
             </div>
+            
+            <p className="text-gray-400 text-sm sm:text-base mt-4">
+              Curso gravado por <span className="text-white font-medium">Marcos Lima</span>
+            </p>
           </motion.div>
         </div>
       </motion.section>
