@@ -104,23 +104,34 @@ const VideoManager: React.FC = () => {
     try {
       if (editingVideo) {
         // Atualizar vídeo existente
-        const { error } = await supabase
-          .from('video_lessons')
-          .update({
-            title: videoData.title,
-            description: videoData.description,
-            file_path: videoData.file_path,
-            thumbnail_path: videoData.thumbnail_path,
-            module_id: videoData.module_id,
-            order_index: videoData.order_index,
-            difficulty_level: videoData.difficulty_level,
-            status: videoData.status,
-            estimated_minutes: videoData.estimated_minutes,
-            is_public: videoData.status === 'publicado'
-          })
-          .eq('id', editingVideo.id);
+        const updateData = {
+          title: videoData.title,
+          description: videoData.description,
+          file_path: videoData.file_path,
+          thumbnail_path: videoData.thumbnail_path,
+          module_id: videoData.module_id,
+          order_index: videoData.order_index,
+          difficulty_level: videoData.difficulty_level,
+          status: videoData.status,
+          estimated_minutes: videoData.estimated_minutes,
+          is_public: videoData.status === 'publicado',
+          updated_at: new Date().toISOString()
+        };
 
-        if (error) throw error;
+        console.log('🔄 Atualizando vídeo:', editingVideo.id, updateData);
+
+        const { data, error } = await supabase
+          .from('video_lessons')
+          .update(updateData)
+          .eq('id', editingVideo.id)
+          .select();
+
+        if (error) {
+          console.error('❌ Erro ao atualizar vídeo:', error);
+          throw error;
+        }
+        
+        console.log('✅ Vídeo atualizado com sucesso:', data);
         
         toast({
           title: "Sucesso",
@@ -128,22 +139,32 @@ const VideoManager: React.FC = () => {
         });
       } else {
         // Criar novo vídeo
-        const { error } = await supabase
-          .from('video_lessons')
-          .insert({
-            title: videoData.title,
-            description: videoData.description,
-            file_path: videoData.file_path,
-            thumbnail_path: videoData.thumbnail_path,
-            module_id: videoData.module_id,
-            order_index: videoData.order_index || 0,
-            difficulty_level: videoData.difficulty_level,
-            status: videoData.status || 'rascunho',
-            estimated_minutes: videoData.estimated_minutes || 0,
-            is_public: videoData.status === 'publicado'
-          });
+        const insertData = {
+          title: videoData.title,
+          description: videoData.description,
+          file_path: videoData.file_path,
+          thumbnail_path: videoData.thumbnail_path,
+          module_id: videoData.module_id,
+          order_index: videoData.order_index || 0,
+          difficulty_level: videoData.difficulty_level,
+          status: videoData.status || 'rascunho',
+          estimated_minutes: videoData.estimated_minutes || 0,
+          is_public: (videoData.status || 'rascunho') === 'publicado'
+        };
 
-        if (error) throw error;
+        console.log('➕ Criando novo vídeo:', insertData);
+
+        const { data, error } = await supabase
+          .from('video_lessons')
+          .insert(insertData)
+          .select();
+
+        if (error) {
+          console.error('❌ Erro ao criar vídeo:', error);
+          throw error;
+        }
+        
+        console.log('✅ Vídeo criado com sucesso:', data);
         
         toast({
           title: "Sucesso",
@@ -153,12 +174,20 @@ const VideoManager: React.FC = () => {
 
       setShowVideoDialog(false);
       setEditingVideo(null);
-      fetchData();
+      
+      // Forçar recarregamento dos dados
+      await fetchData();
+      
+      // Forçar atualização da página para limpar qualquer cache
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
+      
     } catch (error) {
-      console.error('Erro ao salvar vídeo:', error);
+      console.error('❌ Erro ao salvar vídeo:', error);
       toast({
         title: "Erro",
-        description: "Erro ao salvar vídeo",
+        description: `Erro ao salvar vídeo: ${error.message}`,
         variant: "destructive",
       });
     }

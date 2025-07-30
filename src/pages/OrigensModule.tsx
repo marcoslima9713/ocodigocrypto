@@ -26,28 +26,60 @@ export default function OrigensModule() {
   // Carregar vídeos do Supabase
   useEffect(() => {
     const fetchVideoLessons = async () => {
+      console.log('🔄 Carregando vídeos do módulo origens-bitcoin...');
+      
+      // Sempre buscar dados frescos do Supabase
       const { data, error } = await supabase
         .from('video_lessons')
         .select('*')
         .eq('module_id', 'origens-bitcoin')
+        .eq('status', 'publicado')  // Filtrar apenas vídeos publicados
         .order('order_index');
       
-      if (data) {
+      console.log('📊 Dados carregados do Supabase:', { data, error });
+      
+      if (data && !error) {
         // Converter dados do Supabase para o formato Lesson
         const convertedLessons: Lesson[] = data.map(video => ({
           id: video.id,
           title: video.title,
           description: video.description || '',
           duration: video.duration ? `${Math.ceil(video.duration / 60)} min` : '',
-          order_index: video.order_index,
+          order_index: video.order_index || 0,
           isCompleted: false
         }));
         
+        console.log('✅ Lições convertidas:', convertedLessons);
         setLessons(convertedLessons);
+      } else {
+        console.error('❌ Erro ao carregar vídeos:', error);
       }
     };
 
     fetchVideoLessons();
+    
+    // Adicionar listener para mudanças em tempo real
+    const channel = supabase
+      .channel('video_lessons_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'video_lessons',
+          filter: 'module_id=eq.origens-bitcoin'
+        },
+        (payload) => {
+          console.log('🔔 Mudança detectada na tabela video_lessons:', payload);
+          // Recarregar os vídeos quando houver mudanças
+          fetchVideoLessons();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const handleWatchLesson = async (lesson: Lesson) => {
