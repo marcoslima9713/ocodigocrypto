@@ -2,6 +2,7 @@
 import { motion } from 'framer-motion';
 import { Bitcoin, Globe, Timer, Eye, Wallet, FileText, LogOut, User, Play, Info, ChevronRight } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { ModuleCard } from '@/components/ModuleCard';
 import { useNavigate } from 'react-router-dom';
@@ -240,10 +241,33 @@ export default function Dashboard() {
                 <Play className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
                 Assistir Agora
               </Button>
-              <Button variant="secondary" className="bg-gray-600/70 text-white hover:bg-gray-600 px-6 sm:px-8 py-2.5 sm:py-3 text-base sm:text-lg">
-                <Info className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
-                Mais
-              </Button>
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button variant="secondary" className="bg-gray-600/70 text-white hover:bg-gray-600 px-6 sm:px-8 py-2.5 sm:py-3 text-base sm:text-lg">
+                    <Info className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
+                    Mais
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="bg-gray-900 border-gray-700">
+                  <DialogHeader>
+                    <DialogTitle className="text-white text-xl mb-2">Sobre o Curso</DialogTitle>
+                    <DialogDescription className="text-gray-300 space-y-3">
+                      <p>
+                        Este curso foi cuidadosamente desenvolvido e gravado por <span className="text-white font-semibold">Marcos Lima</span>, 
+                        especialista em criptomoedas e investimentos digitais.
+                      </p>
+                      <p>
+                        Com uma abordagem prática e didática, você aprenderá tudo sobre Bitcoin, desde os conceitos básicos 
+                        até estratégias avançadas de investimento e gestão de portfólio.
+                      </p>
+                      <p>
+                        Acesse conteúdo exclusivo, técnicas profissionais e insights valiosos para maximizar seus resultados 
+                        no mercado de criptomoedas.
+                      </p>
+                    </DialogDescription>
+                  </DialogHeader>
+                </DialogContent>
+              </Dialog>
             </div>
             
             <p className="text-gray-400 text-sm sm:text-base mt-4">
