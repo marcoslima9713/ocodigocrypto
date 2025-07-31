@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { useCryptoPrices } from './useCryptoPrices';
+import { useCryptoPrices } from '@/hooks/useCryptoPrices';
 
 interface Transaction {
   id: string;
