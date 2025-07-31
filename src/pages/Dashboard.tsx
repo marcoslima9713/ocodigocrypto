@@ -160,6 +160,14 @@ export default function Dashboard() {
               <span className="text-white text-sm hidden sm:block">
                 {currentUser?.email}
               </span>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => navigate('/portfolio')} 
+                className="text-white hover:text-gray-300"
+              >
+                Portfólio
+              </Button>
               <Button variant="ghost" size="sm" onClick={handleLogout} className="text-white hover:text-gray-300">
                 <LogOut className="w-4 h-4" />
               </Button>

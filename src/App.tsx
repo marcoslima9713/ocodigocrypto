@@ -14,6 +14,7 @@ import ForgotPassword from "./pages/ForgotPassword";
 import Dashboard from "./pages/Dashboard";
 import OrigensModule from "./pages/OrigensModule";
 import CicloJurosModule from "./pages/CicloJurosModule";
+import CryptoPortfolio from "./pages/CryptoPortfolio";
 import AdminPanel from "./pages/AdminPanel";
 import NotFound from "./pages/NotFound";
 
@@ -58,6 +59,15 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <CicloJurosModule />
+                </ProtectedRoute>
+              } 
+            />
+            
+            <Route 
+              path="/portfolio" 
+              element={
+                <ProtectedRoute>
+                  <CryptoPortfolio />
                 </ProtectedRoute>
               } 
             />
