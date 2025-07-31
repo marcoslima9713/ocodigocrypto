@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect } from "react";
+import { Navigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,31 +7,24 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Copy, CheckCircle, XCircle, Shield, Code, Globe, Image } from "lucide-react";
+import { Copy, CheckCircle, Shield, Code, Globe, Image, AlertTriangle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import VideoManager from "@/components/VideoManager";
+import { useAuth } from "@/hooks/useAuth";
 
 const AdminPanel = () => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const { currentUser, isAdmin, isLoading } = useAuth();
   const { toast } = useToast();
 
-  const handleLogin = () => {
-    if (email === "marcoslima9713@gmail.com" && password === "Bitcoin2026!") {
-      setIsAuthenticated(true);
-      toast({
-        title: "Acesso autorizado",
-        description: "Bem-vindo ao painel administrativo",
-      });
-    } else {
+  useEffect(() => {
+    if (!isLoading && currentUser && !isAdmin) {
       toast({
         title: "Acesso negado",
-        description: "Credenciais inválidas",
+        description: "Você não tem permissão para acessar o painel administrativo",
         variant: "destructive",
       });
     }
-  };
+  }, [currentUser, isAdmin, isLoading, toast]);
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
@@ -40,41 +34,40 @@ const AdminPanel = () => {
     });
   };
 
-  if (!isAuthenticated) {
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <Card className="w-full max-w-md">
+          <CardContent className="p-6 text-center">
+            <Shield className="h-12 w-12 mx-auto mb-4 text-primary animate-pulse" />
+            <p>Verificando permissões...</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // Not logged in
+  if (!currentUser) {
+    return <Navigate to="/login" replace />;
+  }
+
+  // Not admin
+  if (!isAdmin) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4">
         <Card className="w-full max-w-md">
           <CardHeader className="text-center">
-            <Shield className="h-12 w-12 mx-auto mb-4 text-primary" />
-            <CardTitle>Painel Administrativo</CardTitle>
+            <AlertTriangle className="h-12 w-12 mx-auto mb-4 text-destructive" />
+            <CardTitle>Acesso Negado</CardTitle>
             <CardDescription>
-              Acesso restrito para administradores
+              Você não tem permissão para acessar o painel administrativo
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="Digite seu email"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Senha</Label>
-              <Input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Digite sua senha"
-                onKeyPress={(e) => e.key === "Enter" && handleLogin()}
-              />
-            </div>
-            <Button onClick={handleLogin} className="w-full">
-              Entrar
+          <CardContent>
+            <Button onClick={() => window.history.back()} className="w-full">
+              Voltar
             </Button>
           </CardContent>
         </Card>
@@ -95,12 +88,15 @@ const AdminPanel = () => {
               Gerenciamento do sistema e documentação para desenvolvedores
             </p>
           </div>
-          <Button 
-            variant="outline" 
-            onClick={() => setIsAuthenticated(false)}
-          >
-            Sair
-          </Button>
+          <div className="flex items-center gap-2">
+            <Badge variant="outline">Admin: {currentUser.email}</Badge>
+            <Button 
+              variant="outline" 
+              onClick={() => window.location.href = "/dashboard"}
+            >
+              Voltar ao Dashboard
+            </Button>
+          </div>
         </div>
 
         <Tabs defaultValue="status" className="space-y-6">
