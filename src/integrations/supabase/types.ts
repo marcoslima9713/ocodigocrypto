@@ -80,6 +80,84 @@ export type Database = {
         }
         Relationships: []
       }
+      portfolio_holdings: {
+        Row: {
+          average_buy_price: number
+          created_at: string
+          crypto_symbol: string
+          id: string
+          portfolio_id: string
+          total_amount: number
+          total_invested: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          average_buy_price?: number
+          created_at?: string
+          crypto_symbol: string
+          id?: string
+          portfolio_id: string
+          total_amount?: number
+          total_invested?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          average_buy_price?: number
+          created_at?: string
+          crypto_symbol?: string
+          id?: string
+          portfolio_id?: string
+          total_amount?: number
+          total_invested?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      transactions: {
+        Row: {
+          amount: number
+          created_at: string
+          crypto_symbol: string
+          id: string
+          portfolio_id: string
+          price_usd: number
+          total_usd: number
+          transaction_date: string
+          transaction_type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          crypto_symbol: string
+          id?: string
+          portfolio_id: string
+          price_usd: number
+          total_usd: number
+          transaction_date?: string
+          transaction_type: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          crypto_symbol?: string
+          id?: string
+          portfolio_id?: string
+          price_usd?: number
+          total_usd?: number
+          transaction_date?: string
+          transaction_type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       video_lessons: {
         Row: {
           created_at: string
