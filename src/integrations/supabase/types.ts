@@ -272,6 +272,10 @@ export type Database = {
         Args: { _firebase_uid: string }
         Returns: Database["public"]["Enums"]["app_role"]
       }
+      get_firebase_uid: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
       has_role: {
         Args: {
           _firebase_uid: string

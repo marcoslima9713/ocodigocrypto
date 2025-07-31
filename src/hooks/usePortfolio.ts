@@ -116,6 +116,16 @@ export function usePortfolio(portfolioId: string = 'main') {
     if (!currentUser) return false;
 
     try {
+      // Ensure Supabase context is set before making the transaction
+      await supabase.rpc('set_config' as any, {
+        setting_name: 'app.current_firebase_uid',
+        setting_value: currentUser.uid,
+        is_local: true
+      });
+
+      // Small delay to ensure the context is applied
+      await new Promise(resolve => setTimeout(resolve, 100));
+
       const totalUsd = amount * priceUsd;
 
       const { error } = await supabase
