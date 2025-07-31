@@ -4,11 +4,14 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Plus, TrendingUp, TrendingDown, Wallet, BarChart3 } from 'lucide-react';
+import { Plus, TrendingUp, TrendingDown, Wallet, BarChart3, ArrowLeft } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { AddTransactionDialog } from '@/components/AddTransactionDialog';
 import { PortfolioRanking } from '@/components/PortfolioRanking';
 import { PortfolioOverview } from '@/components/PortfolioOverview';
+import { PortfolioChart } from '@/components/PortfolioChart';
+import { useCryptoPrices } from '@/hooks/useCryptoPrices';
 
 interface Portfolio {
   id: string;
@@ -23,6 +26,8 @@ interface Portfolio {
 
 export default function CryptoPortfolio() {
   const { currentUser } = useAuth();
+  const navigate = useNavigate();
+  const { prices, loading: pricesLoading } = useCryptoPrices();
   const [portfolios, setPortfolios] = useState<Portfolio[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAddTransaction, setShowAddTransaction] = useState(false);
@@ -108,6 +113,17 @@ export default function CryptoPortfolio() {
           animate={{ opacity: 1, y: 0 }}
           className="mb-8"
         >
+          <div className="flex items-center gap-4 mb-4">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate('/dashboard')}
+              className="flex items-center gap-2"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              Voltar
+            </Button>
+          </div>
           <h1 className="text-4xl font-bold text-foreground mb-2">
             Meu Portfólio Crypto
           </h1>
@@ -139,6 +155,16 @@ export default function CryptoPortfolio() {
           <div className="space-y-8">
             {/* Portfolio Overview */}
             <PortfolioOverview portfolios={portfolios} />
+
+            {/* Portfolio Chart */}
+            {portfolios.length > 0 && (
+              <PortfolioChart
+                portfolioId={portfolios[0].id}
+                portfolioName={portfolios[0].name}
+                totalInvested={portfolios.reduce((sum, p) => sum + p.total_invested, 0)}
+                currentValue={portfolios.reduce((sum, p) => sum + p.current_value, 0)}
+              />
+            )}
 
             {/* Action Buttons */}
             <motion.div
