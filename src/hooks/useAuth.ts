@@ -25,26 +25,36 @@ export const useAuth = () => {
       }
 
       try {
-        // Set Firebase UID in Supabase session for RLS policies
-        await supabase.rpc('set_config', {
+        // Set Firebase UID in Supabase session for RLS policies using SQL query
+        const { error: configError } = await supabase
+          .from('user_roles') // Just to establish connection, we'll use rpc
+          .select('id')
+          .limit(1);
+
+        // Use raw SQL to set config since the types don't include set_config
+        const { error: setConfigError } = await supabase.rpc('set_config' as any, {
           setting_name: 'app.current_firebase_uid',
           setting_value: currentUser.uid,
           is_local: true
-        }).then(() => {
-          // Fetch user role
-          return supabase
-            .from('user_roles')
-            .select('*')
-            .eq('firebase_uid', currentUser.uid)
-            .order('role', { ascending: true }) // admin first, then member, then user
-            .limit(1)
-            .single();
-        }).then(({ data, error }) => {
-          if (error && error.code !== 'PGRST116') { // PGRST116 = no rows
-            console.error('Error fetching user role:', error);
-          }
-          setUserRole(data || null);
         });
+
+        if (setConfigError) {
+          console.error('Error setting config:', setConfigError);
+        }
+
+        // Fetch user role
+        const { data, error } = await supabase
+          .from('user_roles')
+          .select('*')
+          .eq('firebase_uid', currentUser.uid)
+          .order('role', { ascending: true }) // admin first, then member, then user
+          .limit(1)
+          .single();
+
+        if (error && error.code !== 'PGRST116') { // PGRST116 = no rows
+          console.error('Error fetching user role:', error);
+        }
+        setUserRole(data || null);
       } catch (error) {
         console.error('Error setting up user session:', error);
       } finally {

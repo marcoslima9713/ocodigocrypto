@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useSupabaseAuth } from './useSupabaseAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useCryptoPrices } from '@/hooks/useCryptoPrices';
 
@@ -37,6 +38,7 @@ interface PortfolioData {
 
 export function usePortfolio(portfolioId: string = 'main') {
   const { currentUser } = useAuth();
+  const authenticatedUser = useSupabaseAuth(); // Ensures Supabase context is set
   const { prices } = useCryptoPrices();
   const [portfolioData, setPortfolioData] = useState<PortfolioData>({
     totalInvested: 0,

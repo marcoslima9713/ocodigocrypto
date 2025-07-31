@@ -279,6 +279,14 @@ export type Database = {
         }
         Returns: boolean
       }
+      set_config: {
+        Args: {
+          setting_name: string
+          setting_value: string
+          is_local?: boolean
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       app_role: "admin" | "member" | "user"

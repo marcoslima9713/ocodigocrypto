@@ -14,24 +14,32 @@ export const useSupabaseAuth = () => {
       if (currentUser) {
         try {
           // Set the Firebase UID as a session variable for RLS policies
-          await supabase.rpc('set_config', {
+          const { error } = await supabase.rpc('set_config' as any, {
             setting_name: 'app.current_firebase_uid',
             setting_value: currentUser.uid,
             is_local: true
           });
           
-          console.log('Supabase context set for user:', currentUser.uid);
+          if (error) {
+            console.error('Error setting Supabase context:', error);
+          } else {
+            console.log('Supabase context set for user:', currentUser.uid);
+          }
         } catch (error) {
           console.error('Error setting Supabase context:', error);
         }
       } else {
         try {
           // Clear the session variable when user logs out
-          await supabase.rpc('set_config', {
+          const { error } = await supabase.rpc('set_config' as any, {
             setting_name: 'app.current_firebase_uid',
             setting_value: '',
             is_local: true
           });
+          
+          if (error) {
+            console.error('Error clearing Supabase context:', error);
+          }
         } catch (error) {
           console.error('Error clearing Supabase context:', error);
         }
