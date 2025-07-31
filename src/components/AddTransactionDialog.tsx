@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
+import { usePortfolio } from '@/hooks/usePortfolio';
+import { useCryptoPrices } from '@/hooks/useCryptoPrices';
 import {
   Dialog,
   DialogContent,
@@ -34,16 +35,16 @@ interface AddTransactionDialogProps {
 }
 
 const CRYPTO_ASSETS = [
-  { symbol: 'BTC', name: 'Bitcoin' },
-  { symbol: 'ETH', name: 'Ethereum' },
-  { symbol: 'ADA', name: 'Cardano' },
-  { symbol: 'DOT', name: 'Polkadot' },
-  { symbol: 'SOL', name: 'Solana' },
-  { symbol: 'MATIC', name: 'Polygon' },
-  { symbol: 'AVAX', name: 'Avalanche' },
-  { symbol: 'ATOM', name: 'Cosmos' },
-  { symbol: 'LINK', name: 'Chainlink' },
-  { symbol: 'UNI', name: 'Uniswap' },
+  { symbol: 'bitcoin', name: 'Bitcoin', shortName: 'BTC' },
+  { symbol: 'ethereum', name: 'Ethereum', shortName: 'ETH' },
+  { symbol: 'cardano', name: 'Cardano', shortName: 'ADA' },
+  { symbol: 'polkadot', name: 'Polkadot', shortName: 'DOT' },
+  { symbol: 'solana', name: 'Solana', shortName: 'SOL' },
+  { symbol: 'polygon', name: 'Polygon', shortName: 'MATIC' },
+  { symbol: 'avalanche-2', name: 'Avalanche', shortName: 'AVAX' },
+  { symbol: 'cosmos', name: 'Cosmos', shortName: 'ATOM' },
+  { symbol: 'chainlink', name: 'Chainlink', shortName: 'LINK' },
+  { symbol: 'uniswap', name: 'Uniswap', shortName: 'UNI' },
 ];
 
 export function AddTransactionDialog({
@@ -54,9 +55,11 @@ export function AddTransactionDialog({
   onTransactionAdded,
 }: AddTransactionDialogProps) {
   const { currentUser } = useAuth();
+  const { prices } = useCryptoPrices();
+  const { addTransaction } = usePortfolio(selectedPortfolioId || 'main');
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
-    portfolio_id: selectedPortfolioId || '',
+    portfolio_id: selectedPortfolioId || 'main',
     crypto_symbol: '',
     transaction_type: 'buy' as 'buy' | 'sell',
     amount: '',
@@ -64,35 +67,44 @@ export function AddTransactionDialog({
     transaction_date: new Date().toISOString().split('T')[0],
   });
 
+  // Auto-fill price when crypto is selected
+  const handleCryptoChange = (symbol: string) => {
+    setFormData(prev => ({ 
+      ...prev, 
+      crypto_symbol: symbol,
+      price_per_unit: prices[symbol]?.current_price?.toString() || ''
+    }));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      // Por enquanto, simular criação de transação
-      console.log('Transação criada:', {
-        user_id: currentUser?.uid,
-        portfolio_id: formData.portfolio_id,
-        crypto_symbol: formData.crypto_symbol,
-        transaction_type: formData.transaction_type,
-        amount: parseFloat(formData.amount),
-        price_per_unit: parseFloat(formData.price_per_unit),
-        transaction_date: formData.transaction_date,
-      });
+      const success = await addTransaction(
+        formData.crypto_symbol,
+        formData.transaction_type,
+        parseFloat(formData.amount),
+        parseFloat(formData.price_per_unit)
+      );
 
-      toast.success('Transação adicionada com sucesso!');
-      onTransactionAdded();
-      onOpenChange(false);
-      
-      // Reset form
-      setFormData({
-        portfolio_id: selectedPortfolioId || '',
-        crypto_symbol: '',
-        transaction_type: 'buy',
-        amount: '',
-        price_per_unit: '',
-        transaction_date: new Date().toISOString().split('T')[0],
-      });
+      if (success) {
+        toast.success('Transação adicionada com sucesso!');
+        onTransactionAdded();
+        onOpenChange(false);
+        
+        // Reset form
+        setFormData({
+          portfolio_id: selectedPortfolioId || 'main',
+          crypto_symbol: '',
+          transaction_type: 'buy',
+          amount: '',
+          price_per_unit: '',
+          transaction_date: new Date().toISOString().split('T')[0],
+        });
+      } else {
+        toast.error('Erro ao adicionar transação');
+      }
     } catch (error) {
       console.error('Erro ao adicionar transação:', error);
       toast.error('Erro ao adicionar transação');
@@ -135,7 +147,7 @@ export function AddTransactionDialog({
             <Label htmlFor="crypto">Criptomoeda</Label>
             <Select
               value={formData.crypto_symbol}
-              onValueChange={(value) => setFormData(prev => ({ ...prev, crypto_symbol: value }))}
+              onValueChange={handleCryptoChange}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Selecione uma criptomoeda" />
@@ -143,7 +155,12 @@ export function AddTransactionDialog({
               <SelectContent>
                 {CRYPTO_ASSETS.map((crypto) => (
                   <SelectItem key={crypto.symbol} value={crypto.symbol}>
-                    {crypto.symbol} - {crypto.name}
+                    {crypto.shortName} - {crypto.name}
+                    {prices[crypto.symbol] && (
+                      <span className="text-muted-foreground ml-2">
+                        ${prices[crypto.symbol].current_price.toFixed(2)}
+                      </span>
+                    )}
                   </SelectItem>
                 ))}
               </SelectContent>

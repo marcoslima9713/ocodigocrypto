@@ -11,54 +11,51 @@ interface ChartData {
 }
 
 interface PortfolioChartProps {
-  portfolioId: string;
-  portfolioName: string;
+  chartData: ChartData[];
   totalInvested: number;
   currentValue: number;
 }
 
 const timeFrames = [
-  { label: '24H', value: '24h' },
   { label: '7D', value: '7d' },
   { label: '30D', value: '30d' },
   { label: '3M', value: '3m' },
   { label: '1Y', value: '1y' },
-  { label: '3Y', value: '3y' },
-  { label: '5Y', value: '5y' },
   { label: 'All', value: 'all' },
 ];
 
-export function PortfolioChart({ portfolioId, portfolioName, totalInvested, currentValue }: PortfolioChartProps) {
+export function PortfolioChart({ chartData, totalInvested, currentValue }: PortfolioChartProps) {
   const [selectedTimeFrame, setSelectedTimeFrame] = useState('all');
 
-  // Dados mockados para demonstração - em produção, estes viriam da API
-  const generateMockData = (): ChartData[] => {
-    const data: ChartData[] = [];
-    const startDate = new Date('2023-01-01');
-    const endDate = new Date();
-    const daysDiff = Math.floor((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+  // Filter chart data based on selected time frame
+  const getFilteredData = (): ChartData[] => {
+    if (!chartData.length) return [];
     
-    for (let i = 0; i <= daysDiff; i += 7) {
-      const date = new Date(startDate.getTime() + i * 24 * 60 * 60 * 1000);
-      const progress = i / daysDiff;
-      
-      // Simular crescimento com alguma volatilidade
-      const baseGrowth = totalInvested + (currentValue - totalInvested) * progress;
-      const volatility = Math.sin(i / 10) * (currentValue * 0.1);
-      const value = Math.max(baseGrowth + volatility, totalInvested * 0.8);
-      
-      data.push({
-        date: date.toISOString().split('T')[0],
-        value: Math.round(value),
-        invested: totalInvested,
-      });
+    const now = new Date();
+    let filterDate = new Date();
+    
+    switch (selectedTimeFrame) {
+      case '7d':
+        filterDate.setDate(now.getDate() - 7);
+        break;
+      case '30d':
+        filterDate.setDate(now.getDate() - 30);
+        break;
+      case '3m':
+        filterDate.setMonth(now.getMonth() - 3);
+        break;
+      case '1y':
+        filterDate.setFullYear(now.getFullYear() - 1);
+        break;
+      default:
+        return chartData;
     }
     
-    return data;
+    return chartData.filter(item => new Date(item.date) >= filterDate);
   };
 
-  const chartData = generateMockData();
-  const maxValue = Math.max(...chartData.map(d => d.value));
+  const filteredData = getFilteredData();
+  const maxValue = Math.max(...(filteredData.length ? filteredData.map(d => d.value) : [0]));
   const formatCurrency = (value: number) => `$${(value / 1000).toFixed(1)}K`;
 
   return (
@@ -87,7 +84,7 @@ export function PortfolioChart({ portfolioId, portfolioName, totalInvested, curr
         <CardContent>
           <div className="h-80 w-full">
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={chartData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+              <AreaChart data={filteredData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
                 <defs>
                   <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3}/>

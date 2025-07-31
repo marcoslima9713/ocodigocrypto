@@ -1,6 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -8,101 +7,54 @@ import { Plus, TrendingUp, TrendingDown, Wallet, BarChart3, ArrowLeft } from 'lu
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { AddTransactionDialog } from '@/components/AddTransactionDialog';
-import { PortfolioRanking } from '@/components/PortfolioRanking';
-import { PortfolioOverview } from '@/components/PortfolioOverview';
 import { PortfolioChart } from '@/components/PortfolioChart';
-import { useCryptoPrices } from '@/hooks/useCryptoPrices';
-
-interface Portfolio {
-  id: string;
-  name: string;
-  description: string | null;
-  total_invested: number;
-  current_value: number;
-  profit_loss: number;
-  profit_loss_percentage: number;
-  created_at: string;
-}
+import { usePortfolio } from '@/hooks/usePortfolio';
 
 export default function CryptoPortfolio() {
   const { currentUser } = useAuth();
   const navigate = useNavigate();
-  const { prices, loading: pricesLoading } = useCryptoPrices();
-  const [portfolios, setPortfolios] = useState<Portfolio[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { 
+    totalInvested, 
+    currentValue, 
+    profitLoss, 
+    profitLossPercentage, 
+    holdings, 
+    loading, 
+    error,
+    chartData,
+    addTransaction,
+    refetch
+  } = usePortfolio('main');
+  
   const [showAddTransaction, setShowAddTransaction] = useState(false);
-  const [selectedPortfolio, setSelectedPortfolio] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (currentUser) {
-      fetchPortfolios();
-    }
-  }, [currentUser]);
-
-  const fetchPortfolios = async () => {
-    try {
-      // Por enquanto, usar dados mockados
-      const mockPortfolios = [
-        {
-          id: '1',
-          name: 'Portfólio Principal',
-          description: 'Meu portfólio principal de criptomoedas',
-          total_invested: 5000,
-          current_value: 6250,
-          profit_loss: 1250,
-          profit_loss_percentage: 25,
-          created_at: new Date().toISOString(),
-        },
-        {
-          id: '2',
-          name: 'Portfólio DeFi',
-          description: 'Investimentos em tokens DeFi',
-          total_invested: 2000,
-          current_value: 1800,
-          profit_loss: -200,
-          profit_loss_percentage: -10,
-          created_at: new Date().toISOString(),
-        },
-      ];
-
-      setPortfolios(mockPortfolios);
-    } catch (error) {
-      console.error('Erro ao buscar portfólios:', error);
-    } finally {
-      setLoading(false);
-    }
+  const handleTransactionAdded = async () => {
+    await refetch();
+    setShowAddTransaction(false);
   };
 
-  const createPortfolio = async () => {
-    try {
-      // Por enquanto, simular criação
-      const newPortfolio = {
-        id: Date.now().toString(),
-        name: `Portfólio ${portfolios.length + 1}`,
-        description: 'Meu novo portfólio de criptomoedas',
-        total_invested: 0,
-        current_value: 0,
-        profit_loss: 0,
-        profit_loss_percentage: 0,
-        created_at: new Date().toISOString(),
-      };
-
-      setPortfolios([newPortfolio, ...portfolios]);
-    } catch (error) {
-      console.error('Erro ao criar portfólio:', error);
-    }
-  };
+  if (!currentUser) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-muted-foreground">Por favor, faça login para acessar seu portfólio</p>
+        </div>
+      </div>
+    );
+  }
 
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Carregando portfólios...</p>
+          <p className="text-muted-foreground">Carregando portfólio...</p>
         </div>
       </div>
     );
   }
+
+  const hasInvestments = totalInvested > 0;
 
   return (
     <div className="min-h-screen bg-background">
@@ -132,8 +84,18 @@ export default function CryptoPortfolio() {
           </p>
         </motion.div>
 
-        {portfolios.length === 0 ? (
-          // Empty State
+        {error && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-6 p-4 bg-destructive/10 border border-destructive/20 rounded-lg"
+          >
+            <p className="text-destructive">{error}</p>
+          </motion.div>
+        )}
+
+        {!hasInvestments ? (
+          // Empty State - No Investments
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -141,30 +103,85 @@ export default function CryptoPortfolio() {
           >
             <Wallet className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
             <h2 className="text-2xl font-semibold text-foreground mb-2">
-              Nenhum portfólio encontrado
+              Seu portfólio está vazio
             </h2>
             <p className="text-muted-foreground mb-6">
-              Comece criando seu primeiro portfólio de criptomoedas
+              Comece adicionando sua primeira transação de criptomoeda
             </p>
-            <Button onClick={createPortfolio} size="lg">
+            <Button onClick={() => setShowAddTransaction(true)} size="lg">
               <Plus className="w-4 h-4 mr-2" />
-              Criar Primeiro Portfólio
+              Adicionar Primeira Transação
             </Button>
           </motion.div>
         ) : (
           <div className="space-y-8">
             {/* Portfolio Overview */}
-            <PortfolioOverview portfolios={portfolios} />
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
+            >
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Total Investido</CardTitle>
+                  <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">
+                    ${totalInvested.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Valor Atual</CardTitle>
+                  <BarChart3 className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">
+                    ${currentValue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Lucro/Prejuízo</CardTitle>
+                  {profitLoss >= 0 ? (
+                    <TrendingUp className="h-4 w-4 text-green-500" />
+                  ) : (
+                    <TrendingDown className="h-4 w-4 text-red-500" />
+                  )}
+                </CardHeader>
+                <CardContent>
+                  <div className={`text-2xl font-bold ${profitLoss >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                    {profitLoss >= 0 ? '+' : ''}${profitLoss.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Retorno %</CardTitle>
+                  <Badge variant={profitLoss >= 0 ? "default" : "destructive"}>
+                    {profitLoss >= 0 ? '+' : ''}{profitLossPercentage.toFixed(2)}%
+                  </Badge>
+                </CardHeader>
+                <CardContent>
+                  <div className={`text-2xl font-bold ${profitLoss >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                    {profitLoss >= 0 ? '+' : ''}{profitLossPercentage.toFixed(2)}%
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
 
             {/* Portfolio Chart */}
-            {portfolios.length > 0 && (
-              <PortfolioChart
-                portfolioId={portfolios[0].id}
-                portfolioName={portfolios[0].name}
-                totalInvested={portfolios.reduce((sum, p) => sum + p.total_invested, 0)}
-                currentValue={portfolios.reduce((sum, p) => sum + p.current_value, 0)}
-              />
-            )}
+            <PortfolioChart
+              chartData={chartData}
+              totalInvested={totalInvested}
+              currentValue={currentValue}
+            />
 
             {/* Action Buttons */}
             <motion.div
@@ -173,93 +190,55 @@ export default function CryptoPortfolio() {
               transition={{ delay: 0.2 }}
               className="flex gap-4"
             >
-              <Button onClick={createPortfolio}>
+              <Button onClick={() => setShowAddTransaction(true)}>
                 <Plus className="w-4 h-4 mr-2" />
-                Novo Portfólio
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => setShowAddTransaction(true)}
-                disabled={portfolios.length === 0}
-              >
-                <TrendingUp className="w-4 h-4 mr-2" />
                 Adicionar Transação
               </Button>
             </motion.div>
 
-            {/* Portfolio Cards */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4 }}
-              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
-            >
-              {portfolios.map((portfolio, index) => (
-                <motion.div
-                  key={portfolio.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.6 + index * 0.1 }}
-                >
-                  <Card className="hover:shadow-lg transition-shadow">
-                    <CardHeader>
-                      <CardTitle className="flex items-center justify-between">
-                        {portfolio.name}
-                        <Badge variant={portfolio.profit_loss >= 0 ? "default" : "destructive"}>
-                          {portfolio.profit_loss >= 0 ? (
-                            <TrendingUp className="w-3 h-3 mr-1" />
-                          ) : (
-                            <TrendingDown className="w-3 h-3 mr-1" />
-                          )}
-                          {portfolio.profit_loss_percentage.toFixed(2)}%
-                        </Badge>
-                      </CardTitle>
-                      <CardDescription>{portfolio.description}</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-3">
-                        <div className="flex justify-between">
-                          <span className="text-sm text-muted-foreground">Investido:</span>
-                          <span className="font-medium">
-                            ${portfolio.total_invested.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                          </span>
+            {/* Holdings */}
+            {holdings.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4 }}
+              >
+                <h2 className="text-2xl font-bold mb-4">Suas Criptomoedas</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {holdings.map((holding) => (
+                    <Card key={holding.id} className="hover:shadow-lg transition-shadow">
+                      <CardHeader>
+                        <CardTitle className="flex items-center justify-between">
+                          <span className="uppercase">{holding.crypto_symbol}</span>
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-3">
+                          <div className="flex justify-between">
+                            <span className="text-sm text-muted-foreground">Quantidade:</span>
+                            <span className="font-medium">
+                              {Number(holding.total_amount).toFixed(8)}
+                            </span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-sm text-muted-foreground">Preço Médio:</span>
+                            <span className="font-medium">
+                              ${Number(holding.average_buy_price).toFixed(2)}
+                            </span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-sm text-muted-foreground">Total Investido:</span>
+                            <span className="font-medium">
+                              ${Number(holding.total_invested).toFixed(2)}
+                            </span>
+                          </div>
                         </div>
-                        <div className="flex justify-between">
-                          <span className="text-sm text-muted-foreground">Valor Atual:</span>
-                          <span className="font-medium">
-                            ${portfolio.current_value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                          </span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-sm text-muted-foreground">P&L:</span>
-                          <span
-                            className={`font-medium ${
-                              portfolio.profit_loss >= 0 ? 'text-green-500' : 'text-red-500'
-                            }`}
-                          >
-                            ${Math.abs(portfolio.profit_loss).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                          </span>
-                        </div>
-                      </div>
-                      <Button
-                        className="w-full mt-4"
-                        variant="outline"
-                        onClick={() => {
-                          setSelectedPortfolio(portfolio.id);
-                          setShowAddTransaction(true);
-                        }}
-                      >
-                        <BarChart3 className="w-4 h-4 mr-2" />
-                        Ver Detalhes
-                      </Button>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              ))}
-            </motion.div>
-
-            {/* Portfolio Ranking */}
-            <PortfolioRanking />
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </motion.div>
+            )}
           </div>
         )}
 
@@ -267,9 +246,9 @@ export default function CryptoPortfolio() {
         <AddTransactionDialog
           open={showAddTransaction}
           onOpenChange={setShowAddTransaction}
-          portfolios={portfolios}
-          selectedPortfolioId={selectedPortfolio}
-          onTransactionAdded={fetchPortfolios}
+          portfolios={[{ id: 'main', name: 'Portfólio Principal' }]}
+          selectedPortfolioId="main"
+          onTransactionAdded={handleTransactionAdded}
         />
       </div>
     </div>
