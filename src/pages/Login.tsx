@@ -160,7 +160,7 @@ export default function Login() {
             
             <div className="border-t border-border pt-4">
               <Link
-                to="/admin"
+                to="/admin-login"
                 className="text-sm text-muted-foreground hover:text-primary transition-colors"
               >
                 Acesso Administrativo

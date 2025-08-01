@@ -7,24 +7,18 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Copy, CheckCircle, Shield, Code, Globe, Image, AlertTriangle } from "lucide-react";
+import { Copy, CheckCircle, Shield, Code, Globe, Image, AlertTriangle, User } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import VideoManager from "@/components/VideoManager";
-import { useAuth } from "@/hooks/useAuth";
+
+import { useAdminAuth } from "@/contexts/AdminAuthContext";
+import { FirestoreStatus } from "@/components/FirestoreStatus";
+import { FirebaseDiagnostics } from "@/components/FirebaseDiagnostics";
+import { FirebaseUIDDisplay } from "@/components/FirebaseUIDDisplay";
 
 const AdminPanel = () => {
-  const { currentUser, isAdmin, isLoading } = useAuth();
+  const { logoutAdmin } = useAdminAuth();
   const { toast } = useToast();
-
-  useEffect(() => {
-    if (!isLoading && currentUser && !isAdmin) {
-      toast({
-        title: "Acesso negado",
-        description: "Você não tem permissão para acessar o painel administrativo",
-        variant: "destructive",
-      });
-    }
-  }, [currentUser, isAdmin, isLoading, toast]);
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
@@ -34,46 +28,7 @@ const AdminPanel = () => {
     });
   };
 
-  // Loading state
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-4">
-        <Card className="w-full max-w-md">
-          <CardContent className="p-6 text-center">
-            <Shield className="h-12 w-12 mx-auto mb-4 text-primary animate-pulse" />
-            <p>Verificando permissões...</p>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
 
-  // Not logged in
-  if (!currentUser) {
-    return <Navigate to="/login" replace />;
-  }
-
-  // Not admin
-  if (!isAdmin) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-4">
-        <Card className="w-full max-w-md">
-          <CardHeader className="text-center">
-            <AlertTriangle className="h-12 w-12 mx-auto mb-4 text-destructive" />
-            <CardTitle>Acesso Negado</CardTitle>
-            <CardDescription>
-              Você não tem permissão para acessar o painel administrativo
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button onClick={() => window.history.back()} className="w-full">
-              Voltar
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
 
   const webhookUrl = "https://wvojbjkdlnvlqgjwtdaf.supabase.co/functions/v1/ggcheckout-webhook";
   const projectUrl = "https://wvojbjkdlnvlqgjwtdaf.supabase.co";
@@ -88,22 +43,32 @@ const AdminPanel = () => {
               Gerenciamento do sistema e documentação para desenvolvedores
             </p>
           </div>
-          <div className="flex items-center gap-2">
-            <Badge variant="outline">Admin: {currentUser.email}</Badge>
+                     <div className="flex items-center gap-2">
+             <Badge variant="outline">Admin: marcoslima9713@gmail.com</Badge>
             <Button 
               variant="outline" 
               onClick={() => window.location.href = "/dashboard"}
             >
               Voltar ao Dashboard
             </Button>
+            <Button 
+              variant="destructive" 
+              onClick={() => {
+                logoutAdmin();
+                window.location.href = "/admin-login";
+              }}
+            >
+              Logout Admin
+            </Button>
           </div>
         </div>
 
         <Tabs defaultValue="status" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="status">Status do Sistema</TabsTrigger>
             <TabsTrigger value="webhook">Webhook</TabsTrigger>
             <TabsTrigger value="videos">Gerenciar Vídeos</TabsTrigger>
+            <TabsTrigger value="firebase">Firebase</TabsTrigger>
             <TabsTrigger value="docs">Documentação</TabsTrigger>
           </TabsList>
 
@@ -220,6 +185,48 @@ const AdminPanel = () => {
 
           <TabsContent value="videos">
             <VideoManager />
+          </TabsContent>
+
+
+
+          <TabsContent value="firebase" className="space-y-4">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <CheckCircle className="h-5 w-5" />
+                    Status do Firestore
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <FirestoreStatus />
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Code className="h-5 w-5" />
+                    Diagnósticos do Firebase
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <FirebaseDiagnostics />
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <User className="h-5 w-5" />
+                    Configurar Admin
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <FirebaseUIDDisplay />
+                </CardContent>
+              </Card>
+            </div>
           </TabsContent>
 
           <TabsContent value="docs" className="space-y-4">

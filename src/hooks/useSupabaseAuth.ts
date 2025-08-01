@@ -14,23 +14,16 @@ export const useSupabaseAuth = () => {
       if (currentUser?.uid) {
         try {
           // Set the Firebase UID as a session variable for RLS policies
-          // Use multiple attempts to ensure it's set correctly
-          for (let attempt = 0; attempt < 3; attempt++) {
-            const { error } = await supabase.rpc('set_config' as any, {
-              setting_name: 'app.current_firebase_uid',
-              setting_value: currentUser.uid,
-              is_local: true
-            });
-            
-            if (!error) {
-              console.log(`Supabase context set for user: ${currentUser.uid} (attempt ${attempt + 1})`);
-              break;
-            } else if (attempt === 2) {
-              console.error('Failed to set Supabase context after 3 attempts:', error);
-            }
-            
-            // Small delay between attempts
-            await new Promise(resolve => setTimeout(resolve, 100));
+          const { error } = await supabase.rpc('set_config' as any, {
+            setting_name: 'app.current_firebase_uid',
+            setting_value: currentUser.uid,
+            is_local: true
+          });
+          
+          if (error) {
+            console.error('Failed to set Supabase context:', error);
+          } else {
+            console.log(`Supabase context set for user: ${currentUser.uid}`);
           }
         } catch (error) {
           console.error('Error setting Supabase context:', error);

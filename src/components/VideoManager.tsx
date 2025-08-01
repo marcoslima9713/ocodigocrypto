@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Search, Edit, Trash2, Upload, Play, Eye, Save, X } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, Upload, Play, Eye, Save, X, Image as ImageIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -11,6 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { Label } from '@/components/ui/label';
 
 interface Module {
   id: string;
@@ -18,6 +19,7 @@ interface Module {
   description: string | null;
   order_index: number;
   is_active: boolean;
+  cover_image?: string;
 }
 
 interface VideoLesson {
@@ -38,9 +40,18 @@ interface VideoLesson {
   updated_at: string;
 }
 
+interface ModuleCover {
+  id: string;
+  module_id: string;
+  cover_image: string;
+  created_at: string;
+  updated_at: string;
+}
+
 const VideoManager: React.FC = () => {
   const [videos, setVideos] = useState<VideoLesson[]>([]);
   const [modules, setModules] = useState<Module[]>([]);
+  const [moduleCovers, setModuleCovers] = useState<ModuleCover[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterModule, setFilterModule] = useState('all');
@@ -49,6 +60,10 @@ const VideoManager: React.FC = () => {
   const [editingModule, setEditingModule] = useState<Module | null>(null);
   const [showVideoDialog, setShowVideoDialog] = useState(false);
   const [showModuleDialog, setShowModuleDialog] = useState(false);
+  const [showCoverDialog, setShowCoverDialog] = useState(false);
+  const [editingCover, setEditingCover] = useState<{moduleId: string, imageUrl: string} | null>(null);
+  const [coverImageUrl, setCoverImageUrl] = useState('');
+  const [coverImagePreview, setCoverImagePreview] = useState('');
   const { toast } = useToast();
 
   // Carregar dados
@@ -77,6 +92,19 @@ const VideoManager: React.FC = () => {
 
       if (videosError) throw videosError;
       setVideos(videosData || []);
+
+      // Carregar capas dos módulos
+      try {
+        const { data: coversData, error: coversError } = await supabase
+          .from('module_covers')
+          .select('*');
+        
+        if (!coversError && coversData) {
+          setModuleCovers(coversData);
+        }
+      } catch (error) {
+        console.log('Tabela module_covers não existe ainda ou erro ao buscar capas');
+      }
     } catch (error) {
       console.error('Erro ao carregar dados:', error);
       toast({
@@ -98,6 +126,105 @@ const VideoManager: React.FC = () => {
     
     return matchesSearch && matchesModule && matchesStatus;
   });
+
+  // Funções para gerenciar capas dos módulos
+  const getModuleCover = (moduleId: string) => {
+    const cover = moduleCovers.find(c => c.module_id === moduleId);
+    return cover?.cover_image || '';
+  };
+
+  const saveModuleCover = async (moduleId: string, imageUrl: string) => {
+    try {
+      // Verificar se já existe uma capa para este módulo
+      const existingCover = moduleCovers.find(c => c.module_id === moduleId);
+      
+      if (existingCover) {
+        // Atualizar capa existente
+        const { error } = await supabase
+          .from('module_covers')
+          .update({ 
+            cover_image: imageUrl,
+            updated_at: new Date().toISOString()
+          })
+          .eq('module_id', moduleId);
+        
+        if (error) throw error;
+      } else {
+        // Criar nova capa
+        const { error } = await supabase
+          .from('module_covers')
+          .insert({
+            module_id: moduleId,
+            cover_image: imageUrl
+          });
+        
+        if (error) throw error;
+      }
+      
+      toast({
+        title: "Sucesso",
+        description: "Capa do módulo salva com sucesso",
+      });
+      
+      fetchData(); // Recarregar dados
+    } catch (error) {
+      console.error('Erro ao salvar capa:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao salvar capa do módulo",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const deleteModuleCover = async (moduleId: string) => {
+    if (!confirm('Tem certeza que deseja remover a capa deste módulo?')) return;
+
+    try {
+      const { error } = await supabase
+        .from('module_covers')
+        .delete()
+        .eq('module_id', moduleId);
+      
+      if (error) throw error;
+      
+      toast({
+        title: "Sucesso",
+        description: "Capa do módulo removida com sucesso",
+      });
+      
+      fetchData(); // Recarregar dados
+    } catch (error) {
+      console.error('Erro ao deletar capa:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao remover capa do módulo",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleCoverImageUrlChange = (url: string) => {
+    setCoverImageUrl(url);
+    setCoverImagePreview(url);
+  };
+
+  const handleSaveCover = async () => {
+    if (!editingCover || !coverImageUrl.trim()) {
+      toast({
+        title: "Erro",
+        description: "Por favor, insira um link de imagem válido",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    await saveModuleCover(editingCover.moduleId, coverImageUrl.trim());
+    setShowCoverDialog(false);
+    setEditingCover(null);
+    setCoverImageUrl('');
+    setCoverImagePreview('');
+  };
 
   // Salvar vídeo
   const saveVideo = async (videoData: Partial<VideoLesson>) => {
@@ -364,6 +491,68 @@ const VideoManager: React.FC = () => {
               />
             </DialogContent>
           </Dialog>
+
+          {/* Diálogo para editar capa do módulo */}
+          <Dialog open={showCoverDialog} onOpenChange={setShowCoverDialog}>
+            <DialogContent className="max-w-2xl">
+              <DialogHeader>
+                <DialogTitle>
+                  {editingCover ? `Editar Capa do Módulo: ${modules.find(m => m.id === editingCover.moduleId)?.name}` : 'Editar Capa do Módulo'}
+                </DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="coverImageUrl">Link da Imagem</Label>
+                  <Input
+                    id="coverImageUrl"
+                    placeholder="Cole aqui o link da imagem (ex: blob:https://imgur.com/...)"
+                    value={coverImageUrl}
+                    onChange={(e) => handleCoverImageUrlChange(e.target.value)}
+                  />
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Cole aqui o link da imagem. Pode ser um link blob do Imgur ou qualquer URL de imagem válida.
+                  </p>
+                </div>
+
+                {coverImagePreview && (
+                  <div>
+                    <Label>Preview da Imagem</Label>
+                    <div className="mt-2 border rounded-md p-4">
+                      <img
+                        src={coverImagePreview}
+                        alt="Preview da capa"
+                        className="w-full h-48 object-cover rounded-md"
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none';
+                          e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                        }}
+                      />
+                      <div className="hidden text-center text-muted-foreground py-8">
+                        <ImageIcon className="h-12 w-12 mx-auto mb-2" />
+                        <p>Imagem não carregada</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                <div className="flex justify-end gap-2 pt-4">
+                  <Button type="button" variant="outline" onClick={() => {
+                    setShowCoverDialog(false);
+                    setEditingCover(null);
+                    setCoverImageUrl('');
+                    setCoverImagePreview('');
+                  }}>
+                    <X className="h-4 w-4 mr-2" />
+                    Cancelar
+                  </Button>
+                  <Button type="button" onClick={handleSaveCover}>
+                    <Save className="h-4 w-4 mr-2" />
+                    Salvar Capa
+                  </Button>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
 
@@ -569,6 +758,79 @@ const VideoManager: React.FC = () => {
                 </CardContent>
               </Card>
             ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Gerenciamento de Capas dos Módulos */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Capas dos Módulos</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {modules.map(module => {
+              const coverImage = getModuleCover(module.id);
+              return (
+                <Card key={module.id} className="relative">
+                  <CardContent className="p-4">
+                    <div className="flex justify-between items-start mb-3">
+                      <h3 className="font-semibold">{module.name}</h3>
+                      <div className="flex gap-1">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => {
+                            setEditingCover({ moduleId: module.id, imageUrl: coverImage });
+                            setCoverImageUrl(coverImage);
+                            setCoverImagePreview(coverImage);
+                            setShowCoverDialog(true);
+                          }}
+                        >
+                          <ImageIcon className="h-4 w-4" />
+                        </Button>
+                        {coverImage && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => deleteModuleCover(module.id)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                    
+                    {coverImage ? (
+                      <div className="relative">
+                        <img
+                          src={coverImage}
+                          alt={`Capa do módulo ${module.name}`}
+                          className="w-full h-32 object-cover rounded-md"
+                          onError={(e) => {
+                            e.currentTarget.style.display = 'none';
+                          }}
+                        />
+                        <div className="absolute inset-0 bg-black bg-opacity-0 hover:bg-opacity-20 transition-all duration-200 rounded-md flex items-center justify-center">
+                          <Eye className="h-6 w-6 text-white opacity-0 hover:opacity-100 transition-opacity" />
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="w-full h-32 bg-muted rounded-md flex items-center justify-center">
+                        <div className="text-center">
+                          <ImageIcon className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
+                          <p className="text-sm text-muted-foreground">Sem capa</p>
+                        </div>
+                      </div>
+                    )}
+                    
+                    <div className="mt-2 text-xs text-muted-foreground">
+                      {coverImage ? 'Capa personalizada' : 'Capa padrão'}
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
         </CardContent>
       </Card>

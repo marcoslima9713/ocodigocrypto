@@ -1,10 +1,12 @@
 // Dashboard Principal - Layout estilo Netflix
 import { motion } from 'framer-motion';
 import { Bitcoin, Globe, Timer, Eye, Wallet, FileText, LogOut, User, Play, Info, ChevronRight } from 'lucide-react';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/hooks/useAuth';
+import { useAuth as useFirebaseAuth } from '@/contexts/AuthContext';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { ModuleCard } from '@/components/ModuleCard';
+
 import { useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
@@ -43,14 +45,16 @@ const moduleIcons = [Bitcoin, Globe, Timer, Eye, Wallet, FileText];
 const moduleImages = [origensUrl, ciclosUrl, oportunidadesUrl, analiseUrl, lucroUrl, gestaoUrl];
 const moduleColors = ['from-orange-500/20 to-orange-600/20', 'from-blue-500/20 to-blue-600/20', 'from-green-500/20 to-green-600/20', 'from-purple-500/20 to-purple-600/20', 'from-indigo-500/20 to-indigo-600/20', 'from-red-500/20 to-red-600/20'];
 export default function Dashboard() {
-  const {
-    currentUser,
-    userProgress,
-    logout
-  } = useAuth();
+  const { currentUser } = useAuth();
+  const { userProgress, logout } = useFirebaseAuth();
+  
+  // Email do administrador autorizado
+  const ADMIN_EMAIL = 'marcoslima9713@gmail.com';
+  const isAdmin = currentUser?.email === ADMIN_EMAIL;
   const navigate = useNavigate();
   const [modules, setModules] = useState<Module[]>([]);
   const [videoLessons, setVideoLessons] = useState<VideoLesson[]>([]);
+  const [moduleCovers, setModuleCovers] = useState<{[key: string]: string}>({});
   const [loading, setLoading] = useState(true);
   const completedCount = userProgress?.completedModules.length || 0;
   useEffect(() => {
@@ -91,6 +95,25 @@ export default function Dashboard() {
         error: videosError
       } = await supabase.from('video_lessons').select('*').eq('is_public', true).eq('status', 'publicado').order('order_index');
       if (videosError) throw videosError;
+
+      // Buscar capas dos módulos
+      try {
+        const {
+          data: coversData,
+          error: coversError
+        } = await supabase.from('module_covers').select('*');
+        
+        if (!coversError && coversData) {
+          const coversMap: {[key: string]: string} = {};
+          coversData.forEach(cover => {
+            coversMap[cover.module_id] = cover.cover_image;
+          });
+          setModuleCovers(coversMap);
+        }
+      } catch (error) {
+        console.log('Tabela module_covers não existe ainda ou erro ao buscar capas');
+      }
+
       setModules(modulesData || []);
       setVideoLessons(videosData || []);
     } catch (error) {
@@ -106,7 +129,7 @@ export default function Dashboard() {
     title: module.name,
     description: module.description,
     icon: moduleIcons[index % moduleIcons.length],
-    image: moduleImages[index % moduleImages.length],
+    image: moduleCovers[module.id] || moduleImages[index % moduleImages.length], // Usar capa personalizada se disponível
     color: moduleColors[index % moduleColors.length],
     estimatedTime: `${Math.round(videoLessons.filter(v => v.module_id === module.id).reduce((total, video) => total + (video.estimated_minutes || 0), 0))} min`
   }));
@@ -168,6 +191,16 @@ export default function Dashboard() {
               >
                 Portfólio
               </Button>
+              {isAdmin && (
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => navigate('/admin')} 
+                  className="text-white hover:text-gray-300"
+                >
+                  Admin
+                </Button>
+              )}
               <Button variant="ghost" size="sm" onClick={handleLogout} className="text-white hover:text-gray-300">
                 <LogOut className="w-4 h-4" />
               </Button>

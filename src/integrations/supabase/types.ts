@@ -6,7 +6,52 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[]
 
-export type Database = {
+  export interface CommunityFeedEntry {
+    id: string;
+    user_id: string;
+    user_display_name: string;
+    user_username?: string;
+    action_type: 'buy' | 'sell' | 'add';
+    asset: string;
+    amount: number;
+    price: number;
+    total_value: number;
+    pnl_percent?: number;
+    pnl_amount?: number;
+    created_at: string;
+  }
+
+  export interface UserPrivacySettings {
+    user_id: string;
+    show_in_community_feed: boolean;
+    created_at: string;
+    updated_at: string;
+  }
+
+  export interface PortfolioRankingEntry {
+    user_id: string;
+    user_name: string;
+    user_username?: string;
+    user_created_at: string;
+    time_window: '7_days' | '30_days';
+    return_percent: number;
+    top_asset?: string;
+    top_asset_return?: number;
+    dca_purchase_count: number;
+    dca_avg_price?: number;
+    total_invested: number;
+    total_current_value: number;
+    total_unrealized_pnl: number;
+    badge?: 'Top Trader' | 'Elite Trader' | 'DCA Master';
+  }
+
+  export interface PortfolioRankings {
+    return_percent: PortfolioRankingEntry[];
+    top_asset: PortfolioRankingEntry[];
+    dca_strategy: PortfolioRankingEntry[];
+  }
+
+export interface Database {
   // Allows to automatically instanciate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
@@ -263,6 +308,17 @@ export type Database = {
         }
         Relationships: []
       }
+      community_feed: {
+        Row: CommunityFeedEntry;
+        Insert: Omit<CommunityFeedEntry, 'id' | 'created_at'>;
+        Update: Partial<Omit<CommunityFeedEntry, 'id' | 'created_at'>>;
+      };
+      
+      user_privacy_settings: {
+        Row: UserPrivacySettings;
+        Insert: Omit<UserPrivacySettings, 'created_at' | 'updated_at'>;
+        Update: Partial<Omit<UserPrivacySettings, 'created_at' | 'updated_at'>>;
+      };
     }
     Views: {
       [_ in never]: never

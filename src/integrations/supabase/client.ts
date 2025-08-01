@@ -11,7 +11,15 @@ const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiO
 export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
   auth: {
     storage: localStorage,
-    persistSession: true,
-    autoRefreshToken: true,
+    persistSession: false, // Desabilita persistência de sessão
+    autoRefreshToken: false, // Desabilita refresh automático de token
+    detectSessionInUrl: false, // Desabilita detecção de sessão na URL
   }
 });
+
+// Função para atualizar o header Authorization dinamicamente
+export async function setSupabaseAuthToken(token: string) {
+  // Não precisamos mais definir sessão do Supabase, pois usamos apenas Firebase
+  // Esta função é mantida para compatibilidade, mas não faz nada
+  console.log('Supabase auth token set (Firebase auth used instead)');
+}

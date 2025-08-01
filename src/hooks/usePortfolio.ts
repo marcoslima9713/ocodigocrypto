@@ -39,7 +39,6 @@ interface PortfolioData {
 export function usePortfolio(portfolioId: string = 'main') {
   const { currentUser } = useAuth();
   const authenticatedUser = useSupabaseAuth(); // Ensures Supabase context is set
-  const { prices } = useCryptoPrices();
   const [portfolioData, setPortfolioData] = useState<PortfolioData>({
     totalInvested: 0,
     currentValue: 0,
@@ -48,6 +47,9 @@ export function usePortfolio(portfolioId: string = 'main') {
     holdings: [],
     transactions: []
   });
+  
+  // Busca preços das criptos em holdings
+  const { prices } = useCryptoPrices(portfolioData.holdings.map(h => h.crypto_symbol));
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -58,11 +60,17 @@ export function usePortfolio(portfolioId: string = 'main') {
       setError(null);
       setLoading(true);
 
+      // Validação de segurança: só busca dados do usuário logado
+      const userId = currentUser.uid;
+      if (!userId) {
+        throw new Error('Usuário não autenticado');
+      }
+
       // Fetch holdings
       const { data: holdings, error: holdingsError } = await supabase
         .from('portfolio_holdings')
         .select('*')
-        .eq('user_id', currentUser.uid)
+        .eq('user_id', userId)
         .eq('portfolio_id', portfolioId);
 
       if (holdingsError) throw holdingsError;
@@ -71,15 +79,16 @@ export function usePortfolio(portfolioId: string = 'main') {
       const { data: transactions, error: transactionsError } = await supabase
         .from('transactions')
         .select('*')
-        .eq('user_id', currentUser.uid)
+        .eq('user_id', userId)
         .eq('portfolio_id', portfolioId)
         .order('transaction_date', { ascending: false });
 
       if (transactionsError) throw transactionsError;
 
-      // Calculate portfolio metrics
+      // Calcular métricas do portfólio
+      // Usa o campo total_invested (já ajustado nas vendas) para representar o custo atual
       const totalInvested = holdings?.reduce((sum, holding) => sum + Number(holding.total_invested), 0) || 0;
-      
+
       let currentValue = 0;
       if (holdings && holdings.length > 0) {
         currentValue = holdings.reduce((sum, holding) => {
@@ -116,22 +125,18 @@ export function usePortfolio(portfolioId: string = 'main') {
     if (!currentUser) return false;
 
     try {
-      // Ensure Supabase context is set before making the transaction
-      await supabase.rpc('set_config' as any, {
-        setting_name: 'app.current_firebase_uid',
-        setting_value: currentUser.uid,
-        is_local: true
-      });
-
-      // Small delay to ensure the context is applied
-      await new Promise(resolve => setTimeout(resolve, 100));
+      // Validação de segurança: só permite inserir para o usuário logado
+      const userId = currentUser.uid;
+      if (!userId) {
+        throw new Error('Usuário não autenticado');
+      }
 
       const totalUsd = amount * priceUsd;
 
       const { error } = await supabase
         .from('transactions')
         .insert({
-          user_id: currentUser.uid,
+          user_id: userId,
           portfolio_id: portfolioId,
           crypto_symbol: cryptoSymbol,
           transaction_type: transactionType,
@@ -148,6 +153,47 @@ export function usePortfolio(portfolioId: string = 'main') {
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro ao adicionar transação');
       console.error('Erro ao adicionar transação:', err);
+      return false;
+    }
+  };
+
+  const removeTransaction = async (transactionId: string) => {
+    if (!currentUser) return false;
+
+    try {
+      // Validação de segurança: só permite remover transações do usuário logado
+      const userId = currentUser.uid;
+      if (!userId) {
+        throw new Error('Usuário não autenticado');
+      }
+
+      // Verificar se a transação pertence ao usuário
+      const { data: transaction, error: fetchError } = await supabase
+        .from('transactions')
+        .select('*')
+        .eq('id', transactionId)
+        .eq('user_id', userId)
+        .single();
+
+      if (fetchError || !transaction) {
+        throw new Error('Transação não encontrada ou não autorizada');
+      }
+
+      // Remover a transação
+      const { error } = await supabase
+        .from('transactions')
+        .delete()
+        .eq('id', transactionId)
+        .eq('user_id', userId);
+
+      if (error) throw error;
+
+      // Refresh portfolio data
+      await fetchPortfolioData();
+      return true;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erro ao remover transação');
+      console.error('Erro ao remover transação:', err);
       return false;
     }
   };
@@ -205,6 +251,27 @@ export function usePortfolio(portfolioId: string = 'main') {
       });
     }
 
+    // Adicionar ponto atual se não houver transações recentes
+    if (chartData.length > 0) {
+      const lastPoint = chartData[chartData.length - 1];
+      const today = new Date().toISOString().split('T')[0];
+      
+      if (lastPoint.date !== today) {
+        // Calcular valor atual baseado nos holdings atuais
+        let currentValue = 0;
+        Object.entries(holdings).forEach(([symbol, holding]) => {
+          const currentPrice = prices[symbol]?.current_price || 0;
+          currentValue += holding.amount * currentPrice;
+        });
+
+        chartData.push({
+          date: today,
+          value: Math.round(currentValue),
+          invested: Math.round(runningInvested)
+        });
+      }
+    }
+
     return chartData;
   };
 
@@ -217,6 +284,7 @@ export function usePortfolio(portfolioId: string = 'main') {
     loading,
     error,
     addTransaction,
+    removeTransaction,
     refetch: fetchPortfolioData,
     chartData: generateChartData()
   };

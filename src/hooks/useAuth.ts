@@ -25,13 +25,7 @@ export const useAuth = () => {
       }
 
       try {
-        // Set Firebase UID in Supabase session for RLS policies using SQL query
-        const { error: configError } = await supabase
-          .from('user_roles') // Just to establish connection, we'll use rpc
-          .select('id')
-          .limit(1);
-
-        // Use raw SQL to set config since the types don't include set_config
+        // Set Firebase UID in Supabase session for RLS policies
         const { error: setConfigError } = await supabase.rpc('set_config' as any, {
           setting_name: 'app.current_firebase_uid',
           setting_value: currentUser.uid,

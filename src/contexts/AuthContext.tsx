@@ -9,7 +9,7 @@ import {
   onAuthStateChanged 
 } from 'firebase/auth';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
-import { auth, db } from '@/lib/firebase';
+import { auth, db, checkFirestoreConnection, executeFirestoreOperation } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
 
 // Interface para o progresso do usuário nos módulos
@@ -114,14 +114,30 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  // Função para resetar senha
+  // Função para resetar senha usando AWS SES
   const resetPassword = async (email: string) => {
     try {
-      await sendPasswordResetEmail(auth, email);
-      toast({
-        title: "Email enviado!",
-        description: "Verifique sua caixa de entrada para redefinir a senha.",
-      });
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/password-reset`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ email }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        toast({
+          title: "Email enviado!",
+          description: "Verifique sua caixa de entrada para redefinir a senha.",
+        });
+      } else {
+        throw new Error(data.error || 'Erro ao enviar email de recuperação');
+      }
     } catch (error: any) {
       console.error('Erro ao resetar senha:', error);
       toast({
@@ -133,52 +149,69 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  // Função para marcar módulo como completo
+  // Carrega progresso do usuário do Firestore
+  const loadUserProgress = async (userId: string) => {
+    const defaultProgress = {
+      completedModules: [],
+      lastAccess: new Date()
+    };
+
+    const result = await executeFirestoreOperation(
+      async () => {
+        const userDoc = await getDoc(doc(db, 'users', userId));
+        if (userDoc.exists()) {
+          const data = userDoc.data();
+          return {
+            completedModules: data.completedModules || [],
+            lastAccess: data.lastAccess?.toDate() || new Date()
+          };
+        } else {
+          // Se o documento não existe, criar um novo
+          return defaultProgress;
+        }
+      },
+      defaultProgress
+    );
+
+    setUserProgress(result);
+  };
+
+  // Função para marcar módulo como completo com melhor tratamento de erro
   const markModuleComplete = async (moduleId: string) => {
     if (!currentUser || !userProgress) return;
 
-    try {
-      const updatedModules = [...userProgress.completedModules];
-      if (!updatedModules.includes(moduleId)) {
-        updatedModules.push(moduleId);
-      }
+    const updatedModules = [...userProgress.completedModules];
+    if (!updatedModules.includes(moduleId)) {
+      updatedModules.push(moduleId);
+    }
 
-      const updatedProgress = {
-        ...userProgress,
-        completedModules: updatedModules,
-        lastAccess: new Date()
-      };
+    const updatedProgress = {
+      ...userProgress,
+      completedModules: updatedModules,
+      lastAccess: new Date()
+    };
 
-      await setDoc(doc(db, 'users', currentUser.uid), updatedProgress, { merge: true });
-      setUserProgress(updatedProgress);
+    // Atualizar estado local imediatamente
+    setUserProgress(updatedProgress);
 
+    const success = await executeFirestoreOperation(
+      async () => {
+        await setDoc(doc(db, 'users', currentUser.uid), updatedProgress, { merge: true });
+        return true;
+      },
+      false
+    );
+
+    if (success) {
       toast({
         title: "Módulo concluído!",
         description: "Parabéns pelo seu progresso.",
       });
-    } catch (error: any) {
-      console.error('Erro ao atualizar progresso:', error);
+    } else {
       toast({
-        title: "Erro ao salvar progresso",
-        description: error.message,
-        variant: "destructive",
+        title: "Módulo concluído!",
+        description: "Progresso salvo localmente (sem conexão com servidor).",
       });
-    }
-  };
-
-  // Carrega progresso do usuário do Firestore
-  const loadUserProgress = async (userId: string) => {
-    try {
-      const userDoc = await getDoc(doc(db, 'users', userId));
-      if (userDoc.exists()) {
-        const data = userDoc.data();
-        setUserProgress({
-          completedModules: data.completedModules || [],
-          lastAccess: data.lastAccess?.toDate() || new Date()
-        });
-      }
-    } catch (error) {
-      console.error('Erro ao carregar progresso:', error);
     }
   };
 
