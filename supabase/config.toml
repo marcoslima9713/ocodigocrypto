@@ -2,3 +2,6 @@ project_id = "wvojbjkdlnvlqgjwtdaf"
 
 [functions.ggcheckout-webhook]
 verify_jwt = false
+
+[functions.coingecko]
+verify_jwt = false

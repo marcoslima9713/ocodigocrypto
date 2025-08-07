@@ -1,18 +1,18 @@
 import { useState, useEffect } from 'react';
-import { User } from 'firebase/auth';
-import { useAuth as useFirebaseAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth as useAppAuth } from '@/contexts/AuthContext';
 
 export interface UserRole {
   id: string;
-  firebase_uid: string;
+  user_id: string;
   role: 'admin' | 'member' | 'user';
   created_at: string;
   updated_at: string;
 }
 
-export const useAuth = () => {
-  const { currentUser } = useFirebaseAuth();
+// Hook para obter o papel do usuário - temporariamente simplificado para Supabase
+export const useUserAuth = () => {
+  const { currentUser } = useAppAuth();
   const [userRole, setUserRole] = useState<UserRole | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -25,33 +25,21 @@ export const useAuth = () => {
       }
 
       try {
-        // Set Firebase UID in Supabase session for RLS policies
-        const { error: setConfigError } = await supabase.rpc('set_config' as any, {
-          setting_name: 'app.current_firebase_uid',
-          setting_value: currentUser.uid,
-          is_local: true
-        });
+        // Por enquanto, vamos usar um papel padrão 'user' para todos os usuários
+        // até que a tabela user_roles seja corrigida
+        const defaultRole: UserRole = {
+          id: currentUser.id,
+          user_id: currentUser.id,
+          role: 'user', // Papel padrão
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        };
 
-        if (setConfigError) {
-          console.error('Error setting config:', setConfigError);
-        }
-
-        // Fetch user role
-        const { data, error } = await supabase
-          .from('user_roles')
-          .select('*')
-          .eq('firebase_uid', currentUser.uid)
-          .order('role', { ascending: true }) // admin first, then member, then user
-          .limit(1)
-          .single();
-
-        if (error && error.code !== 'PGRST116') { // PGRST116 = no rows
-          console.error('Error fetching user role:', error);
-        }
-        setUserRole(data || null);
+        setUserRole(defaultRole);
+        setIsLoading(false);
       } catch (error) {
-        console.error('Error setting up user session:', error);
-      } finally {
+        console.error('Error fetching user role:', error);
+        setUserRole(null);
         setIsLoading(false);
       }
     };
@@ -60,13 +48,13 @@ export const useAuth = () => {
   }, [currentUser]);
 
   const isAdmin = userRole?.role === 'admin';
-  const isMember = userRole?.role === 'member' || isAdmin;
+  const isMember = isAdmin || userRole?.role === 'member';
 
   return {
     currentUser,
     userRole,
     isAdmin,
     isMember,
-    isLoading
+    isLoading,
   };
 };

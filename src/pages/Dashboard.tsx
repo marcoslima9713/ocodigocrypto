@@ -1,7 +1,7 @@
 // Dashboard Principal - Layout estilo Netflix
 import { motion } from 'framer-motion';
-import { Bitcoin, Globe, Timer, Eye, Wallet, FileText, LogOut, User, Play, Info, ChevronRight } from 'lucide-react';
-import { useAuth } from '@/hooks/useAuth';
+import { Bitcoin, Globe, Timer, Eye, Wallet, FileText, LogOut, User, Play, Info, ChevronRight, Calculator } from 'lucide-react';
+import { useUserAuth } from '@/hooks/useAuth';
 import { useAuth as useFirebaseAuth } from '@/contexts/AuthContext';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -45,7 +45,7 @@ const moduleIcons = [Bitcoin, Globe, Timer, Eye, Wallet, FileText];
 const moduleImages = [origensUrl, ciclosUrl, oportunidadesUrl, analiseUrl, lucroUrl, gestaoUrl];
 const moduleColors = ['from-orange-500/20 to-orange-600/20', 'from-blue-500/20 to-blue-600/20', 'from-green-500/20 to-green-600/20', 'from-purple-500/20 to-purple-600/20', 'from-indigo-500/20 to-indigo-600/20', 'from-red-500/20 to-red-600/20'];
 export default function Dashboard() {
-  const { currentUser } = useAuth();
+  const { currentUser } = useUserAuth();
   const { userProgress, logout } = useFirebaseAuth();
   
   // Email do administrador autorizado
@@ -162,47 +162,44 @@ export default function Dashboard() {
       </div>;
   }
   return <div className="min-h-screen bg-black">
-      {/* Header Netflix Style */}
+      {/* Header */}
       <motion.header initial={{
-      opacity: 0
-    }} animate={{
-      opacity: 1
-    }} className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-b from-black/80 to-transparent backdrop-blur-sm">
-        <div className="px-4 sm:px-8 lg:px-16">
-          <div className="flex justify-between items-center h-16">
+        opacity: 0,
+        y: -20
+      }} animate={{
+        opacity: 1,
+        y: 0
+      }} className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-b from-black/80 to-transparent backdrop-blur-sm">
+        <div className="px-4 sm:px-8 lg:px-16 py-3 sm:py-4">
+          <div className="flex items-center justify-between">
             {/* Logo */}
-            <div className="flex items-center space-x-8">
-              <h1 className="text-2xl font-bold text-red-600">Acesso Premium</h1>
-              
-              {/* Navigation Menu */}
-              
+            <div className="flex items-center space-x-2 sm:space-x-4">
+              <img src={bitcoinLogoUrl} alt="Bitcoin" className="w-8 h-8 sm:w-10 sm:h-10" />
+              <div className="hidden sm:block">
+                <h1 className="text-lg sm:text-xl font-bold text-white">O Código Crypto</h1>
+                <p className="text-xs sm:text-sm text-gray-400">Portal de Investimentos</p>
+              </div>
+              <div className="sm:hidden">
+                <h1 className="text-sm font-bold text-white">O Código Crypto</h1>
+              </div>
             </div>
 
             {/* User Menu */}
-            <div className="flex items-center space-x-4">
-              <span className="text-white text-sm hidden sm:block">
+            <div className="flex items-center space-x-2 sm:space-x-4">
+              <span className="text-white text-xs sm:text-sm hidden sm:block">
                 {currentUser?.email}
               </span>
               <Button 
                 variant="ghost" 
                 size="sm" 
                 onClick={() => navigate('/portfolio')} 
-                className="text-white hover:text-gray-300"
+                className="text-white hover:text-gray-300 text-xs sm:text-sm px-2 sm:px-3"
               >
-                Portfólio
+                <span className="hidden sm:inline">Portfólio</span>
+                <span className="sm:hidden">📊</span>
               </Button>
-              {isAdmin && (
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  onClick={() => navigate('/admin')} 
-                  className="text-white hover:text-gray-300"
-                >
-                  Admin
-                </Button>
-              )}
               <Button variant="ghost" size="sm" onClick={handleLogout} className="text-white hover:text-gray-300">
-                <LogOut className="w-4 h-4" />
+                <LogOut className="w-3 h-3 sm:w-4 sm:h-4" />
               </Button>
             </div>
           </div>
@@ -211,10 +208,10 @@ export default function Dashboard() {
 
       {/* Hero Section */}
       <motion.section initial={{
-      opacity: 0
-    }} animate={{
-      opacity: 1
-    }} className="relative min-h-[80vh] sm:h-screen flex items-center">
+        opacity: 0
+      }} animate={{
+        opacity: 1
+      }} className="relative min-h-[70vh] sm:min-h-[80vh] lg:h-screen flex items-center">
         {/* Background Image */}
         <div className="absolute inset-0">
           <img src={featuredModule.image} alt={featuredModule.title} className="w-full h-full object-cover" />
@@ -225,37 +222,37 @@ export default function Dashboard() {
         {/* Hero Content */}
         <div className="relative z-10 px-4 sm:px-8 lg:px-16 max-w-2xl mt-16 sm:mt-0">
           <motion.div initial={{
-          opacity: 0,
-          y: 50
-        }} animate={{
-          opacity: 1,
-          y: 0
-        }} transition={{
-          delay: 0.3
-        }}>
-            <h1 className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-4 leading-tight">
+            opacity: 0,
+            y: 50
+          }} animate={{
+            opacity: 1,
+            y: 0
+          }} transition={{
+            delay: 0.3
+          }}>
+            <h1 className="text-2xl sm:text-3xl md:text-5xl lg:text-6xl xl:text-7xl font-bold text-white mb-3 sm:mb-4 leading-tight">
               {featuredModule.title}
             </h1>
-            <p className="text-sm sm:text-lg md:text-xl text-gray-300 mb-6 sm:mb-8 leading-relaxed">
+            <p className="text-sm sm:text-base md:text-lg lg:text-xl text-gray-300 mb-4 sm:mb-6 lg:mb-8 leading-relaxed">
               {featuredModule.description}
             </p>
             
-            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
-              <Button onClick={handleWatchNow} className="bg-white text-black hover:bg-gray-200 px-6 sm:px-8 py-2.5 sm:py-3 text-base sm:text-lg font-semibold">
-                <Play className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
+            <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 lg:gap-4">
+              <Button onClick={handleWatchNow} className="bg-white text-black hover:bg-gray-200 px-4 sm:px-6 lg:px-8 py-2 sm:py-2.5 lg:py-3 text-sm sm:text-base lg:text-lg font-semibold">
+                <Play className="w-3 h-3 sm:w-4 sm:h-4 lg:w-5 lg:h-5 mr-1 sm:mr-2" />
                 Assistir Agora
               </Button>
               <Dialog>
                 <DialogTrigger asChild>
-                  <Button variant="secondary" className="bg-gray-600/70 text-white hover:bg-gray-600 px-6 sm:px-8 py-2.5 sm:py-3 text-base sm:text-lg">
-                    <Info className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
+                  <Button variant="secondary" className="bg-gray-600/70 text-white hover:bg-gray-600 px-4 sm:px-6 lg:px-8 py-2 sm:py-2.5 lg:py-3 text-sm sm:text-base lg:text-lg">
+                    <Info className="w-3 h-3 sm:w-4 sm:h-4 lg:w-5 lg:h-5 mr-1 sm:mr-2" />
                     Mais
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="bg-gray-900 border-gray-700">
+                <DialogContent className="bg-gray-900 border-gray-700 max-w-sm sm:max-w-md lg:max-w-lg mx-4">
                   <DialogHeader>
-                    <DialogTitle className="text-white text-xl mb-2">Sobre o Curso</DialogTitle>
-                    <DialogDescription className="text-gray-300 space-y-3">
+                    <DialogTitle className="text-white text-lg sm:text-xl mb-2">Sobre o Curso</DialogTitle>
+                    <DialogDescription className="text-gray-300 space-y-3 text-sm sm:text-base">
                       <p>
                         Este curso foi cuidadosamente desenvolvido e gravado por <span className="text-white font-semibold">Marcos Lima</span>, 
                         entusiasta em criptomoedas e investimentos digitais.
@@ -273,139 +270,193 @@ export default function Dashboard() {
                 </DialogContent>
               </Dialog>
             </div>
-            
-            
           </motion.div>
         </div>
       </motion.section>
 
       {/* Content Sections */}
-      <div className="px-4 sm:px-8 lg:px-16 pb-16 space-y-12">
+      <div className="px-3 sm:px-4 lg:px-8 xl:px-16 pb-8 sm:pb-12 lg:pb-16 space-y-8 sm:space-y-12">
         {/* Minha Lista */}
         <motion.section initial={{
-        opacity: 0,
-        y: 50
-      }} animate={{
-        opacity: 1,
-        y: 0
-      }} transition={{
-        delay: 0.5
-      }}>
-          <div className="flex items-center justify-between mb-4 sm:mb-6">
-            <h2 className="text-lg sm:text-2xl font-bold text-white">Continuar Assistindo</h2>
-            <Button variant="ghost" className="text-gray-400 hover:text-white text-sm sm:text-base hidden sm:flex">
-              Ver Todos <ChevronRight className="w-4 h-4 ml-1" />
+          opacity: 0,
+          y: 50
+        }} animate={{
+          opacity: 1,
+          y: 0
+        }} transition={{
+          delay: 0.5
+        }}>
+          <div className="flex items-center justify-between mb-3 sm:mb-4 lg:mb-6">
+            <h2 className="text-base sm:text-lg lg:text-2xl font-bold text-white">Continuar Assistindo</h2>
+            <Button variant="ghost" className="text-gray-400 hover:text-white text-xs sm:text-sm lg:text-base hidden sm:flex">
+              Ver Todos <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4 ml-1" />
             </Button>
           </div>
           
-          <div className="flex space-x-3 sm:space-x-4 overflow-x-auto pb-4 -mx-4 px-4 sm:mx-0 sm:px-0">
-            {displayModules.slice(0, 4).map((module, index) => <motion.div key={module.id} initial={{
-            opacity: 0,
-            x: 50
-          }} animate={{
-            opacity: 1,
-            x: 0
-          }} transition={{
-            delay: 0.6 + index * 0.1
-          }} className="flex-shrink-0 w-64 sm:w-80">
+          <div className="flex space-x-3 sm:space-x-4 overflow-x-auto pb-2 sm:pb-4 scrollbar-hide">
+            {displayModules.slice(0, 4).map((module, index) => (
+              <motion.div key={module.id} initial={{
+                opacity: 0,
+                x: 50
+              }} animate={{
+                opacity: 1,
+                x: 0
+              }} transition={{
+                delay: 0.6 + index * 0.1
+              }} className="flex-shrink-0 w-48 sm:w-64 lg:w-80">
                 <div className="relative group cursor-pointer" onClick={() => handleModuleClick(module.id)}>
-                  <img src={module.image} alt={module.title} className="w-full h-36 sm:h-44 object-cover rounded-lg transition-transform duration-300 group-hover:scale-105" />
+                  <img src={module.image} alt={module.title} className="w-full h-28 sm:h-36 lg:h-44 object-cover rounded-lg transition-transform duration-300 group-hover:scale-105" />
                   <div className="absolute inset-0 bg-black/0 group-hover:bg-black/50 transition-colors duration-300 rounded-lg flex items-center justify-center">
-                    <Play className="w-8 h-8 sm:w-12 sm:h-12 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                    <Play className="w-6 h-6 sm:w-8 sm:h-8 lg:w-12 lg:h-12 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                   </div>
                   
                   {/* Progress Bar */}
-                  {userProgress?.completedModules.includes(module.id) && <div className="absolute bottom-0 left-0 right-0 h-1 bg-red-600 rounded-b-lg" />}
+                  {userProgress?.completedModules.includes(module.id) && (
+                    <div className="absolute bottom-0 left-0 right-0 h-1 bg-red-600 rounded-b-lg" />
+                  )}
                 </div>
                 
                 <div className="mt-2">
-                  <h3 className="text-white font-semibold text-sm sm:text-base line-clamp-2">{module.title}</h3>
+                  <h3 className="text-white font-semibold text-xs sm:text-sm lg:text-base line-clamp-2">{module.title}</h3>
                   <p className="text-gray-400 text-xs sm:text-sm mt-1">{module.estimatedTime}</p>
                 </div>
-              </motion.div>)}
+              </motion.div>
+            ))}
           </div>
         </motion.section>
 
         {/* Módulos Exclusivos */}
         <motion.section initial={{
-        opacity: 0,
-        y: 50
-      }} animate={{
-        opacity: 1,
-        y: 0
-      }} transition={{
-        delay: 0.7
-      }}>
-          <div className="flex items-center justify-between mb-4 sm:mb-6">
-            <h2 className="text-lg sm:text-2xl font-bold text-white">Módulos Exclusivos</h2>
-            <Button variant="ghost" className="text-gray-400 hover:text-white text-sm sm:text-base hidden sm:flex">
-              Ver Todos <ChevronRight className="w-4 h-4 ml-1" />
+          opacity: 0,
+          y: 50
+        }} animate={{
+          opacity: 1,
+          y: 0
+        }} transition={{
+          delay: 0.7
+        }}>
+          <div className="flex items-center justify-between mb-3 sm:mb-4 lg:mb-6">
+            <h2 className="text-base sm:text-lg lg:text-2xl font-bold text-white">Módulos Exclusivos</h2>
+            <Button variant="ghost" className="text-gray-400 hover:text-white text-xs sm:text-sm lg:text-base hidden sm:flex">
+              Ver Todos <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4 ml-1" />
             </Button>
           </div>
           
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4">
-            {displayModules.map((module, index) => <motion.div key={module.id} initial={{
-            opacity: 0,
-            y: 50
-          }} animate={{
-            opacity: 1,
-            y: 0
-          }} transition={{
-            delay: 0.8 + index * 0.1
-          }} className="relative group cursor-pointer" onClick={() => handleModuleClick(module.id)}>
-                <img src={module.image} alt={module.title} className="w-full h-24 sm:h-32 object-cover rounded-lg transition-transform duration-300 group-hover:scale-105" />
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 sm:gap-3 lg:gap-4">
+            {displayModules.map((module, index) => (
+              <motion.div key={module.id} initial={{
+                opacity: 0,
+                y: 50
+              }} animate={{
+                opacity: 1,
+                y: 0
+              }} transition={{
+                delay: 0.8 + index * 0.1
+              }} className="relative group cursor-pointer" onClick={() => handleModuleClick(module.id)}>
+                <img src={module.image} alt={module.title} className="w-full h-20 sm:h-24 lg:h-32 object-cover rounded-lg transition-transform duration-300 group-hover:scale-105" />
                 <div className="absolute inset-0 bg-black/0 group-hover:bg-black/50 transition-colors duration-300 rounded-lg flex items-center justify-center">
-                  <Play className="w-6 h-6 sm:w-8 sm:h-8 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  <Play className="w-4 h-4 sm:w-6 sm:h-6 lg:w-8 lg:h-8 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                 </div>
                 
                 {/* Completion Badge */}
-                {userProgress?.completedModules.includes(module.id) && <div className="absolute top-1 right-1 sm:top-2 sm:right-2 w-5 h-5 sm:w-6 sm:h-6 bg-green-500 rounded-full flex items-center justify-center">
+                {userProgress?.completedModules.includes(module.id) && (
+                  <div className="absolute top-1 right-1 sm:top-2 sm:right-2 w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 bg-green-500 rounded-full flex items-center justify-center">
                     <span className="text-white text-xs">✓</span>
-                  </div>}
+                  </div>
+                )}
                 
-                <h3 className="text-white text-xs sm:text-sm font-medium mt-2 group-hover:text-gray-300 line-clamp-2">
+                <h3 className="text-white text-xs sm:text-sm lg:text-base font-medium mt-1 sm:mt-2 group-hover:text-gray-300 line-clamp-2">
                   {module.title}
                 </h3>
-              </motion.div>)}
+              </motion.div>
+            ))}
+          </div>
+        </motion.section>
+
+        {/* Calculadora DCA */}
+        <motion.section initial={{
+          opacity: 0,
+          y: 50
+        }} animate={{
+          opacity: 1,
+          y: 0
+        }} transition={{
+          delay: 0.9
+        }} className="bg-gray-900/50 backdrop-blur-sm rounded-lg p-4 sm:p-6 lg:p-8">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div>
+              <h3 className="text-lg sm:text-xl lg:text-2xl font-bold text-white mb-2">
+                Calculadora DCA
+              </h3>
+              <p className="text-gray-300 text-sm sm:text-base">
+                Simule investimentos recorrentes em criptomoedas
+              </p>
+            </div>
+            
+            <Button 
+              onClick={() => navigate('/dca-calculator')}
+              className="bg-orange-600 hover:bg-orange-700 text-white px-6 py-3 rounded-lg flex items-center space-x-2"
+            >
+              <Calculator className="w-5 h-5" />
+              <span>Acessar Calculadora</span>
+            </Button>
           </div>
         </motion.section>
 
         {/* Status do Progresso */}
         <motion.section initial={{
-        opacity: 0,
-        y: 50
-      }} animate={{
-        opacity: 1,
-        y: 0
-      }} transition={{
-        delay: 0.9
-      }} className="bg-gray-900/50 rounded-lg p-4 sm:p-6 lg:p-8">
-          <h2 className="text-lg sm:text-2xl font-bold text-white mb-4 sm:mb-6">Seu Progresso</h2>
-          
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
-            <div className="text-center">
-              <div className="text-2xl sm:text-3xl lg:text-4xl font-bold text-red-600 mb-2">
-                {completedCount}
-              </div>
-              <div className="text-gray-400 text-sm sm:text-base">Módulos Concluídos</div>
+          opacity: 0,
+          y: 50
+        }} animate={{
+          opacity: 1,
+          y: 0
+        }} transition={{
+          delay: 1.0
+        }} className="bg-gray-900/50 backdrop-blur-sm rounded-lg p-4 sm:p-6 lg:p-8">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div>
+              <h3 className="text-lg sm:text-xl lg:text-2xl font-bold text-white mb-2">
+                Seu Progresso
+              </h3>
+              <p className="text-gray-300 text-sm sm:text-base">
+                {completedCount} de {displayModules.length} módulos concluídos
+              </p>
             </div>
             
-            <div className="text-center">
-              <div className="text-2xl sm:text-3xl lg:text-4xl font-bold text-red-600 mb-2">
-                {displayModules.length - completedCount}
+            <div className="flex items-center space-x-2 sm:space-x-4">
+              <div className="text-center">
+                <div className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white">
+                  {Math.round((completedCount / displayModules.length) * 100)}%
+                </div>
+                <div className="text-xs sm:text-sm text-gray-400">Concluído</div>
               </div>
-              <div className="text-gray-400 text-sm sm:text-base">Módulos Restantes</div>
-            </div>
-            
-            <div className="text-center">
-              <div className="text-2xl sm:text-3xl lg:text-4xl font-bold text-red-600 mb-2">
-                {displayModules.length > 0 ? Math.round(completedCount / displayModules.length * 100) : 0}%
+              
+              <div className="w-16 sm:w-20 lg:w-24 h-16 sm:h-20 lg:h-24 relative">
+                <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+                  <circle
+                    cx="50"
+                    cy="50"
+                    r="40"
+                    stroke="currentColor"
+                    strokeWidth="8"
+                    fill="none"
+                    className="text-gray-700"
+                  />
+                  <circle
+                    cx="50"
+                    cy="50"
+                    r="40"
+                    stroke="currentColor"
+                    strokeWidth="8"
+                    fill="none"
+                    strokeDasharray={`${(completedCount / displayModules.length) * 251.2} 251.2`}
+                    className="text-red-500 transition-all duration-1000"
+                  />
+                </svg>
               </div>
-              <div className="text-gray-400 text-sm sm:text-base">Progresso Total</div>
             </div>
           </div>
         </motion.section>
-
       </div>
     </div>;
 }

@@ -166,15 +166,16 @@ export default function OrigensModule() {
         animate={{ opacity: 1 }}
         className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-b from-black/80 to-transparent backdrop-blur-sm"
       >
-        <div className="px-4 sm:px-8 lg:px-16">
-          <div className="flex justify-between items-center h-16">
+        <div className="px-3 sm:px-4 lg:px-8 xl:px-16">
+          <div className="flex justify-between items-center h-12 sm:h-16">
             <Button 
               variant="ghost" 
               onClick={() => navigate('/dashboard')}
-              className="text-white hover:text-gray-300"
+              className="text-white hover:text-gray-300 text-xs sm:text-sm px-2 sm:px-3"
             >
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Voltar ao Dashboard
+              <ArrowLeft className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+              <span className="hidden sm:inline">Voltar ao Dashboard</span>
+              <span className="sm:hidden">Voltar</span>
             </Button>
           </div>
         </div>
@@ -184,7 +185,7 @@ export default function OrigensModule() {
       <motion.section 
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        className="relative h-[60vh] flex items-center"
+        className="relative h-[50vh] sm:h-[60vh] flex items-center"
       >
         <div className="absolute inset-0">
           <img 
@@ -196,21 +197,21 @@ export default function OrigensModule() {
           <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent" />
         </div>
 
-        <div className="relative z-10 px-4 sm:px-8 lg:px-16 max-w-3xl mt-16">
+        <div className="relative z-10 px-3 sm:px-4 lg:px-8 xl:px-16 max-w-2xl sm:max-w-3xl mt-12 sm:mt-16">
           <motion.div
             initial={{ opacity: 0, y: 50 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
           >
-            <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-white mb-4">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold text-white mb-2 sm:mb-4">
               {moduleData?.name || 'Carregando...'}
             </h1>
-            <p className="text-lg text-gray-300 mb-6 leading-relaxed">
+            <p className="text-sm sm:text-base lg:text-lg text-gray-300 mb-3 sm:mb-6 leading-relaxed">
               {moduleData?.description || 'Carregando descrição do módulo...'}
             </p>
-            <div className="flex items-center space-x-6 text-gray-300">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-4 lg:space-x-6 text-gray-300 text-xs sm:text-sm">
               <div className="flex items-center">
-                <Clock className="w-4 h-4 mr-2" />
+                <Clock className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
                 {totalDuration} min total
               </div>
               <div>
@@ -225,15 +226,15 @@ export default function OrigensModule() {
       </motion.section>
 
       {/* Lessons List */}
-      <div className="px-4 sm:px-8 lg:px-16 pb-16">
+      <div className="px-3 sm:px-4 lg:px-8 xl:px-16 pb-8 sm:pb-12 lg:pb-16">
         <motion.section
           initial={{ opacity: 0, y: 50 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
         >
-          <h2 className="text-2xl font-bold text-white mb-8">Aulas do Módulo</h2>
+          <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-white mb-4 sm:mb-6 lg:mb-8">Aulas do Módulo</h2>
           
-          <div className="space-y-4">
+          <div className="space-y-3 sm:space-y-4">
             {lessons.map((lesson, index) => {
               const isCompleted = completedLessons.includes(lesson.id);
               
@@ -243,97 +244,48 @@ export default function OrigensModule() {
                   initial={{ opacity: 0, x: -50 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.6 + index * 0.1 }}
-                  className="bg-gray-900/50 rounded-lg p-6 hover:bg-gray-800/50 transition-colors cursor-pointer group"
+                  className="bg-gray-900/50 rounded-lg p-3 sm:p-4 lg:p-6 hover:bg-gray-800/50 transition-colors cursor-pointer group"
                   onClick={() => handleWatchLesson(lesson)}
                 >
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-4">
+                    <div className="flex items-center space-x-2 sm:space-x-4 flex-1 min-w-0">
                       <div className="flex-shrink-0">
-                        {isLoadingVideo && currentLesson?.id === lesson.id ? (
-                          <div className="w-12 h-12 border-2 border-red-600 border-t-transparent rounded-full animate-spin" />
-                        ) : isCompleted ? (
-                          <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center">
-                            <CheckCircle className="w-6 h-6 text-white" />
-                          </div>
-                        ) : (
-                          <div className="w-12 h-12 bg-gray-700 rounded-full flex items-center justify-center group-hover:bg-red-600 transition-colors">
-                            <Play className="w-5 h-5 text-white" />
-                          </div>
-                        )}
+                        <div className="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 bg-gray-700 rounded-full flex items-center justify-center">
+                          {isCompleted ? (
+                            <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-green-500" />
+                          ) : (
+                            <span className="text-white text-xs sm:text-sm lg:text-base font-semibold">
+                              {index + 1}
+                            </span>
+                          )}
+                        </div>
                       </div>
                       
-                      <div className="flex-1">
-                        <h3 className="text-lg font-semibold text-white mb-1">
-                          Aula {index + 1}: {lesson.title}
+                      <div className="flex-1 min-w-0">
+                        <h3 className="text-sm sm:text-base lg:text-lg font-semibold text-white mb-1 group-hover:text-gray-300 line-clamp-2">
+                          {lesson.title}
                         </h3>
-                        <p className="text-gray-400 text-sm leading-relaxed">
+                        <p className="text-xs sm:text-sm text-gray-400 line-clamp-2">
                           {lesson.description}
                         </p>
                       </div>
                     </div>
                     
-                    <div className="flex items-center space-x-4">
-                      <div className="text-gray-400 text-sm">
-                        <Clock className="w-3 h-3 inline mr-1" />
-                        {lesson.duration}
-                      </div>
-                      
-                      {isCompleted && (
-                        <motion.div
-                          initial={{ scale: 0 }}
-                          animate={{ scale: 1 }}
-                          className="text-green-500 text-xs font-medium bg-green-500/20 px-2 py-1 rounded-full"
-                        >
-                          Concluída
-                        </motion.div>
+                    <div className="flex items-center space-x-2 sm:space-x-3 ml-2 sm:ml-4">
+                      {lesson.duration && (
+                        <span className="text-xs sm:text-sm text-gray-400 hidden sm:block">
+                          {lesson.duration}
+                        </span>
                       )}
+                      <div className="w-8 h-8 sm:w-10 sm:h-10 bg-red-600 rounded-full flex items-center justify-center group-hover:bg-red-700 transition-colors">
+                        <Play className="w-3 h-3 sm:w-4 sm:h-4 lg:w-5 lg:h-5 text-white ml-0.5" />
+                      </div>
                     </div>
                   </div>
                 </motion.div>
               );
             })}
           </div>
-        </motion.section>
-
-        {/* Progress Summary */}
-        <motion.section
-          initial={{ opacity: 0, y: 50 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 1.0 }}
-          className="mt-12 bg-gray-900/50 rounded-lg p-6"
-        >
-          <h3 className="text-xl font-bold text-white mb-4">Progresso do Módulo</h3>
-          
-          <div className="flex items-center justify-between mb-4">
-            <span className="text-gray-400">Progresso Geral</span>
-            <span className="text-white font-semibold">
-              {Math.round((completedLessons.length / lessons.length) * 100)}%
-            </span>
-          </div>
-          
-          <div className="w-full bg-gray-700 rounded-full h-2 mb-6">
-            <motion.div
-              initial={{ width: 0 }}
-              animate={{ width: `${(completedLessons.length / lessons.length) * 100}%` }}
-              transition={{ duration: 0.5, delay: 1.2 }}
-              className="bg-red-600 h-2 rounded-full"
-            />
-          </div>
-          
-          {completedLessons.length === lessons.length && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="text-center py-4"
-            >
-              <div className="text-2xl font-bold text-green-500 mb-2">
-                🎉 Parabéns! Módulo Concluído
-              </div>
-              <p className="text-gray-400">
-                Você completou todas as aulas do módulo "Origens do Bitcoin"
-              </p>
-            </motion.div>
-          )}
         </motion.section>
       </div>
 

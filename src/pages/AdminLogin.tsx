@@ -61,27 +61,27 @@ export default function AdminLogin() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900 flex items-center justify-center p-3 sm:p-4">
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.5 }}
-        className="w-full max-w-md"
+        className="w-full max-w-sm sm:max-w-md"
       >
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="text-center mb-8"
+          className="text-center mb-6 sm:mb-8"
         >
-          <div className="flex items-center justify-center mb-4">
-            <Shield className="h-12 w-12 text-yellow-500" />
+          <div className="flex items-center justify-center mb-3 sm:mb-4">
+            <Shield className="h-8 w-8 sm:h-10 sm:w-10 lg:h-12 lg:w-12 text-yellow-500" />
           </div>
-          <h1 className="text-3xl font-bold text-yellow-500 mb-2">
-            Área Administrativa
+          <h1 className="text-2xl sm:text-3xl font-bold text-yellow-500 mb-2">
+            O Código Crypto - Admin
           </h1>
-          <p className="text-gray-400">
+          <p className="text-sm sm:text-base text-gray-400">
             Acesso restrito ao administrador do sistema
           </p>
         </motion.div>
@@ -91,33 +91,29 @@ export default function AdminLogin() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-2xl p-8 shadow-2xl"
+          className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-2xl p-4 sm:p-6 lg:p-8 shadow-2xl"
         >
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
             {/* Email */}
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.4 }}
             >
-              <label className="block text-sm font-medium mb-2 text-gray-300">
+              <label className="block text-xs sm:text-sm font-medium text-gray-300 mb-1 sm:mb-2">
                 Email Administrativo
               </label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
                 <input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full bg-gray-700/50 border border-gray-600 rounded-lg px-10 py-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition-all"
+                  className="w-full pl-10 pr-4 py-2 sm:py-3 bg-gray-700/50 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent text-sm sm:text-base"
                   placeholder="admin@exemplo.com"
                   required
-                  readOnly
                 />
               </div>
-              <p className="text-xs text-gray-500 mt-1">
-                Email pré-definido para acesso administrativo
-              </p>
             </motion.div>
 
             {/* Senha */}
@@ -126,25 +122,29 @@ export default function AdminLogin() {
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.5 }}
             >
-              <label className="block text-sm font-medium mb-2 text-gray-300">
+              <label className="block text-xs sm:text-sm font-medium text-gray-300 mb-1 sm:mb-2">
                 Senha Administrativa
               </label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
                 <input
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full bg-gray-700/50 border border-gray-600 rounded-lg px-10 pr-10 py-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition-all"
+                  className="w-full pl-10 pr-12 py-2 sm:py-3 bg-gray-700/50 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent text-sm sm:text-base"
                   placeholder="••••••••"
                   required
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white"
                 >
-                  {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4 sm:h-5 sm:w-5" />
+                  ) : (
+                    <Eye className="h-4 w-4 sm:h-5 sm:w-5" />
+                  )}
                 </button>
               </div>
             </motion.div>
@@ -158,16 +158,16 @@ export default function AdminLogin() {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-black font-semibold py-3 px-6 rounded-lg transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center"
+                className="w-full bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-black font-semibold py-2 sm:py-3 px-4 rounded-lg transition-all duration-200 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
               >
                 {isLoading ? (
-                  <div className="flex items-center">
-                    <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin mr-2" />
+                  <div className="flex items-center justify-center">
+                    <div className="w-4 h-4 sm:w-5 sm:h-5 border-2 border-black border-t-transparent rounded-full animate-spin mr-2" />
                     Acessando...
                   </div>
                 ) : (
-                  <div className="flex items-center">
-                    <LogIn className="w-4 h-4 mr-2" />
+                  <div className="flex items-center justify-center">
+                    <LogIn className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
                     Acessar Painel Admin
                   </div>
                 )}
@@ -175,38 +175,34 @@ export default function AdminLogin() {
             </motion.div>
           </form>
 
-          {/* Links */}
+          {/* Link de Volta */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.7 }}
-            className="mt-6 space-y-4 text-center"
+            className="mt-6 text-center"
           >
             <Link
               to="/login"
-              className="flex items-center justify-center text-sm text-gray-400 hover:text-yellow-500 transition-colors"
+              className="flex items-center justify-center text-gray-400 hover:text-yellow-500 transition-colors text-xs sm:text-sm"
             >
-              <ArrowLeft className="w-4 h-4 mr-2" />
+              <ArrowLeft className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
               Voltar ao Login Principal
             </Link>
           </motion.div>
         </motion.div>
 
-        {/* Informações de Segurança */}
+        {/* Aviso de Segurança */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.8 }}
           className="mt-6 text-center"
         >
-          <div className="bg-gray-800/30 border border-gray-700 rounded-lg p-4">
-            <h3 className="text-sm font-semibold text-yellow-500 mb-2">
-              🔒 Acesso Restrito
-            </h3>
-            <p className="text-xs text-gray-400">
-              Este painel é de uso exclusivo do administrador do sistema.
-              <br />
-              Todas as ações são registradas e monitoradas.
+          <div className="bg-red-900/20 border border-red-800 rounded-lg p-3 sm:p-4">
+            <p className="text-xs sm:text-sm text-red-300">
+              ⚠️ Esta área é restrita ao administrador autorizado. 
+              Tentativas de acesso não autorizado serão registradas.
             </p>
           </div>
         </motion.div>

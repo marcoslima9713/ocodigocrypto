@@ -13,6 +13,7 @@ import {
   Zap
 } from 'lucide-react';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval } from 'date-fns';
+import { getCoinGeckoId } from '@/services/cryptoPriceService';
 import { ptBR } from 'date-fns/locale';
 
 interface Transaction {
@@ -35,7 +36,7 @@ interface Holding {
 interface MonthlyReportProps {
   transactions: Transaction[];
   holdings: Holding[];
-  currentPrices: { [symbol: string]: number };
+  currentPrices: { [id: string]: { usd: number; brl?: number } };
   selectedMonth?: Date;
 }
 
@@ -70,7 +71,7 @@ export function MonthlyReport({
 
     // Calcular valor atual dos holdings
     const currentValue = holdings.reduce((sum, holding) => {
-      const currentPrice = currentPrices[holding.crypto_symbol] || holding.average_buy_price;
+      const currentPrice = currentPrices[getCoinGeckoId(holding.crypto_symbol)]?.usd || holding.average_buy_price;
       return sum + (holding.total_amount * currentPrice);
     }, 0);
 
@@ -80,7 +81,7 @@ export function MonthlyReport({
 
     // Top performers do mês
     const cryptoPerformance = holdings.map(holding => {
-      const currentPrice = currentPrices[holding.crypto_symbol] || holding.average_buy_price;
+      const currentPrice = currentPrices[getCoinGeckoId(holding.crypto_symbol)]?.usd || holding.average_buy_price;
       const pnl = (currentPrice - holding.average_buy_price) * holding.total_amount;
       const pnlPercentage = ((currentPrice / holding.average_buy_price) - 1) * 100;
       

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
@@ -23,6 +23,7 @@ import {
 import { useAuth } from '@/contexts/AuthContext';
 import { usePortfolio } from '@/hooks/usePortfolio';
 import { useCryptoPrices } from '@/hooks/useCryptoPrices';
+import { useCryptoImages } from '@/hooks/useCryptoImages';
 import { AddTransactionDialog } from '@/components/AddTransactionDialog';
 import { DeleteTransactionDialog } from '@/components/DeleteTransactionDialog';
 import { Button } from '@/components/ui/button';
@@ -54,7 +55,18 @@ export default function CryptoPortfolio() {
     refetch,
     chartData
   } = usePortfolio();
-  const { prices, loading: pricesLoading } = useCryptoPrices(holdings.map(h => h.crypto_symbol));
+  const cryptoIds = useMemo(() => 
+    holdings?.map(h => h.coinGeckoId || h.crypto_symbol.toLowerCase()) || [], 
+    [holdings]
+  );
+  const { prices, loading: pricesLoading, lastUpdated, isUpdating } = useCryptoPrices(cryptoIds);
+  
+  // Hook para imagens das criptomoedas
+  const { getCryptoImage } = useCryptoImages();
+  
+  // Debug removido para evitar re-renderizações desnecessárias
+
+
   const [showAddTransaction, setShowAddTransaction] = useState(false);
   const [showValues, setShowValues] = useState(true);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
@@ -106,14 +118,15 @@ export default function CryptoPortfolio() {
   };
 
   const getCryptoIcon = (symbol: string) => {
-    return `https://assets.coingecko.com/coins/images/1/large/${symbol.toLowerCase()}.png`;
+    return getCryptoImage(symbol) || `https://assets.coingecko.com/coins/images/1/large/${symbol.toLowerCase()}.png`;
   };
 
   const generateSparklineData = (symbol: string) => {
     // Simulação de dados de sparkline - em produção, buscar da API
+    const coinGeckoId = symbol.toLowerCase();
     const data = [];
     for (let i = 0; i < 7; i++) {
-      const basePrice = prices[symbol]?.current_price || 100;
+      const basePrice = prices[coinGeckoId]?.usd || 100;
       const variation = (Math.random() - 0.5) * 0.1; // ±5% variação
       data.push(basePrice * (1 + variation));
     }
@@ -122,12 +135,18 @@ export default function CryptoPortfolio() {
 
   const getTopPerformers = () => {
     return holdings
-      .map(holding => ({
-        ...holding,
-        currentPrice: prices[holding.crypto_symbol]?.current_price || 0,
-        pnl: (prices[holding.crypto_symbol]?.current_price || 0) * Number(holding.total_amount) - Number(holding.total_invested),
-        pnlPercentage: ((prices[holding.crypto_symbol]?.current_price || 0) / Number(holding.average_buy_price) - 1) * 100
-      }))
+      .map(holding => {
+        const coinGeckoId = holding.coinGeckoId || holding.crypto_symbol.toLowerCase();
+        const currentPrice = prices[coinGeckoId]?.usd || Number(holding.average_buy_price);
+        const currentValue = Number(holding.total_amount) * currentPrice;
+        
+        return {
+          ...holding,
+          currentPrice,
+          pnl: currentValue - Number(holding.total_invested),
+          pnlPercentage: Number(holding.total_invested) > 0 ? ((currentValue / Number(holding.total_invested)) - 1) * 100 : 0
+        };
+      })
       .filter(holding => holding.pnlPercentage > 0)
       .sort((a, b) => b.pnlPercentage - a.pnlPercentage)
       .slice(0, 3);
@@ -135,12 +154,18 @@ export default function CryptoPortfolio() {
 
   const getWorstPerformers = () => {
     return holdings
-      .map(holding => ({
-        ...holding,
-        currentPrice: prices[holding.crypto_symbol]?.current_price || 0,
-        pnl: (prices[holding.crypto_symbol]?.current_price || 0) * Number(holding.total_amount) - Number(holding.total_invested),
-        pnlPercentage: ((prices[holding.crypto_symbol]?.current_price || 0) / Number(holding.average_buy_price) - 1) * 100
-      }))
+      .map(holding => {
+        const coinGeckoId = holding.coinGeckoId || holding.crypto_symbol.toLowerCase();
+        const currentPrice = prices[coinGeckoId]?.usd || Number(holding.average_buy_price);
+        const currentValue = Number(holding.total_amount) * currentPrice;
+        
+        return {
+          ...holding,
+          currentPrice,
+          pnl: currentValue - Number(holding.total_invested),
+          pnlPercentage: Number(holding.total_invested) > 0 ? ((currentValue / Number(holding.total_invested)) - 1) * 100 : 0
+        };
+      })
       .filter(holding => holding.pnlPercentage < 0)
       .sort((a, b) => a.pnlPercentage - b.pnlPercentage)
       .slice(0, 3);
@@ -172,40 +197,44 @@ export default function CryptoPortfolio() {
   }
 
   return (
-    <div className="min-h-screen bg-zinc-950 p-4">
-        {/* Header */}
+    <div className="min-h-screen bg-zinc-950 p-3 sm:p-4">
+      {/* Header */}
       <div className="max-w-7xl mx-auto">
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <Link to="/dashboard" className="flex items-center text-zinc-400 hover:text-white transition-colors mb-2">
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Voltar
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6 lg:mb-8 gap-3 sm:gap-0">
+          <div className="flex-1">
+            <Link to="/dashboard" className="flex items-center text-zinc-400 hover:text-white transition-colors mb-1 sm:mb-2 text-sm">
+              <ArrowLeft className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+              <span className="hidden sm:inline">Voltar</span>
             </Link>
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-green-400 to-emerald-400 bg-clip-text text-transparent">
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-green-400 to-emerald-400 bg-clip-text text-transparent">
               Meu Portfólio Crypto
             </h1>
-            <p className="text-zinc-400 mt-2">
+            <p className="text-zinc-400 mt-1 sm:mt-2 text-xs sm:text-sm lg:text-base">
               Gerencie seus investimentos em criptomoedas e acompanhe sua performance
             </p>
           </div>
           
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
             <Button
               variant="outline"
               size="sm"
               onClick={() => setShowValues(!showValues)}
+              className="text-xs sm:text-sm px-2 sm:px-3"
             >
-              {showValues ? <EyeOff className="w-4 h-4 mr-2" /> : <Eye className="w-4 h-4 mr-2" />}
-              {showValues ? 'Ocultar' : 'Mostrar'} Valores
+              {showValues ? <EyeOff className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" /> : <Eye className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />}
+              <span className="hidden sm:inline">{showValues ? 'Ocultar' : 'Mostrar'} Valores</span>
+              <span className="sm:hidden">{showValues ? 'Ocultar' : 'Mostrar'}</span>
             </Button>
             
             <Button
               variant="outline"
               size="sm"
               onClick={() => navigate('/ranking')}
+              className="text-xs sm:text-sm px-2 sm:px-3"
             >
-              <Trophy className="w-4 h-4 mr-2" />
-              Ver Ranking
+              <Trophy className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+              <span className="hidden sm:inline">Ver Ranking</span>
+              <span className="sm:hidden">Ranking</span>
             </Button>
             
             <Button
@@ -213,76 +242,75 @@ export default function CryptoPortfolio() {
               size="sm"
               onClick={refetch}
               disabled={loading}
+              className="text-xs sm:text-sm px-2 sm:px-3"
             >
-              <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-              Atualizar
+              <RefreshCw className={`w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2 ${loading ? 'animate-spin' : ''}`} />
+              <span className="hidden sm:inline">Atualizar</span>
+              <span className="sm:hidden">Atualizar</span>
             </Button>
             
-            <Button onClick={() => setShowAddTransaction(true)}>
-              <Plus className="w-4 h-4 mr-2" />
-              Adicionar Transação
+            <Button onClick={() => setShowAddTransaction(true)} className="text-xs sm:text-sm px-2 sm:px-3">
+              <Plus className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+              <span className="hidden sm:inline">Adicionar Transação</span>
+              <span className="sm:hidden">Adicionar</span>
             </Button>
           </div>
         </div>
 
         {/* Métricas Principais */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 mb-4 sm:mb-6 lg:mb-8">
           <Card className="border-l-4 border-l-green-400 bg-zinc-900 border-zinc-800">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-zinc-400">
+            <CardHeader className="pb-1 sm:pb-2">
+              <CardTitle className="text-xs sm:text-sm font-medium text-zinc-400">
                 Total Investido
-              </CardTitle>
-                </CardHeader>
-                <CardContent>
-              <div className="text-2xl font-bold text-white">
-                {showValues ? formatCurrency(totalInvested) : '••••••'}
-                  </div>
-                </CardContent>
-              </Card>
-
-          <Card className="border-l-4 border-l-emerald-400 bg-zinc-900 border-zinc-800">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-zinc-400">
-                Valor Atual
-              </CardTitle>
-                </CardHeader>
-                <CardContent>
-              <div className="text-2xl font-bold text-white">
-                {showValues ? formatCurrency(currentValue) : '••••••'}
-                  </div>
-                </CardContent>
-              </Card>
-
-          <Card className={`border-l-4 bg-zinc-900 border-zinc-800 ${profitLoss >= 0 ? 'border-l-green-500' : 'border-l-red-500'}`}>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-zinc-400">
-                Lucro/Prejuízo
-              </CardTitle>
-                </CardHeader>
-                <CardContent>
-              <div className="text-2xl font-bold text-white">
-                {showValues ? formatCurrency(profitLoss) : '••••••'}
-              </div>
-              <div className={`text-sm ${profitLoss >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                {showValues ? formatPercentage(profitLossPercentage) : '••••'}
-                  </div>
-                </CardContent>
-              </Card>
-
-          <Card className="border-l-4 border-l-blue-500 bg-zinc-900 border-zinc-800">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-zinc-400">
-                Performance
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-white">
-                {showValues ? formatPercentage(profitLossPercentage) : '••••'}
+              <div className="text-lg sm:text-xl lg:text-2xl font-bold text-white">
+                {showValues ? formatCurrency(totalInvested) : '••••••'}
               </div>
-              <Progress 
-                value={Math.min(Math.max(profitLossPercentage + 100, 0), 200)} 
-                className="mt-2"
-              />
+            </CardContent>
+          </Card>
+
+          <Card className="border-l-4 border-l-emerald-400 bg-zinc-900 border-zinc-800">
+            <CardHeader className="pb-1 sm:pb-2">
+              <CardTitle className="text-xs sm:text-sm font-medium text-zinc-400">
+                Valor Atual
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-lg sm:text-xl lg:text-2xl font-bold text-white">
+                {showValues ? formatCurrency(currentValue) : '••••••'}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-l-4 border-l-blue-400 bg-zinc-900 border-zinc-800">
+            <CardHeader className="pb-1 sm:pb-2">
+              <CardTitle className="text-xs sm:text-sm font-medium text-zinc-400">
+                Lucro/Prejuízo
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className={`text-lg sm:text-xl lg:text-2xl font-bold ${profitLoss >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                {showValues ? formatCurrency(profitLoss) : '••••••'}
+              </div>
+              <div className={`text-xs sm:text-sm ${profitLossPercentage >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                {showValues ? formatPercentage(profitLossPercentage) : '••••••'}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-l-4 border-l-purple-400 bg-zinc-900 border-zinc-800">
+            <CardHeader className="pb-1 sm:pb-2">
+              <CardTitle className="text-xs sm:text-sm font-medium text-zinc-400">
+                Total de Ativos
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-lg sm:text-xl lg:text-2xl font-bold text-white">
+                {holdings.length}
+              </div>
             </CardContent>
           </Card>
         </div>
@@ -333,11 +361,17 @@ export default function CryptoPortfolio() {
                 {/* Cards dos Ativos */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {holdings.map((holding) => {
-                    const currentPrice = prices[holding.crypto_symbol]?.current_price || 0;
+                    // Converter symbol para coinGeckoId para buscar preços
+                    const coinGeckoId = holding.coinGeckoId || holding.crypto_symbol.toLowerCase();
+                    const currentPrice = prices[coinGeckoId]?.usd || Number(holding.average_buy_price);
                     const currentValue = Number(holding.total_amount) * currentPrice;
+                    
+                    // P&L baseado nos dados calculados (já corretos)
                     const pnl = currentValue - Number(holding.total_invested);
-                    const pnlPercentage = ((currentPrice / Number(holding.average_buy_price)) - 1) * 100;
+                    const pnlPercentage = Number(holding.total_invested) > 0 ? ((currentValue / Number(holding.total_invested)) - 1) * 100 : 0;
                     const sparklineData = generateSparklineData(holding.crypto_symbol);
+
+
 
                     return (
                       <motion.div
@@ -627,9 +661,7 @@ export default function CryptoPortfolio() {
             <MonthlyReport
               transactions={transactions}
               holdings={holdings}
-              currentPrices={Object.fromEntries(
-                Object.entries(prices).map(([symbol, data]) => [symbol, data.current_price])
-              )}
+              currentPrices={prices}
               selectedMonth={new Date()}
             />
           </TabsContent>

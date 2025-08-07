@@ -1,179 +1,397 @@
-# Sistema de Integração GGCheckout
+# 🚀 Crypto Luxe Portal - Sistema de Educação em Criptomoedas
 
-Este sistema integra sua área de membros com a GGCheckout através de webhooks, criando automaticamente usuários e enviando e-mails de boas-vindas quando um pagamento é aprovado.
+Um portal educacional completo para aprendizado sobre Bitcoin, criptomoedas e blockchain, com sistema de autenticação, módulos interativos e painel administrativo.
 
-## 🚀 Funcionalidades
+## 🎯 Funcionalidades Principais
 
-- ✅ Endpoint de webhook seguro para GGCheckout (`/ggcheckout-webhook`)
-- ✅ Validação de assinatura do webhook para segurança
-- ✅ Criação automática de usuários no banco de dados
-- ✅ Geração de senhas seguras e criptografadas
-- ✅ Envio automático de e-mails com dados de acesso
-- ✅ Template de e-mail responsivo e profissional
-- ✅ Sistema de logs para monitoramento
-- ✅ Prevenção de duplicatas por transaction_id
+### 📚 **Módulos Educacionais**
+- **Origens do Bitcoin** - História e fundamentos do Bitcoin
+- **Tecnologia Blockchain** - Conceitos técnicos e aplicações
+- **Trading de Criptomoedas** - Estratégias e análise técnica
+- **Segurança de Carteiras** - Melhores práticas de segurança
+- **Investimento em Cripto** - Planejamento e gestão de risco
+- **Módulo Avançado** - Conteúdo especializado
 
-## 🏗️ Arquitetura
+### 🔐 **Sistema de Autenticação**
+- ✅ Login/Registro com Supabase Auth
+- ✅ Recuperação de senha via e-mail
+- ✅ Proteção de rotas com React Router
+- ✅ Context API para gerenciamento de estado
+- ✅ Integração com Supabase para dados de usuário
 
-O sistema utiliza:
-- **Supabase Edge Functions** para o backend serverless
-- **Supabase Database** para armazenamento de dados
-- **Resend** para envio de e-mails transacionais
+### 📊 **Dashboard Interativo**
+- ✅ Portfolio de criptomoedas com gráficos (preços fixos de referência)
+- ✅ Ranking de usuários
+- ✅ Feed da comunidade
+- ✅ Relatórios mensais
+- ✅ Estatísticas de progresso
+
+### 🎥 **Sistema de Vídeos**
+- ✅ Player de vídeo integrado
+- ✅ Progresso automático de lições
+- ✅ Sistema de módulos com capas
+- ✅ Gerenciamento de conteúdo via admin
+
+### 👨‍💼 **Painel Administrativo**
+- ✅ Gerenciamento de usuários
+- ✅ Upload e edição de vídeos
+- ✅ Monitoramento de sistema
+- ✅ Logs de atividade
+- ✅ Configurações avançadas
+
+## 🏗️ Arquitetura Técnica
+
+### **Frontend**
+- **React 18** com TypeScript
+- **Vite** para build e desenvolvimento
+- **React Router DOM** para navegação
+- **Tailwind CSS** para estilização
+- **shadcn/ui** para componentes
+- **Lucide React** para ícones
+
+### **Backend & Database**
+- **Supabase** para autenticação, banco de dados e Edge Functions
 - **PostgreSQL** com Row Level Security (RLS)
-- **Validação HMAC SHA-256** para segurança dos webhooks
 
-## 📊 Estrutura do Banco de Dados
+### **Integrações**
+- **Amazon SES** para envio de e-mails
+- **GGCheckout** para processamento de pagamentos
+- **Webhooks** para automação
 
-### Tabela `members`
-- `id` (UUID) - Identificador único
-- `email` (TEXT) - E-mail do cliente
-- `password_hash` (TEXT) - Senha criptografada
+## 📁 Estrutura do Projeto
+
+```
+crypto-luxe-portal/
+├── src/
+│   ├── components/          # Componentes React
+│   │   ├── ui/             # Componentes shadcn/ui
+│   │   ├── PortfolioChart.tsx
+│   │   ├── CommunityFeed.tsx
+│   │   ├── VideoManager.tsx
+│   │   └── ...
+│   ├── pages/              # Páginas da aplicação
+│   │   ├── Dashboard.tsx
+│   │   ├── Login.tsx
+│   │   ├── AdminPanel.tsx
+│   │   └── ...
+│   ├── contexts/           # Context API
+│   │   ├── AuthContext.tsx
+│   │   └── AdminAuthContext.tsx
+│   ├── hooks/              # Custom Hooks
+│   │   ├── useAuth.ts
+│   │   ├── usePortfolio.ts
+│   │   └── ...
+│   ├── lib/                # Configurações
+│   │   ├── firebase.ts
+│   │   └── utils.ts
+│   └── integrations/       # Integrações externas
+│       └── supabase/
+├── supabase/               # Configuração Supabase
+│   ├── functions/          # Edge Functions
+│   └── migrations/         # Migrações do banco
+├── public/                 # Assets estáticos
+└── docs/                   # Documentação
+```
+
+## 🔧 Configuração e Instalação
+
+### **Pré-requisitos**
+- Node.js 18+
+- npm ou yarn
+- Conta Supabase
+
+### **Instalação**
+
+```bash
+# Clone o repositório
+git clone [url-do-repositorio]
+cd crypto-luxe-portal
+
+# Instale as dependências
+npm install
+
+# Configure as variáveis de ambiente
+cp .env.example .env.local
+```
+
+### **Variáveis de Ambiente**
+
+Crie um arquivo `.env.local` com:
+
+```env
+# Firebase
+VITE_FIREBASE_API_KEY=sua_api_key
+VITE_FIREBASE_AUTH_DOMAIN=seu_projeto.firebaseapp.com
+VITE_FIREBASE_PROJECT_ID=seu_projeto_id
+VITE_FIREBASE_STORAGE_BUCKET=seu_projeto.appspot.com
+VITE_FIREBASE_MESSAGING_SENDER_ID=123456789
+VITE_FIREBASE_APP_ID=seu_app_id
+
+# Supabase
+VITE_SUPABASE_URL=sua_url_supabase
+VITE_SUPABASE_ANON_KEY=sua_chave_anonima
+```
+
+### **Executar o Projeto**
+
+```bash
+# Desenvolvimento
+npm run dev
+
+# Build para produção
+npm run build
+
+# Preview da build
+npm run preview
+```
+
+## 🗄️ Estrutura do Banco de Dados
+
+### **Tabelas Principais**
+
+#### `users`
+- `id` (UUID) - ID único do usuário
+- `firebase_uid` (TEXT) - UID do Firebase
+- `email` (TEXT) - E-mail do usuário
 - `full_name` (TEXT) - Nome completo
-- `product_name` (TEXT) - Nome do produto comprado
-- `ggcheckout_transaction_id` (TEXT) - ID da transação GGCheckout
-- `is_active` (BOOLEAN) - Status ativo/inativo
 - `created_at` (TIMESTAMP) - Data de criação
-- `updated_at` (TIMESTAMP) - Data de atualização
 
-### Tabela `webhook_logs`
-- `id` (UUID) - Identificador único
-- `webhook_type` (TEXT) - Tipo do webhook
-- `payload` (JSONB) - Dados recebidos
-- `status` (TEXT) - Status do processamento
-- `error_message` (TEXT) - Mensagem de erro (se houver)
-- `created_at` (TIMESTAMP) - Data do log
+#### `user_progress`
+- `id` (UUID) - ID único
+- `user_id` (UUID) - Referência ao usuário
+- `module_id` (TEXT) - ID do módulo
+- `lesson_id` (TEXT) - ID da lição
+- `completed` (BOOLEAN) - Status de conclusão
+- `progress_percentage` (INTEGER) - Porcentagem de progresso
 
-## 🔗 URL do Webhook
+#### `portfolio_transactions`
+- `id` (UUID) - ID único
+- `user_id` (UUID) - Referência ao usuário
+- `crypto_symbol` (TEXT) - Símbolo da cripto
+- `transaction_type` (TEXT) - Compra/Venda
+- `amount` (DECIMAL) - Quantidade
+- `price` (DECIMAL) - Preço unitário
+- `date` (TIMESTAMP) - Data da transação
 
-Configure este endpoint na GGCheckout:
+#### `community_posts`
+- `id` (UUID) - ID único
+- `user_id` (UUID) - Referência ao usuário
+- `content` (TEXT) - Conteúdo do post
+- `created_at` (TIMESTAMP) - Data de criação
 
+#### `module_covers`
+- `id` (UUID) - ID único
+- `module_id` (TEXT) - ID do módulo
+- `cover_url` (TEXT) - URL da imagem de capa
+- `title` (TEXT) - Título do módulo
+- `description` (TEXT) - Descrição
+
+## 🔐 Segurança
+
+### **Autenticação**
+- Firebase Authentication com múltiplos provedores
+- Tokens JWT seguros
+- Refresh tokens automáticos
+- Proteção de rotas com React Router
+
+### **Banco de Dados**
+- Row Level Security (RLS) no Supabase
+- Políticas de acesso por usuário
+- Validação de dados com TypeScript
+- Sanitização de inputs
+
+### **Webhooks**
+- Validação HMAC SHA-256 para GGCheckout
+- Logs de auditoria completos
+- Prevenção de duplicatas
+- Tratamento de erros robusto
+
+## 📊 Funcionalidades Avançadas
+
+### **Sistema de Portfolio**
+- ✅ Adicionar/remover transações
+- ✅ Cálculo automático de P&L
+- ✅ Gráficos interativos
+- ✅ Distribuição por criptomoeda
+- ✅ Relatórios mensais
+
+### **Feed da Comunidade**
+- ✅ Posts em tempo real
+- ✅ Sistema de likes
+- ✅ Comentários
+- ✅ Moderação automática
+
+### **Sistema de Módulos**
+- ✅ Progresso automático
+- ✅ Certificados de conclusão
+- ✅ Conteúdo dinâmico
+- ✅ Integração com vídeos
+
+### **Monitoramento**
+- ✅ Logs de erro em tempo real
+- ✅ Métricas de performance
+- ✅ Alertas de conectividade
+- ✅ Status do sistema
+
+## 🚀 Deploy
+
+### **Vercel (Recomendado)**
+```bash
+# Instalar Vercel CLI
+npm i -g vercel
+
+# Deploy
+vercel --prod
 ```
-https://wvojbjkdlnvlqgjwtdaf.supabase.co/functions/v1/ggcheckout-webhook
+
+### **Netlify**
+```bash
+# Build
+npm run build
+
+# Deploy manual via interface
 ```
 
-## ⚙️ Configuração na GGCheckout
+### **Firebase Hosting**
+```bash
+# Instalar Firebase CLI
+npm i -g firebase-tools
 
-1. **Acesse sua conta GGCheckout**
-2. **Vá para Configurações > Webhooks**
-3. **Adicione um novo webhook com:**
-   - URL: `https://wvojbjkdlnvlqgjwtdaf.supabase.co/functions/v1/ggcheckout-webhook`
-   - Eventos: `pagamento_aprovado`
-   - Método: `POST`
-   - Secret: (use o mesmo valor do `GGCHECKOUT_WEBHOOK_SECRET`)
-
-4. **Teste o webhook** enviando uma transação de teste
-
-## 🔐 Variáveis de Ambiente (Secrets)
-
-As seguintes variáveis estão configuradas no Supabase:
-
-- `RESEND_API_KEY` - Chave da API do Resend para envio de e-mails
-- `GGCHECKOUT_WEBHOOK_SECRET` - Secret para validação da assinatura
-- `SUPABASE_URL` - URL do projeto Supabase
-- `SUPABASE_SERVICE_ROLE_KEY` - Chave de serviço do Supabase
-
-## 📧 Template de E-mail
-
-O sistema envia automaticamente um e-mail de boas-vindas com:
-
-- **Assunto:** "Seu acesso foi liberado! 🎉"
-- **Conteúdo:** Nome do cliente, produto comprado, login e senha
-- **Design:** Template HTML responsivo e profissional
-- **Link:** Botão direto para área de membros
-
-### Exemplo de E-mail:
-```
-Olá João Silva,
-Obrigado por sua compra do produto Curso Completo de Marketing!
-
-📋 Seus dados de acesso:
-Login: joao@email.com
-Senha: Ab3$kL9mN2pQ
-
-[🚀 Acessar Área de Membros]
-
-Bom aprendizado! 📚
+# Login e deploy
+firebase login
+firebase deploy
 ```
 
-## 🔄 Fluxo de Processamento
+## 🔧 Desenvolvimento
 
-1. **GGCheckout envia webhook** quando pagamento é aprovado
-2. **Sistema valida assinatura** HMAC SHA-256
-3. **Verifica se usuário já existe** (evita duplicatas)
-4. **Gera senha segura** (12 caracteres aleatórios)
-5. **Cria usuário no banco** com senha criptografada
-6. **Envia e-mail de boas-vindas** com dados de acesso
-7. **Registra logs** para monitoramento
+### **Scripts Disponíveis**
+```bash
+npm run dev          # Servidor de desenvolvimento
+npm run build        # Build para produção
+npm run preview      # Preview da build
+npm run lint         # Linting do código
+npm run type-check   # Verificação de tipos
+```
 
-## 📈 Monitoramento
+### **Estrutura de Componentes**
+- **Atomic Design** para organização
+- **Composition Pattern** para reutilização
+- **Custom Hooks** para lógica de negócio
+- **Context API** para estado global
 
-### Logs de Webhook
-Todos os webhooks são registrados na tabela `webhook_logs` com:
-- Payload completo recebido
-- Status do processamento
-- Mensagens de erro (se houver)
-- Timestamp de cada evento
+### **Padrões de Código**
+- **TypeScript** para type safety
+- **ESLint** para qualidade de código
+- **Prettier** para formatação
+- **Husky** para pre-commit hooks
 
-### Status Possíveis:
-- `received` - Webhook recebido com sucesso
-- `processed` - Usuário criado e e-mail enviado
-- `skipped` - Usuário já existia para esta transação
-- `ignored` - Evento não processado (ex: pagamento negado)
-- `error` - Erro durante processamento
+## 📈 Monitoramento e Analytics
 
-## 🛡️ Segurança
+### **Firebase Analytics**
+- Eventos de usuário
+- Conversões
+- Retenção
+- Performance
 
-- **Validação de assinatura HMAC** em todos os webhooks
-- **Senhas criptografadas** com SHA-256
-- **Row Level Security (RLS)** no banco de dados
-- **CORS configurado** para requisições web
-- **Logs de auditoria** de todas as operações
+### **Supabase Logs**
+- Queries de banco
+- Autenticação
+- Edge Functions
+- Webhooks
 
-## 🚀 Deploy Automático
+### **Vercel Analytics**
+- Performance de páginas
+- Core Web Vitals
+- Erros de JavaScript
+- Métricas de usuário
 
-O sistema está configurado para deploy automático:
-- Edge Functions são deployadas automaticamente
-- Banco de dados sincronizado via migrações
-- Secrets gerenciados pelo Supabase
-- SSL/TLS automático para HTTPS
+## 🛠️ Troubleshooting
+
+### **Problemas Comuns**
+
+#### **Erro 400 do Firestore**
+- Verificar configuração do Firebase
+- Confirmar regras de segurança
+- Validar conectividade de rede
+
+#### **Erro de Autenticação**
+- Verificar tokens do Firebase
+- Confirmar configuração do Supabase
+- Validar políticas RLS
+
+#### **Problemas de Performance**
+- Otimizar queries do Firestore
+- Implementar cache adequado
+- Verificar bundle size
+
+### **Logs de Debug**
+```javascript
+// Habilitar logs detalhados
+localStorage.setItem('debug', 'firebase:*');
+```
+
+## 🤝 Contribuição
+
+### **Como Contribuir**
+1. Fork o projeto
+2. Crie uma branch para sua feature
+3. Commit suas mudanças
+4. Push para a branch
+5. Abra um Pull Request
+
+### **Padrões de Commit**
+```
+feat: nova funcionalidade
+fix: correção de bug
+docs: documentação
+style: formatação
+refactor: refatoração
+test: testes
+chore: manutenção
+```
 
 ## 📞 Suporte
 
-Para dúvidas ou problemas:
-1. Verifique os logs no Supabase Dashboard
-2. Teste o webhook com transações de teste
-3. Confirme configuração dos secrets
-4. Valide URL e eventos na GGCheckout
+### **Canais de Ajuda**
+- **Issues do GitHub** para bugs
+- **Discussions** para dúvidas
+- **Documentação** para guias
+- **Email** para suporte direto
 
-## 🔧 Desenvolvimento Local
+### **Recursos Úteis**
+- [Firebase Documentation](https://firebase.google.com/docs)
+- [Supabase Documentation](https://supabase.com/docs)
+- [React Documentation](https://react.dev)
+- [Tailwind CSS](https://tailwindcss.com/docs)
 
-Para testar localmente (opcional):
-```bash
-# Instalar Supabase CLI
-npm install -g supabase
+## 📄 Licença
 
-# Fazer login
-supabase login
+Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para mais detalhes.
 
-# Sincronizar projeto
-supabase link --project-ref wvojbjkdlnvlqgjwtdaf
+## 🙏 Agradecimentos
 
-# Executar funções localmente
-supabase functions serve ggcheckout-webhook
-```
+- **Firebase** pela infraestrutura
+- **Supabase** pelo banco de dados
+- **Vercel** pelo deploy
+- **shadcn/ui** pelos componentes
+- **Tailwind CSS** pela estilização
 
 ---
 
-## Projeto Original Lovable
+## 🎉 Status do Projeto
 
-**URL**: https://lovable.dev/projects/45339df3-9b91-487e-bbf9-219f12acc057
+**✅ Produção Pronta**
+- Sistema estável e testado
+- Todas as funcionalidades implementadas
+- Performance otimizada
+- Segurança validada
 
-### Tecnologias Frontend:
-- Vite, TypeScript, React
-- shadcn-ui, Tailwind CSS
-- Supabase Integration
+**🚀 Próximos Passos**
+- Implementar testes automatizados
+- Adicionar mais módulos educacionais
+- Expandir funcionalidades de portfolio
+- Melhorar UX/UI
 
-### Deploy:
-Abra [Lovable](https://lovable.dev/projects/45339df3-9b91-487e-bbf9-219f12acc057) e clique em Share → Publish.
+---
 
-**Sistema pronto para produção! 🎉**
+**Desenvolvido com ❤️ para a comunidade crypto! 🚀**

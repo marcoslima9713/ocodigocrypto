@@ -223,3 +223,153 @@
     transform: scale(1);
   }
 }
+
+/* Classes personalizadas para responsividade */
+@layer components {
+  /* Classes personalizadas para responsividade */
+  .card-premium {
+    @apply bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-6 sm:p-8 shadow-2xl;
+  }
+  
+  .input-premium {
+    @apply bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition-all;
+  }
+  
+  .btn-gold {
+    @apply bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-black font-semibold transition-all duration-300 transform hover:scale-105;
+  }
+  
+  .text-gradient-gold {
+    @apply bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent;
+  }
+  
+  /* Utilitários para responsividade móvel */
+  .mobile-only {
+    @apply block sm:hidden;
+  }
+  
+  .desktop-only {
+    @apply hidden sm:block;
+  }
+  
+  .mobile-text {
+    @apply text-xs sm:text-sm;
+  }
+  
+  .mobile-padding {
+    @apply p-3 sm:p-4;
+  }
+  
+  .mobile-margin {
+    @apply m-2 sm:m-4;
+  }
+  
+  .mobile-gap {
+    @apply gap-2 sm:gap-3;
+  }
+  
+  .mobile-space {
+    @apply space-y-2 sm:space-y-3;
+  }
+  
+  /* Scrollbar personalizada para mobile */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  
+  /* Melhorias para touch em dispositivos móveis */
+  .touch-target {
+    @apply min-h-[44px] min-w-[44px];
+  }
+  
+  /* Animações suaves para mobile */
+  .mobile-transition {
+    @apply transition-all duration-200 ease-in-out;
+  }
+  
+  /* Layout responsivo para cards */
+  .responsive-grid {
+    @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 lg:gap-6;
+  }
+  
+  /* Texto responsivo */
+  .responsive-text {
+    @apply text-sm sm:text-base lg:text-lg;
+  }
+  
+  .responsive-heading {
+    @apply text-lg sm:text-xl lg:text-2xl xl:text-3xl;
+  }
+  
+  /* Espaçamento responsivo */
+  .responsive-spacing {
+    @apply p-3 sm:p-4 lg:p-6;
+  }
+  
+  .responsive-margin {
+    @apply m-2 sm:m-4 lg:m-6;
+  }
+  
+  /* Botões responsivos */
+  .responsive-button {
+    @apply px-3 sm:px-4 lg:px-6 py-2 sm:py-3 text-sm sm:text-base;
+  }
+  
+  /* Ícones responsivos */
+  .responsive-icon {
+    @apply w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6;
+  }
+  
+  /* Container responsivo */
+  .responsive-container {
+    @apply max-w-sm sm:max-w-md lg:max-w-lg xl:max-w-xl;
+  }
+  
+  /* Flex responsivo */
+  .responsive-flex {
+    @apply flex flex-col sm:flex-row;
+  }
+  
+  /* Grid responsivo */
+  .responsive-grid-cols {
+    @apply grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4;
+  }
+}
+
+/* Melhorias específicas para dispositivos móveis */
+@media (max-width: 640px) {
+  .mobile-optimized {
+    font-size: 14px;
+    line-height: 1.4;
+  }
+  
+  .mobile-touch {
+    touch-action: manipulation;
+  }
+  
+  .mobile-overflow {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* Melhorias para tablets */
+@media (min-width: 641px) and (max-width: 1024px) {
+  .tablet-optimized {
+    font-size: 16px;
+    line-height: 1.5;
+  }
+}
+
+/* Melhorias para desktop */
+@media (min-width: 1025px) {
+  .desktop-optimized {
+    font-size: 18px;
+    line-height: 1.6;
+  }
+}

@@ -19,21 +19,60 @@ import {
 import { PortfolioRanking } from '@/components/PortfolioRanking';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { usePortfolioRankings } from '@/hooks/usePortfolioRankings';
 
 export default function PortfolioRankingPage() {
   const { currentUser } = useAuth();
   const navigate = useNavigate();
   const [selectedTimeWindow, setSelectedTimeWindow] = useState<'7_days' | '30_days'>('7_days');
+  
+  // Usar o hook para obter dados reais
+  const { rankings, loading, error } = usePortfolioRankings({
+    timeWindow: selectedTimeWindow,
+    limit: 10
+  });
 
-  // Estatísticas baseadas em dados reais (inicialmente zeradas)
-  const stats = {
-    totalUsers: 0,
-    averageReturn: 0,
-    topReturn: 0,
-    activeUsers: 0,
-    totalInvested: 0,
-    averageDCA: 0
+  // Calcular estatísticas baseadas nos dados reais
+  const calculateStats = () => {
+    const allRankings = [
+      ...rankings.return_percent,
+      ...rankings.top_asset,
+      ...rankings.dca_strategy
+    ];
+
+    // Remover duplicatas baseado no user_id
+    const uniqueUsers = allRankings.filter((entry, index, self) => 
+      index === self.findIndex(e => e.user_id === entry.user_id)
+    );
+
+    if (uniqueUsers.length === 0) {
+      return {
+        totalUsers: 0,
+        averageReturn: 0,
+        topReturn: 0,
+        activeUsers: 0,
+        totalInvested: 0,
+        averageDCA: 0
+      };
+    }
+
+    const totalUsers = uniqueUsers.length;
+    const averageReturn = uniqueUsers.reduce((sum, user) => sum + user.return_percent, 0) / totalUsers;
+    const topReturn = Math.max(...uniqueUsers.map(user => user.return_percent));
+    const totalInvested = uniqueUsers.reduce((sum, user) => sum + user.total_invested, 0);
+    const averageDCA = uniqueUsers.reduce((sum, user) => sum + user.dca_purchase_count, 0) / totalUsers;
+
+    return {
+      totalUsers,
+      averageReturn: Math.round(averageReturn * 10) / 10, // Arredondar para 1 casa decimal
+      topReturn: Math.round(topReturn * 10) / 10,
+      activeUsers: totalUsers,
+      totalInvested,
+      averageDCA: Math.round(averageDCA * 10) / 10
+    };
   };
+
+  const stats = calculateStats();
 
   const handleBackToPortfolio = () => {
     navigate('/portfolio');
@@ -123,7 +162,7 @@ export default function PortfolioRankingPage() {
                 <div>
                   <p className="text-zinc-400 text-sm">Total Investido</p>
                   <p className="text-2xl font-bold text-white">
-                    {stats.totalInvested > 0 ? `$${(stats.totalInvested / 1000000).toFixed(1)}M` : '$0'}
+                    {stats.totalInvested > 0 ? `$${(stats.totalInvested / 1000).toFixed(0)}K` : '$0'}
                   </p>
                 </div>
                 <DollarSign className="w-8 h-8 text-zinc-600" />
@@ -154,7 +193,7 @@ export default function PortfolioRankingPage() {
                   </div>
                   <div>
                     <p className="text-white font-medium">Conta Ativa</p>
-                    <p className="text-zinc-400 text-sm">Mínimo 7 dias</p>
+                    <p className="text-zinc-400 text-sm">Mínimo 1 hora</p>
                   </div>
                 </div>
                 

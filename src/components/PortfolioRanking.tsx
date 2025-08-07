@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -14,11 +14,12 @@ import {
   Calendar,
   Users,
   Target,
-  Zap
+  Zap,
+  Wifi,
+  WifiOff
 } from 'lucide-react';
 import { usePortfolioRankings } from '@/hooks/usePortfolioRankings';
 import { PortfolioRankingEntry } from '@/integrations/supabase/types';
-import { EmptyState } from '@/components/EmptyState';
 
 interface PortfolioRankingProps {
   className?: string;
@@ -26,6 +27,7 @@ interface PortfolioRankingProps {
 
 export function PortfolioRanking({ className = "" }: PortfolioRankingProps) {
   const [timeWindow, setTimeWindow] = useState<'7_days' | '30_days'>('7_days');
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
   
   const {
     rankings,
@@ -38,6 +40,28 @@ export function PortfolioRanking({ className = "" }: PortfolioRankingProps) {
     getBadgeIcon,
     getBadgeColor
   } = usePortfolioRankings({ timeWindow, limit: 10 });
+
+  // Monitorar status de conectividade
+  useEffect(() => {
+    const handleOnline = () => {
+      setIsOnline(true);
+      // Tentar recarregar dados quando a conexão for restaurada
+      if (error) {
+        setTimeout(() => {
+          refreshRankings();
+        }, 1000);
+      }
+    };
+    const handleOffline = () => setIsOnline(false);
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, [error, refreshRankings]);
 
   // Função para obter iniciais do nome
   const getInitials = (name: string) => {
@@ -236,16 +260,24 @@ export function PortfolioRanking({ className = "" }: PortfolioRankingProps) {
             </Badge>
           </div>
 
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={refreshRankings}
-            disabled={loading}
-            className="text-xs"
-          >
-            <RefreshCw className={`w-3 h-3 mr-1 ${loading ? 'animate-spin' : ''}`} />
-            Atualizar
-          </Button>
+          <div className="flex items-center gap-2">
+            {!isOnline && (
+              <Badge variant="destructive" className="text-xs">
+                <WifiOff className="w-3 h-3 mr-1" />
+                Offline
+              </Badge>
+            )}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={refreshRankings}
+              disabled={loading || !isOnline}
+              className="text-xs"
+            >
+              <RefreshCw className={`w-3 h-3 mr-1 ${loading ? 'animate-spin' : ''}`} />
+              Atualizar
+            </Button>
+          </div>
         </div>
 
         {/* Tabs de janela de tempo */}
@@ -269,13 +301,19 @@ export function PortfolioRanking({ className = "" }: PortfolioRankingProps) {
           <div className="text-center py-8">
             <div className="text-red-400 mb-2">⚠️</div>
             <p className="text-red-400 text-sm">{error}</p>
+            {!isOnline && (
+              <p className="text-zinc-400 text-xs mt-2">
+                Verifique sua conexão com a internet
+              </p>
+            )}
             <Button 
               variant="outline" 
               size="sm" 
               onClick={refreshRankings}
+              disabled={!isOnline}
               className="mt-2"
             >
-              Tentar novamente
+              {isOnline ? 'Tentar novamente' : 'Sem conexão'}
             </Button>
           </div>
         )}
@@ -306,29 +344,41 @@ export function PortfolioRanking({ className = "" }: PortfolioRankingProps) {
               </p>
             </div>
 
-            <AnimatePresence mode="wait">
-              {loading ? (
-                Array.from({ length: 5 }).map((_, index) => (
-                  <RankingSkeleton key={index} />
-                ))
-              ) : rankings.return_percent.length > 0 ? (
-                rankings.return_percent.map((entry, index) => (
+            {loading ? (
+              Array.from({ length: 5 }).map((_, index) => (
+                <RankingSkeleton key={index} />
+              ))
+            ) : rankings.return_percent.length > 0 ? (
+              <AnimatePresence>
+                {rankings.return_percent.map((entry, index) => (
                   <RankingEntry
                     key={`${entry.user_id}-${timeWindow}`}
                     entry={entry}
                     position={index + 1}
                     category="return_percent"
                   />
-                ))
-              ) : (
-                <EmptyState
-                  icon={Trophy}
-                  title="Aguardando Resultados"
-                  description="O ranking será exibido assim que usuários da comunidade começarem a registrar transações e atingirem os critérios de elegibilidade."
-                  details="Critérios: Conta ativa há 7+ dias • Investimento mínimo $100 • Perfil público"
-                />
+                ))}
+              </AnimatePresence>
+                          ) : (
+                <div className="text-center py-12">
+                  <div className="text-6xl mb-4">🏆</div>
+                  <h3 className="text-lg font-semibold text-white mb-2">
+                    Aguardando Resultados
+                  </h3>
+                  <p className="text-zinc-400 text-sm mb-4 max-w-md mx-auto">
+                    O ranking será exibido assim que usuários da comunidade começarem a registrar transações e atingirem os critérios de elegibilidade.
+                  </p>
+                  <div className="bg-zinc-800 rounded-lg p-4 max-w-sm mx-auto">
+                    <h4 className="text-white font-medium mb-2">Critérios de Elegibilidade:</h4>
+                    <ul className="text-zinc-400 text-xs space-y-1">
+                      <li>• Conta ativa há 7+ dias</li>
+                      <li>• Investimento mínimo $100</li>
+                      <li>• Perfil público ativado</li>
+                      <li>• Transações registradas</li>
+                    </ul>
+                  </div>
+                </div>
               )}
-            </AnimatePresence>
           </TabsContent>
 
           {/* Tab: Melhor Ativo */}
@@ -340,29 +390,41 @@ export function PortfolioRanking({ className = "" }: PortfolioRankingProps) {
               </p>
             </div>
 
-            <AnimatePresence mode="wait">
-              {loading ? (
-                Array.from({ length: 5 }).map((_, index) => (
-                  <RankingSkeleton key={index} />
-                ))
-              ) : rankings.top_asset.length > 0 ? (
-                rankings.top_asset.map((entry, index) => (
+            {loading ? (
+              Array.from({ length: 5 }).map((_, index) => (
+                <RankingSkeleton key={index} />
+              ))
+            ) : rankings.top_asset.length > 0 ? (
+              <AnimatePresence>
+                {rankings.top_asset.map((entry, index) => (
                   <RankingEntry
                     key={`${entry.user_id}-${timeWindow}`}
                     entry={entry}
                     position={index + 1}
                     category="top_asset"
                   />
-                ))
-              ) : (
-                <EmptyState
-                  icon={Target}
-                  title="Aguardando Resultados"
-                  description="O ranking será exibido assim que usuários da comunidade começarem a registrar transações e atingirem os critérios de elegibilidade."
-                  details="Critérios: Conta ativa há 7+ dias • Investimento mínimo $100 • Perfil público"
-                />
+                ))}
+              </AnimatePresence>
+                          ) : (
+                <div className="text-center py-12">
+                  <div className="text-6xl mb-4">💎</div>
+                  <h3 className="text-lg font-semibold text-white mb-2">
+                    Aguardando Resultados
+                  </h3>
+                  <p className="text-zinc-400 text-sm mb-4 max-w-md mx-auto">
+                    O ranking será exibido assim que usuários da comunidade começarem a registrar transações e atingirem os critérios de elegibilidade.
+                  </p>
+                  <div className="bg-zinc-800 rounded-lg p-4 max-w-sm mx-auto">
+                    <h4 className="text-white font-medium mb-2">Critérios de Elegibilidade:</h4>
+                    <ul className="text-zinc-400 text-xs space-y-1">
+                      <li>• Conta ativa há 7+ dias</li>
+                      <li>• Investimento mínimo $100</li>
+                      <li>• Perfil público ativado</li>
+                      <li>• Transações registradas</li>
+                    </ul>
+                  </div>
+                </div>
               )}
-            </AnimatePresence>
           </TabsContent>
 
           {/* Tab: Estratégia DCA */}
@@ -374,29 +436,41 @@ export function PortfolioRanking({ className = "" }: PortfolioRankingProps) {
               </p>
             </div>
 
-            <AnimatePresence mode="wait">
-              {loading ? (
-                Array.from({ length: 5 }).map((_, index) => (
-                  <RankingSkeleton key={index} />
-                ))
-              ) : rankings.dca_strategy.length > 0 ? (
-                rankings.dca_strategy.map((entry, index) => (
+            {loading ? (
+              Array.from({ length: 5 }).map((_, index) => (
+                <RankingSkeleton key={index} />
+              ))
+            ) : rankings.dca_strategy.length > 0 ? (
+              <AnimatePresence>
+                {rankings.dca_strategy.map((entry, index) => (
                   <RankingEntry
                     key={`${entry.user_id}-${timeWindow}`}
                     entry={entry}
                     position={index + 1}
                     category="dca_strategy"
                   />
-                ))
-              ) : (
-                <EmptyState
-                  icon={DollarSign}
-                  title="Aguardando Resultados"
-                  description="O ranking será exibido assim que usuários da comunidade começarem a registrar transações e atingirem os critérios de elegibilidade."
-                  details="Critérios: Conta ativa há 7+ dias • Investimento mínimo $100 • Perfil público"
-                />
+                ))}
+              </AnimatePresence>
+                          ) : (
+                <div className="text-center py-12">
+                  <div className="text-6xl mb-4">📊</div>
+                  <h3 className="text-lg font-semibold text-white mb-2">
+                    Aguardando Resultados
+                  </h3>
+                  <p className="text-zinc-400 text-sm mb-4 max-w-md mx-auto">
+                    O ranking será exibido assim que usuários da comunidade começarem a registrar transações e atingirem os critérios de elegibilidade.
+                  </p>
+                  <div className="bg-zinc-800 rounded-lg p-4 max-w-sm mx-auto">
+                    <h4 className="text-white font-medium mb-2">Critérios de Elegibilidade:</h4>
+                    <ul className="text-zinc-400 text-xs space-y-1">
+                      <li>• Conta ativa há 7+ dias</li>
+                      <li>• Investimento mínimo $100</li>
+                      <li>• Perfil público ativado</li>
+                      <li>• Transações registradas</li>
+                    </ul>
+                  </div>
+                </div>
               )}
-            </AnimatePresence>
           </TabsContent>
         </Tabs>
 

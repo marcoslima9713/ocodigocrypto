@@ -20,15 +20,23 @@ export default function Login() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('🔍 Formulário submetido!', { email, password });
     setIsLoading(true);
 
     try {
+      console.log('🔄 Tentando fazer login...');
       await login(email, password);
+      console.log('✅ Login bem-sucedido!');
     } catch (error) {
+      console.error('❌ Erro no login:', error);
       // Erro já tratado no context
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleButtonClick = () => {
+    console.log('🔍 Botão clicado!');
   };
 
   return (
@@ -128,6 +136,7 @@ export default function Login() {
                 type="submit"
                 disabled={isLoading}
                 className="btn-gold w-full"
+                onClick={handleButtonClick}
               >
                 {isLoading ? (
                   <div className="flex items-center">

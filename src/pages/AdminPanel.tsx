@@ -7,14 +7,14 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Copy, CheckCircle, Shield, Code, Globe, Image, AlertTriangle, User } from "lucide-react";
+import { Copy, CheckCircle, Shield, Code, Globe, Image, AlertTriangle, User, Coins } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import VideoManager from "@/components/VideoManager";
+import CoinGeckoManager from "@/components/CoinGeckoManager";
+import CryptoImageManager from "@/components/CryptoImageManager";
+import DCACryptoManager from "@/components/DCACryptoManager";
 
 import { useAdminAuth } from "@/contexts/AdminAuthContext";
-import { FirestoreStatus } from "@/components/FirestoreStatus";
-import { FirebaseDiagnostics } from "@/components/FirebaseDiagnostics";
-import { FirebaseUIDDisplay } from "@/components/FirebaseUIDDisplay";
 
 const AdminPanel = () => {
   const { logoutAdmin } = useAdminAuth();
@@ -64,11 +64,13 @@ const AdminPanel = () => {
         </div>
 
         <Tabs defaultValue="status" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="grid w-full grid-cols-8">
             <TabsTrigger value="status">Status do Sistema</TabsTrigger>
             <TabsTrigger value="webhook">Webhook</TabsTrigger>
             <TabsTrigger value="videos">Gerenciar Vídeos</TabsTrigger>
-            <TabsTrigger value="firebase">Firebase</TabsTrigger>
+            <TabsTrigger value="coingecko">API CoinGecko</TabsTrigger>
+            <TabsTrigger value="crypto-images">Imagens Crypto</TabsTrigger>
+            <TabsTrigger value="dca-crypto">DCA Crypto</TabsTrigger>
             <TabsTrigger value="docs">Documentação</TabsTrigger>
           </TabsList>
 
@@ -187,46 +189,12 @@ const AdminPanel = () => {
             <VideoManager />
           </TabsContent>
 
+          <TabsContent value="coingecko">
+            <CoinGeckoManager />
+          </TabsContent>
 
-
-          <TabsContent value="firebase" className="space-y-4">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <CheckCircle className="h-5 w-5" />
-                    Status do Firestore
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <FirestoreStatus />
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Code className="h-5 w-5" />
-                    Diagnósticos do Firebase
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <FirebaseDiagnostics />
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <User className="h-5 w-5" />
-                    Configurar Admin
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <FirebaseUIDDisplay />
-                </CardContent>
-              </Card>
-            </div>
+          <TabsContent value="crypto-images">
+            <CryptoImageManager />
           </TabsContent>
 
           <TabsContent value="docs" className="space-y-4">
@@ -382,6 +350,23 @@ Colunas:
                 </CardContent>
               </Card>
             </div>
+          </TabsContent>
+
+          <TabsContent value="dca-crypto" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Coins className="h-5 w-5" />
+                  Gerenciar Criptomoedas da Calculadora DCA
+                </CardTitle>
+                <CardDescription>
+                  Adicione, edite ou remova criptomoedas disponíveis na calculadora DCA
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <DCACryptoManager />
+              </CardContent>
+            </Card>
           </TabsContent>
         </Tabs>
       </div>

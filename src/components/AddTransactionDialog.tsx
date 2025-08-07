@@ -37,16 +37,16 @@ interface AddTransactionDialogProps {
 }
 
 const CRYPTO_ASSETS = [
-  { symbol: 'bitcoin', name: 'Bitcoin', shortName: 'BTC' },
-  { symbol: 'ethereum', name: 'Ethereum', shortName: 'ETH' },
-  { symbol: 'cardano', name: 'Cardano', shortName: 'ADA' },
-  { symbol: 'polkadot', name: 'Polkadot', shortName: 'DOT' },
-  { symbol: 'solana', name: 'Solana', shortName: 'SOL' },
-  { symbol: 'polygon', name: 'Polygon', shortName: 'MATIC' },
-  { symbol: 'avalanche-2', name: 'Avalanche', shortName: 'AVAX' },
-  { symbol: 'cosmos', name: 'Cosmos', shortName: 'ATOM' },
-  { symbol: 'chainlink', name: 'Chainlink', shortName: 'LINK' },
-  { symbol: 'uniswap', name: 'Uniswap', shortName: 'UNI' },
+  { symbol: 'BTC', name: 'Bitcoin', shortName: 'BTC', coinGeckoId: 'bitcoin' },
+  { symbol: 'ETH', name: 'Ethereum', shortName: 'ETH', coinGeckoId: 'ethereum' },
+  { symbol: 'ADA', name: 'Cardano', shortName: 'ADA', coinGeckoId: 'cardano' },
+  { symbol: 'DOT', name: 'Polkadot', shortName: 'DOT', coinGeckoId: 'polkadot' },
+  { symbol: 'SOL', name: 'Solana', shortName: 'SOL', coinGeckoId: 'solana' },
+  { symbol: 'MATIC', name: 'Polygon', shortName: 'MATIC', coinGeckoId: 'matic-network' },
+  { symbol: 'AVAX', name: 'Avalanche', shortName: 'AVAX', coinGeckoId: 'avalanche-2' },
+  { symbol: 'ATOM', name: 'Cosmos', shortName: 'ATOM', coinGeckoId: 'cosmos' },
+  { symbol: 'LINK', name: 'Chainlink', shortName: 'LINK', coinGeckoId: 'chainlink' },
+  { symbol: 'UNI', name: 'Uniswap', shortName: 'UNI', coinGeckoId: 'uniswap' },
 ];
 
 export function AddTransactionDialog({
@@ -57,7 +57,8 @@ export function AddTransactionDialog({
   onTransactionAdded,
 }: AddTransactionDialogProps) {
   const { currentUser } = useAuth();
-  const { prices } = useCryptoPrices();
+  const cryptoIds = CRYPTO_ASSETS.map(crypto => crypto.coinGeckoId);
+  const { prices } = useCryptoPrices(cryptoIds);
   const { addTransaction } = usePortfolio(selectedPortfolioId || 'main');
   const [loading, setLoading] = useState(false);
   const [date, setDate] = useState<Date>(new Date());
@@ -88,10 +89,12 @@ export function AddTransactionDialog({
 
   // Auto-fill price when crypto is selected
   const handleCryptoChange = (symbol: string) => {
+    const selectedCrypto = CRYPTO_ASSETS.find(crypto => crypto.symbol === symbol);
+    const coinGeckoId = selectedCrypto?.coinGeckoId || symbol.toLowerCase();
     setFormData(prev => ({ 
       ...prev, 
       crypto_symbol: symbol,
-      price_per_unit: prices[symbol]?.current_price?.toString() || ''
+      price_per_unit: prices[coinGeckoId]?.usd?.toString() || ''
     }));
     setErrors(prev => ({ ...prev, crypto_symbol: '' }));
   };
@@ -100,7 +103,8 @@ export function AddTransactionDialog({
   const calculateTotal = () => {
     const amount = parseFloat(formData.amount) || 0;
     const price = parseFloat(formData.price_per_unit) || 0;
-    return amount * price;
+    const total = amount * price;
+    return total;
   };
 
   // Validate form
@@ -176,7 +180,8 @@ export function AddTransactionDialog({
   };
 
   const selectedCrypto = CRYPTO_ASSETS.find(crypto => crypto.symbol === formData.crypto_symbol);
-  const currentPrice = prices[formData.crypto_symbol]?.current_price;
+  const coinGeckoId = selectedCrypto?.coinGeckoId || formData.crypto_symbol.toLowerCase();
+  const currentPrice = prices[coinGeckoId]?.usd;
   const totalValue = calculateTotal();
 
   return (
@@ -250,7 +255,7 @@ export function AddTransactionDialog({
               </SelectTrigger>
               <SelectContent>
                 {CRYPTO_ASSETS.map((crypto) => {
-                  const price = prices[crypto.symbol]?.current_price;
+                  const price = prices[crypto.coinGeckoId]?.usd;
                   return (
                     <SelectItem key={crypto.symbol} value={crypto.symbol}>
                       <div className="flex items-center justify-between w-full">

@@ -2,8 +2,18 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
-const SUPABASE_URL = "https://wvojbjkdlnvlqgjwtdaf.supabase.co";
-const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind2b2piamtkbG52bHFnand0ZGFmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM0NjEwMzcsImV4cCI6MjA2OTAzNzAzN30.juWlSIl6oLFH43Ii39TQ1p55scz04uhDj0TVjNduH0k";
+// Configurações de fallback caso as variáveis de ambiente não estejam disponíveis
+const fallbackSupabaseUrl = "https://wvojbjkdlnvlqgjwtdaf.supabase.co";
+const fallbackSupabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind2b2piamtkbG52bHFnanF3dGRhZiIsInJvbGUiOiJhbm9uIiwiaWF0IjoxNzM1NzI5NzE5LCJleHAiOjIwNTEzMDU3MTl9.juWlSIl6oLFH43Ii39TQ1p55scz04uhDj0TVjNduH0k";
+
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || fallbackSupabaseUrl;
+const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || fallbackSupabaseKey;
+
+// Debug: Verificar se as variáveis de ambiente estão sendo carregadas
+console.log('Supabase Config:', {
+  url: SUPABASE_URL ? '✅ Configurado' : '❌ Não configurado',
+  key: SUPABASE_PUBLISHABLE_KEY ? '✅ Configurado' : '❌ Não configurado'
+});
 
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";

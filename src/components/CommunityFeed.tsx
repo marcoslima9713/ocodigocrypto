@@ -17,6 +17,7 @@ import {
   WifiOff
 } from 'lucide-react';
 import { useCommunityFeed } from '@/hooks/useCommunityFeed';
+import { usePrivacySettings } from '@/hooks/usePrivacySettings';
 import { CommunityFeedEntry } from '@/integrations/supabase/types';
 import { EmptyState } from '@/components/EmptyState';
 
@@ -52,6 +53,14 @@ export function CommunityFeed({
     pollingInterval: enableWebSocket ? 0 : 120000, // 2 minutos se não usar WebSocket
     enableWebSocket
   });
+
+  const {
+    privacySettings,
+    loading: privacyLoading,
+    error: privacyError,
+    toggleCommunityFeed,
+    isPublic
+  } = usePrivacySettings();
 
   // Simular status do WebSocket (em produção, usar estado real)
   useEffect(() => {
@@ -261,10 +270,21 @@ export function CommunityFeed({
               <Button
                 variant="outline"
                 size="sm"
-                className="text-xs"
+                className={`text-xs ${isPublic ? 'text-green-400 border-green-400' : 'text-red-400 border-red-400'}`}
+                onClick={toggleCommunityFeed}
+                disabled={privacyLoading}
               >
-                <Eye className="w-3 h-3 mr-1" />
-                Público
+                {isPublic ? (
+                  <>
+                    <Eye className="w-3 h-3 mr-1" />
+                    Público
+                  </>
+                ) : (
+                  <>
+                    <EyeOff className="w-3 h-3 mr-1" />
+                    Privado
+                  </>
+                )}
               </Button>
             )}
             

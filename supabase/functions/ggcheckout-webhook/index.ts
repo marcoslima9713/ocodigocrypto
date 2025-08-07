@@ -100,21 +100,43 @@ async function createMember(customerData: any, productName: string, transactionI
   const password = generateRandomPassword();
   const passwordHash = await hashPassword(password);
 
-  // Insert new member
-  const { data: member, error } = await supabase
-    .from("members")
-    .insert({
-      email: customerData.email,
-      password_hash: passwordHash,
+  // First, create user in Supabase Auth
+  const { data: authUser, error: authError } = await supabase.auth.admin.createUser({
+    email: customerData.email,
+    password: password,
+    email_confirm: true,
+    user_metadata: {
       full_name: customerData.name,
       product_name: productName,
-      ggcheckout_transaction_id: transactionId,
-      is_active: true,
-    })
-    .select()
-    .single();
+      ggcheckout_transaction_id: transactionId
+    }
+  });
+
+  if (authError) {
+    console.error("Error creating auth user:", authError);
+    throw new Error(`Failed to create auth user: ${authError.message}`);
+  }
+
+                // Then insert new member in members table
+        const { data: member, error } = await supabase
+          .from("members")
+          .insert({
+            email: customerData.email,
+            password_hash: passwordHash,
+            full_name: customerData.name,
+            product_name: productName,
+            ggcheckout_transaction_id: transactionId,
+            is_active: true
+            // auth_user_id: authUser.user?.id // Temporarily removed until column is added
+          })
+          .select()
+          .single();
 
   if (error) {
+    // If member creation fails, we should clean up the auth user
+    if (authUser.user?.id) {
+      await supabase.auth.admin.deleteUser(authUser.user.id);
+    }
     throw new Error(`Failed to create member: ${error.message}`);
   }
 
@@ -279,7 +301,7 @@ async function sendWelcomeEmail(memberData: any, password: string) {
                   <table role="presentation" style="margin: 0 auto;">
                     <tr>
                       <td style="border-radius: 8px; background-color: #FF6A00;">
-                        <a href="https://preview--crypto-luxe-portal.lovable.app/login" 
+                        <a href="https://hidden-market-revelation.vercel.app/login" 
                            style="display: inline-block; padding: 18px 32px; color: #FFFFFF; text-decoration: none; font-weight: 600; font-size: 16px; border-radius: 8px; text-transform: uppercase; letter-spacing: 1px;" 
                            class="mobile-button">
                           🔗 ACESSAR ÁREA EXCLUSIVA
@@ -335,7 +357,7 @@ async function sendWelcomeEmail(memberData: any, password: string) {
           Charset: 'UTF-8'
         },
         Text: {
-          Data: `Olá ${memberData.full_name}! Seu acesso premium foi liberado. Login: ${memberData.email} | Senha: ${password} | Acesse: https://preview--crypto-luxe-portal.lovable.app/login`,
+          Data: `Olá ${memberData.full_name}! Seu acesso premium foi liberado. Login: ${memberData.email} | Senha: ${password} | Acesse: https://hidden-market-revelation.vercel.app/login`,
           Charset: 'UTF-8'
         }
       }

@@ -1,249 +1,133 @@
-// Context de Autenticação - Gerencia estado do usuário logado
-import { createContext, useContext, useEffect, useState } from 'react';
-import { 
-  User, 
-  signInWithEmailAndPassword, 
-  createUserWithEmailAndPassword, 
-  signOut, 
-  sendPasswordResetEmail,
-  onAuthStateChanged 
-} from 'firebase/auth';
-import { doc, setDoc, getDoc } from 'firebase/firestore';
-import { auth, db, checkFirestoreConnection, executeFirestoreOperation } from '@/lib/firebase';
-import { useToast } from '@/hooks/use-toast';
+// Supabase-only AuthContext – substitui a antiga dependência de Firebase
+import { createContext, useContext, useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import type { Session, User } from "@supabase/supabase-js";
+import { useToast } from "@/hooks/use-toast";
 
-// Interface para o progresso do usuário nos módulos
-interface UserProgress {
-  completedModules: string[];
-  lastAccess: Date;
-}
-
-// Interface do contexto de autenticação
 interface AuthContextType {
   currentUser: User | null;
-  userProgress: UserProgress | null;
+  userProgress: { completedModules: string[]; lastAccess: Date } | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
+  // Por enquanto mantemos assinatura para compatibilidade; implementação futura
   markModuleComplete: (moduleId: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Hook para usar o contexto de autenticação
 export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth deve ser usado dentro de um AuthProvider');
-  }
-  return context;
+  const ctx = useContext(AuthContext);
+  if (!ctx) throw new Error("useAuth deve ser usado dentro de AuthProvider");
+  return ctx;
 };
 
-// Provider do contexto de autenticação
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [userProgress, setUserProgress] = useState<UserProgress | null>(null);
-  const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  const [session, setSession] = useState<Session | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
 
-  // Função para registrar novo usuário
-  const register = async (email: string, password: string) => {
-    try {
-      const result = await createUserWithEmailAndPassword(auth, email, password);
-      
-      // Cria documento inicial do usuário no Firestore
-      await setDoc(doc(db, 'users', result.user.uid), {
-        email: result.user.email,
-        completedModules: [],
-        lastAccess: new Date(),
-        createdAt: new Date()
-      });
-      
-      toast({
-        title: "Conta criada com sucesso!",
-        description: "Bem-vindo à nossa plataforma premium.",
-      });
-    } catch (error: any) {
-      console.error('Erro no registro:', error);
-      toast({
-        title: "Erro no registro",
-        description: error.message,
-        variant: "destructive",
-      });
-      throw error;
-    }
-  };
-
-  // Função para fazer login
-  const login = async (email: string, password: string) => {
-    try {
-      await signInWithEmailAndPassword(auth, email, password);
-      toast({
-        title: "Login realizado com sucesso!",
-        description: "Bem-vindo de volta.",
-      });
-    } catch (error: any) {
-      console.error('Erro no login:', error);
-      toast({
-        title: "Erro no login",
-        description: "Email ou senha incorretos.",
-        variant: "destructive",
-      });
-      throw error;
-    }
-  };
-
-  // Função para fazer logout
-  const logout = async () => {
-    try {
-      await signOut(auth);
-      setUserProgress(null);
-      toast({
-        title: "Logout realizado",
-        description: "Até logo!",
-      });
-    } catch (error: any) {
-      console.error('Erro no logout:', error);
-      toast({
-        title: "Erro no logout",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
-  };
-
-  // Função para resetar senha usando AWS SES
-  const resetPassword = async (email: string) => {
-    try {
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/password-reset`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ email }),
-        }
-      );
-
-      const data = await response.json();
-
-      if (response.ok && data.success) {
-        toast({
-          title: "Email enviado!",
-          description: "Verifique sua caixa de entrada para redefinir a senha.",
-        });
-      } else {
-        throw new Error(data.error || 'Erro ao enviar email de recuperação');
-      }
-    } catch (error: any) {
-      console.error('Erro ao resetar senha:', error);
-      toast({
-        title: "Erro ao enviar email",
-        description: error.message,
-        variant: "destructive",
-      });
-      throw error;
-    }
-  };
-
-  // Carrega progresso do usuário do Firestore
-  const loadUserProgress = async (userId: string) => {
-    const defaultProgress = {
-      completedModules: [],
-      lastAccess: new Date()
-    };
-
-    const result = await executeFirestoreOperation(
-      async () => {
-        const userDoc = await getDoc(doc(db, 'users', userId));
-        if (userDoc.exists()) {
-          const data = userDoc.data();
-          return {
-            completedModules: data.completedModules || [],
-            lastAccess: data.lastAccess?.toDate() || new Date()
-          };
-        } else {
-          // Se o documento não existe, criar um novo
-          return defaultProgress;
-        }
-      },
-      defaultProgress
-    );
-
-    setUserProgress(result);
-  };
-
-  // Função para marcar módulo como completo com melhor tratamento de erro
-  const markModuleComplete = async (moduleId: string) => {
-    if (!currentUser || !userProgress) return;
-
-    const updatedModules = [...userProgress.completedModules];
-    if (!updatedModules.includes(moduleId)) {
-      updatedModules.push(moduleId);
-    }
-
-    const updatedProgress = {
-      ...userProgress,
-      completedModules: updatedModules,
-      lastAccess: new Date()
-    };
-
-    // Atualizar estado local imediatamente
-    setUserProgress(updatedProgress);
-
-    const success = await executeFirestoreOperation(
-      async () => {
-        await setDoc(doc(db, 'users', currentUser.uid), updatedProgress, { merge: true });
-        return true;
-      },
-      false
-    );
-
-    if (success) {
-      toast({
-        title: "Módulo concluído!",
-        description: "Parabéns pelo seu progresso.",
-      });
-    } else {
-      toast({
-        title: "Módulo concluído!",
-        description: "Progresso salvo localmente (sem conexão com servidor).",
-      });
-    }
-  };
-
-  // Observer do estado de autenticação
+  // Monitorar mudanças de sessão
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      setCurrentUser(user);
-      if (user) {
-        await loadUserProgress(user.uid);
-      } else {
-        setUserProgress(null);
-      }
+    // Carrega sessão inicial
+    supabase.auth.getSession().then(({ data }) => {
+      setSession(data.session);
       setLoading(false);
     });
 
-    return unsubscribe;
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, sess) => {
+      setSession(sess);
+    });
+
+    return () => listener.subscription.unsubscribe();
   }, []);
 
-  const value = {
-    currentUser,
-    userProgress,
+  const login = async (email: string, password: string) => {
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) {
+      toast({ title: "Erro no login", description: error.message, variant: "destructive" });
+      throw error;
+    }
+    toast({ title: "Login realizado", description: "Bem-vindo de volta!" });
+  };
+
+  const register = async (email: string, password: string) => {
+    const { error } = await supabase.auth.signUp({ email, password });
+    if (error) {
+      toast({ title: "Erro no registro", description: error.message, variant: "destructive" });
+      throw error;
+    }
+    toast({ title: "Conta criada!", description: "Verifique seu email para confirmar." });
+  };
+
+  const logout = async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      toast({ title: "Erro ao sair", description: error.message, variant: "destructive" });
+      throw error;
+    }
+  };
+
+  const resetPassword = async (email: string) => {
+    const { error } = await supabase.auth.resetPasswordForEmail(email);
+    if (error) {
+      toast({ title: "Erro ao enviar email", description: error.message, variant: "destructive" });
+      throw error;
+    }
+    toast({ title: "Email enviado", description: "Verifique sua caixa de entrada." });
+  };
+
+  const [userProgress, setUserProgress] = useState<{ completedModules: string[]; lastAccess: Date } | null>(null);
+
+  // Carrega progresso ao logar
+  useEffect(() => {
+    const loadProgress = async () => {
+      if (!session?.user) return;
+      const { data, error } = await supabase
+        .from('users_progress')
+        .select('*')
+        .eq('user_id', session.user.id)
+        .single();
+      if (error && error.code !== 'PGRST116') console.error('Erro carregando progresso', error);
+      if (data) {
+        setUserProgress({
+          completedModules: data.completed_modules ?? [],
+          lastAccess: data.last_access ? new Date(data.last_access) : new Date(),
+        });
+      } else {
+        // cria linha padrão
+        await supabase.from('users_progress').insert({ user_id: session.user.id, completed_modules: [] });
+        setUserProgress({ completedModules: [], lastAccess: new Date() });
+      }
+    };
+    if (session?.user) loadProgress();
+  }, [session?.user]);
+
+  const markModuleComplete = async (moduleId: string) => {
+    if (!session?.user) return;
+    const progress = userProgress ?? { completedModules: [], lastAccess: new Date() };
+    if (progress.completedModules.includes(moduleId)) return;
+    const newModules = [...progress.completedModules, moduleId];
+    setUserProgress({ ...progress, completedModules: newModules, lastAccess: new Date() });
+    await supabase.from('users_progress').upsert({
+      user_id: session.user.id,
+      completed_modules: newModules,
+      last_access: new Date().toISOString(),
+    });
+  };
+
+  const value: AuthContextType = {
+    currentUser: session?.user ?? null,
     loading,
     login,
     register,
     logout,
     resetPassword,
-    markModuleComplete
+    markModuleComplete,
+    userProgress,
   };
 
-  return (
-    <AuthContext.Provider value={value}>
-      {!loading && children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
