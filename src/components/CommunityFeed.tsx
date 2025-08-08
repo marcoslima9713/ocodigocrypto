@@ -137,15 +137,15 @@ export function CommunityFeed({
         transition={{ duration: 0.3 }}
         className="relative"
       >
-        {/* Linha da timeline */}
-        <div className="absolute left-6 top-12 bottom-0 w-0.5 bg-zinc-700" />
+        {/* Linha da timeline (esconde em telas pequenas) */}
+        <div className="hidden sm:block absolute sm:left-8 top-12 bottom-0 w-0.5 bg-zinc-700" />
         
-        <Card className="mb-4 bg-zinc-900 border-zinc-800 hover:border-zinc-700 transition-colors">
-          <CardContent className="p-4">
-            <div className="flex items-start gap-4">
+        <Card className="mb-3 sm:mb-4 bg-zinc-900 border-zinc-800 hover:border-zinc-700 transition-colors">
+          <CardContent className="p-3 sm:p-4">
+            <div className="flex items-start gap-3 sm:gap-4">
               {/* Avatar e ícone da ação */}
               <div className="relative flex-shrink-0">
-                <Avatar className="w-12 h-12 border-2 border-zinc-700">
+                <Avatar className="w-10 h-10 sm:w-12 sm:h-12 border-2 border-zinc-700">
                   <AvatarImage 
                     src={`https://api.dicebear.com/7.x/initials/svg?seed=${entry.user_display_name}`}
                     alt={entry.user_display_name}
@@ -156,14 +156,14 @@ export function CommunityFeed({
                 </Avatar>
                 
                 {/* Ícone da ação */}
-                <div className={`absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-zinc-800 border-2 border-zinc-900 flex items-center justify-center text-xs`}>
+                <div className={`absolute -bottom-1 -right-1 w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-zinc-800 border-2 border-zinc-900 flex items-center justify-center text-[10px] sm:text-xs`}>
                   <span className="text-lg">{getActionIcon(entry.action_type)}</span>
                 </div>
               </div>
 
               {/* Conteúdo da entrada */}
               <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-2">
+                <div className="flex items-center gap-2 mb-2 flex-wrap">
                   <span className="font-semibold text-white hover:text-blue-400 cursor-pointer transition-colors">
                     {entry.user_username ? `@${entry.user_username}` : entry.user_display_name}
                   </span>
@@ -179,7 +179,7 @@ export function CommunityFeed({
                   </Badge>
                   
                   {/* P&L para vendas */}
-                  {entry.action_type === 'sell' && entry.pnl_percent !== undefined && (
+                  {entry.action_type === 'sell' && typeof entry.pnl_percent === 'number' && !Number.isNaN(entry.pnl_percent) && (
                     <Badge 
                       variant="outline" 
                       className={`text-xs px-2 py-1 ${
@@ -188,18 +188,18 @@ export function CommunityFeed({
                           : 'text-red-400 border-red-400'
                       }`}
                     >
-                      {entry.pnl_percent >= 0 ? '+' : ''}{entry.pnl_percent.toFixed(2)}%
+                      {entry.pnl_percent >= 0 ? '+' : ''}{Number(entry.pnl_percent).toFixed(2)}%
                     </Badge>
                   )}
                 </div>
 
                 {/* Mensagem do feed */}
-                <p className="text-zinc-300 text-sm leading-relaxed mb-2">
+                <p className="text-zinc-300 text-sm leading-relaxed mb-2 break-words">
                   {formatFeedMessage(entry)}
                 </p>
 
                 {/* Timestamp */}
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   <span className="text-xs text-zinc-500">
                     {formatTimestamp(entry.created_at)}
                   </span>
@@ -221,9 +221,9 @@ export function CommunityFeed({
 
   // Componente de loading skeleton
   const FeedEntrySkeleton = () => (
-    <Card className="mb-4 bg-zinc-900 border-zinc-800">
-      <CardContent className="p-4">
-        <div className="flex items-start gap-4">
+    <Card className="mb-3 sm:mb-4 bg-zinc-900 border-zinc-800">
+      <CardContent className="p-3 sm:p-4">
+        <div className="flex items-start gap-3 sm:gap-4">
           <Skeleton className="w-12 h-12 rounded-full" />
           <div className="flex-1 space-y-2">
             <div className="flex items-center gap-2">
@@ -242,7 +242,7 @@ export function CommunityFeed({
   return (
     <Card className={`bg-zinc-900 border-zinc-800 ${className}`}>
       <CardHeader className="pb-4">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-3">
             <CardTitle className="flex items-center gap-2 text-white">
               <Users className="w-5 h-5" />
@@ -264,7 +264,7 @@ export function CommunityFeed({
             )}
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             {/* Toggle de privacidade */}
             {showPrivacyToggle && (
               <Button

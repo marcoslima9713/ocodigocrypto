@@ -179,8 +179,8 @@ export function useCommunityFeed(options: UseCommunityFeedOptions = {}) {
         break;
       case 'sell':
         message = `${userName} vendeu ${formattedAmount} ${asset} por ${formattedPrice} cada (${formattedTotal} total)`;
-        if (pnl_percent !== undefined) {
-          const pnlText = pnl_percent >= 0 ? `+${pnl_percent.toFixed(2)}%` : `${pnl_percent.toFixed(2)}%`;
+        if (typeof pnl_percent === 'number' && !Number.isNaN(pnl_percent)) {
+          const pnlText = pnl_percent >= 0 ? `+${Number(pnl_percent).toFixed(2)}%` : `${Number(pnl_percent).toFixed(2)}%`;
           message += ` com ${pnl_percent >= 0 ? 'lucro' : 'prejuízo'} de ${pnlText}`;
         }
         break;

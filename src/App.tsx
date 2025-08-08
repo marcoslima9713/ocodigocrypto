@@ -111,10 +111,18 @@ const GlobalErrorHandler = ({ children }: { children: React.ReactNode }) => {
 
 const App = () => {
   // Teste para confirmar que não há integração Web3
-  console.assert(
-    typeof window.ethereum === 'undefined', 
-    '✅ Remoção completa de integração Web3 confirmada'
-  );
+  // Evitar console.assert que gera erro visual nos bundles
+  // Silenciar aviso em produção para evitar ruído em usuários com wallets instaladas
+  if (typeof window !== 'undefined') {
+    try {
+      const isProd = import.meta && import.meta.env && import.meta.env.PROD
+      if (!isProd && typeof (window as any).ethereum !== 'undefined') {
+        console.warn('Ethereum provider detectado. Integrações Web3 devem permanecer desativadas.');
+      }
+    } catch {
+      // ignore
+    }
+  }
 
   return (
     <GlobalErrorHandler>

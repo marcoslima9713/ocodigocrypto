@@ -82,8 +82,8 @@ export default function PortfolioRankingPage() {
     <div className="min-h-screen bg-zinc-950 p-4">
       {/* Header */}
       <div className="max-w-7xl mx-auto">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-4">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-6">
+          <div className="flex items-center gap-3 sm:gap-4">
             <Button
               variant="outline"
               size="sm"
@@ -95,11 +95,11 @@ export default function PortfolioRankingPage() {
             </Button>
             
             <div>
-              <h1 className="text-2xl font-bold text-white flex items-center gap-2">
-                <Trophy className="w-6 h-6 text-yellow-500" />
+              <h1 className="text-xl sm:text-2xl font-bold text-white flex items-center gap-2">
+                <Trophy className="w-5 h-5 sm:w-6 sm:h-6 text-yellow-500" />
                 Ranking de Performance
               </h1>
-              <p className="text-zinc-400 text-sm">
+              <p className="text-zinc-400 text-xs sm:text-sm">
                 Descubra os melhores traders da comunidade
               </p>
             </div>

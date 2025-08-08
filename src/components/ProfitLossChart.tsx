@@ -80,7 +80,18 @@ export function ProfitLossChart({ data, loading = false }: ProfitLossChartProps)
   };
 
   const formatDate = (isoDate: string) => {
-    return new Date(isoDate).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' });
+    const d = new Date(isoDate)
+    const now = new Date()
+    // Se filtro for 24H, mostrar horas
+    const { days } = timeFilters[selectedFilter]
+    if (days === 1) {
+      return d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+    }
+    // Se mesmo ano, omitir ano
+    const opts: Intl.DateTimeFormatOptions = d.getFullYear() === now.getFullYear()
+      ? { day: '2-digit', month: 'short' }
+      : { day: '2-digit', month: 'short', year: '2-digit' }
+    return d.toLocaleDateString('pt-BR', opts)
   };
 
   if (loading) {
@@ -158,7 +169,7 @@ export function ProfitLossChart({ data, loading = false }: ProfitLossChartProps)
               fontSize={12}
               tickFormatter={formatDate}
             />
-            <YAxis
+             <YAxis
               stroke="#9ca3af"
               fontSize={12}
               tickFormatter={formatCurrency}

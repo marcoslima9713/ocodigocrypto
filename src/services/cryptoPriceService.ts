@@ -257,14 +257,20 @@ export const getCoinGeckoId = (symbol: string): string => {
 // Função para obter dados históricos de preços
 export const getHistoricalPrices = async (
   coinId: string,
-  fromDate: string, // formato: 'dd-mm-yyyy'
-  toDate: string,   // formato: 'dd-mm-yyyy'
+  fromDate: string, // OBS: não utilizado. Use getHistoricalPricesRange abaixo.
+  toDate: string,   // OBS: não utilizado. Use getHistoricalPricesRange abaixo.
   currency: string = 'brl'
 ): Promise<Array<{ date: string; price: number }>> => {
   try {
     console.log(`📊 Buscando dados históricos para ${coinId} de ${fromDate} até ${toDate}`)
     
-    const url = `${BASE_URL}/coins/${coinId}/market_chart/range?vs_currency=${currency}&from=${fromDate}&to=${toDate}&x_cg_demo_api_key=${COINGECKO_API_KEY}`
+    // Manter compatibilidade: se receber timestamps numéricos em string use-os; caso contrário, jogue para os últimos 30 dias
+    const now = Math.floor(Date.now() / 1000)
+    const defaultFrom = now - 30 * 24 * 60 * 60
+    const fromTs = /^\d{10,}$/.test(fromDate) ? Number(fromDate) : defaultFrom
+    const toTs = /^\d{10,}$/.test(toDate) ? Number(toDate) : now
+
+    const url = `${BASE_URL}/coins/${coinId}/market_chart/range?vs_currency=${currency}&from=${fromTs}&to=${toTs}&x_cg_demo_api_key=${COINGECKO_API_KEY}`
     
     const response = await fetch(url)
     
@@ -289,6 +295,63 @@ export const getHistoricalPrices = async (
     
   } catch (error) {
     console.error('❌ Erro ao buscar dados históricos:', error)
+    throw error
+  }
+}
+
+// Novo: obter preços históricos por intervalo (timestamps em segundos)
+export const getHistoricalPricesRange = async (
+  coinId: string,
+  fromTimestamp: number,
+  toTimestamp: number,
+  currency: string = 'usd'
+): Promise<Record<string, number>> => {
+  try {
+    const url = `${BASE_URL}/coins/${coinId}/market_chart/range?vs_currency=${currency}&from=${fromTimestamp}&to=${toTimestamp}&x_cg_demo_api_key=${COINGECKO_API_KEY}`
+    const response = await fetch(url)
+    if (!response.ok) {
+      throw new Error(`Erro na API: ${response.status} ${response.statusText}`)
+    }
+    const data = await response.json()
+    if (!data.prices || !Array.isArray(data.prices)) {
+      throw new Error('Formato de resposta inválido da API (prices ausente)')
+    }
+
+    // Consolidar para 1 ponto por dia (último preço do dia)
+    const dayToPrice: Record<string, number> = {}
+    for (const [timestamp, price] of data.prices as [number, number][]) {
+      const dayIso = new Date(timestamp).toISOString().split('T')[0]
+      dayToPrice[dayIso] = price
+    }
+    return dayToPrice
+  } catch (error) {
+    console.error('❌ Erro ao buscar preços históricos (range):', error)
+    throw error
+  }
+}
+
+// Preços intraday (timestamps → price) sem consolidação diária
+export const getIntradayPricesRange = async (
+  coinId: string,
+  fromTimestamp: number,
+  toTimestamp: number,
+  currency: string = 'usd'
+): Promise<Array<{ timestamp: number; price: number }>> => {
+  try {
+    const url = `${BASE_URL}/coins/${coinId}/market_chart/range?vs_currency=${currency}&from=${fromTimestamp}&to=${toTimestamp}&x_cg_demo_api_key=${COINGECKO_API_KEY}`
+    const response = await fetch(url)
+    if (!response.ok) {
+      throw new Error(`Erro na API: ${response.status} ${response.statusText}`)
+    }
+    const data = await response.json()
+    if (!data.prices || !Array.isArray(data.prices)) {
+      throw new Error('Formato de resposta inválido da API (prices ausente)')
+    }
+    return (data.prices as [number, number][])
+      .map(([ts, price]) => ({ timestamp: ts, price }))
+      .sort((a, b) => a.timestamp - b.timestamp)
+  } catch (error) {
+    console.error('❌ Erro ao buscar preços intraday (range):', error)
     throw error
   }
 }

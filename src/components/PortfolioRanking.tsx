@@ -175,15 +175,15 @@ export function PortfolioRanking({ className = "" }: PortfolioRankingProps) {
         transition={{ duration: 0.3, delay: position * 0.1 }}
       >
         <Card className="mb-3 bg-zinc-900 border-zinc-800 hover:border-zinc-700 transition-colors">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
+          <CardContent className="p-3 sm:p-4">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               {/* Posição e Avatar */}
               <div className="flex items-center gap-3">
-                <Badge className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${getPositionColor(position)}`}>
+                <Badge className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-[10px] sm:text-xs font-bold ${getPositionColor(position)}`}>
                   {getPositionIcon(position)}
                 </Badge>
                 
-                <Avatar className="w-10 h-10 border-2 border-zinc-700">
+                <Avatar className="w-9 h-9 sm:w-10 sm:h-10 border-2 border-zinc-700">
                   <AvatarImage 
                     src={`https://api.dicebear.com/7.x/initials/svg?seed=${entry.user_name}`}
                     alt={entry.user_name}
@@ -194,7 +194,7 @@ export function PortfolioRanking({ className = "" }: PortfolioRankingProps) {
                 </Avatar>
 
                 <div className="flex flex-col">
-                  <span className="font-semibold text-white hover:text-blue-400 cursor-pointer transition-colors">
+                  <span className="font-semibold text-white hover:text-blue-400 cursor-pointer transition-colors truncate max-w-[60vw] sm:max-w-none">
                     {entry.user_username ? `@${entry.user_username}` : entry.user_name}
                   </span>
                   <div className="flex items-center gap-2">
@@ -214,7 +214,7 @@ export function PortfolioRanking({ className = "" }: PortfolioRankingProps) {
               </div>
 
               {/* Métrica principal */}
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-4 sm:self-auto self-end">
                 {getCategoryMetric(category, entry)}
               </div>
             </div>
@@ -249,7 +249,7 @@ export function PortfolioRanking({ className = "" }: PortfolioRankingProps) {
   return (
     <Card className={`bg-zinc-900 border-zinc-800 ${className}`}>
       <CardHeader className="pb-4">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-3">
             <CardTitle className="flex items-center gap-2 text-white">
               <Trophy className="w-5 h-5" />
@@ -260,7 +260,7 @@ export function PortfolioRanking({ className = "" }: PortfolioRankingProps) {
             </Badge>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             {!isOnline && (
               <Badge variant="destructive" className="text-xs">
                 <WifiOff className="w-3 h-3 mr-1" />
@@ -283,11 +283,11 @@ export function PortfolioRanking({ className = "" }: PortfolioRankingProps) {
         {/* Tabs de janela de tempo */}
         <Tabs value={timeWindow} onValueChange={(value) => setTimeWindow(value as '7_days' | '30_days')}>
           <TabsList className="grid w-full grid-cols-2 bg-zinc-800 border border-zinc-700">
-            <TabsTrigger value="7_days" className="flex items-center gap-2 data-[state=active]:bg-zinc-700 data-[state=active]:text-white text-zinc-400">
+            <TabsTrigger value="7_days" className="flex items-center gap-2 data-[state=active]:bg-zinc-700 data-[state=active]:text-white text-zinc-400 text-xs sm:text-sm">
               <Calendar className="w-3 h-3" />
               7 Dias
             </TabsTrigger>
-            <TabsTrigger value="30_days" className="flex items-center gap-2 data-[state=active]:bg-zinc-700 data-[state=active]:text-white text-zinc-400">
+            <TabsTrigger value="30_days" className="flex items-center gap-2 data-[state=active]:bg-zinc-700 data-[state=active]:text-white text-zinc-400 text-xs sm:text-sm">
               <Calendar className="w-3 h-3" />
               30 Dias
             </TabsTrigger>
@@ -321,15 +321,15 @@ export function PortfolioRanking({ className = "" }: PortfolioRankingProps) {
         {/* Tabs de categorias */}
         <Tabs defaultValue="return_percent" className="space-y-4">
           <TabsList className="grid w-full grid-cols-3 bg-zinc-800 border border-zinc-700">
-            <TabsTrigger value="return_percent" className="flex items-center gap-2 data-[state=active]:bg-zinc-700 data-[state=active]:text-white text-zinc-400">
+            <TabsTrigger value="return_percent" className="flex items-center gap-2 data-[state=active]:bg-zinc-700 data-[state=active]:text-white text-zinc-400 text-xs sm:text-sm">
               <TrendingUp className="w-3 h-3" />
               Retorno %
             </TabsTrigger>
-            <TabsTrigger value="top_asset" className="flex items-center gap-2 data-[state=active]:bg-zinc-700 data-[state=active]:text-white text-zinc-400">
+            <TabsTrigger value="top_asset" className="flex items-center gap-2 data-[state=active]:bg-zinc-700 data-[state=active]:text-white text-zinc-400 text-xs sm:text-sm">
               <Target className="w-3 h-3" />
               Melhor Ativo
             </TabsTrigger>
-            <TabsTrigger value="dca_strategy" className="flex items-center gap-2 data-[state=active]:bg-zinc-700 data-[state=active]:text-white text-zinc-400">
+            <TabsTrigger value="dca_strategy" className="flex items-center gap-2 data-[state=active]:bg-zinc-700 data-[state=active]:text-white text-zinc-400 text-xs sm:text-sm">
               <DollarSign className="w-3 h-3" />
               Estratégia DCA
             </TabsTrigger>
