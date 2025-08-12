@@ -21,6 +21,15 @@
         "run",
         "main.py"
       ]
+    },
+    "crypto-news-mcp": {
+      "command": "python",
+      "args": [
+        "C:/Users/Clara/Desktop/projeto membros/crypto-news-mcp/main.py"
+      ],
+      "env": {
+        "NEWS_API_KEY": "your_newsdata_api_key_here"
+      }
     }
   }
 }

@@ -28,6 +28,7 @@ export default function Sentiment() {
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
   const [range, setRange] = useState<"30" | "365" | "all">("30");
+  const [news, setNews] = useState<any[]>([]);
 
   // Fetch Fear & Greed + BTC price/volume
   const fetchAll = async (days: string) => {
@@ -72,6 +73,21 @@ export default function Sentiment() {
     const id = setInterval(() => fetchAll(range), 5 * 60 * 1000);
     return () => clearInterval(id);
   }, [range]);
+
+  // Notícias (busca via Supabase Function em produção; fallback MCP local não está disponível no browser)
+  useEffect(() => {
+    (async () => {
+      try {
+        const { data, error } = await supabase.functions.invoke("cryptonews", {
+          // filtros padrão pt-BR
+          headers: { "x-use-cache": "1" },
+        });
+        if (!error && data?.results) setNews(data.results.slice(0, 10));
+      } catch {
+        // como fallback, não quebra a tela
+      }
+    })();
+  }, []);
 
   const latest = fgData?.[0];
   const yesterday = fgData?.[1];
@@ -210,6 +226,40 @@ export default function Sentiment() {
                   </div>
                 ) : (
                   <div className="text-zinc-400">Sem dados</div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Notícias */}
+            <Card className="bg-zinc-900 border-zinc-800">
+              <CardHeader>
+                <CardTitle className="text-white flex items-center gap-2">Últimas notícias de cripto</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {news.length === 0 ? (
+                  <div className="text-zinc-400 text-sm">Sem notícias no momento.</div>
+                ) : (
+                  <div className="space-y-4">
+                    {news.map((n, i) => (
+                      <a
+                        key={i}
+                        href={n.link || n.url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="block p-3 rounded-md border border-zinc-800 hover:border-zinc-700 hover:bg-zinc-800/50 transition"
+                      >
+                        <div className="text-sm text-zinc-400">
+                          {new Date(n.pubDate || n.published_at || Date.now()).toLocaleString('pt-BR')}
+                        </div>
+                        <div className="text-white font-medium">
+                          {n.title}
+                        </div>
+                        {n.source_id || n.source ? (
+                          <div className="text-xs text-zinc-500 mt-1">{n.source_id || n.source}</div>
+                        ) : null}
+                      </a>
+                    ))}
+                  </div>
                 )}
               </CardContent>
             </Card>
