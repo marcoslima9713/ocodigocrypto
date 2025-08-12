@@ -15,6 +15,7 @@ interface AuthContextType {
   freeAllowDashboard?: boolean;
   freeAllowDCACalc?: boolean;
   freeAllowPortfolio?: boolean;
+  freeAllowSentiment?: boolean;
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
@@ -41,6 +42,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [freeAllowDashboard, setFreeAllowDashboard] = useState<boolean>(false);
   const [freeAllowDCACalc, setFreeAllowDCACalc] = useState<boolean>(false);
   const [freeAllowPortfolio, setFreeAllowPortfolio] = useState<boolean>(false);
+  const [freeAllowSentiment, setFreeAllowSentiment] = useState<boolean>(false);
 
   // Monitorar mudanças de sessão
   useEffect(() => {
@@ -131,7 +133,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           try {
             const { data: globalCfg } = await supabase
               .from('free_access_settings')
-              .select('allowed_modules, allow_dashboard, allow_dca_calculator, allow_portfolio')
+              .select('allowed_modules, allow_dashboard, allow_dca_calculator, allow_portfolio, allow_sentiment')
               .eq('id', 'global')
               .maybeSingle();
             if (globalCfg) {
@@ -140,6 +142,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
               setFreeAllowDashboard(!!globalCfg.allow_dashboard);
               setFreeAllowDCACalc(!!globalCfg.allow_dca_calculator);
               setFreeAllowPortfolio(!!globalCfg.allow_portfolio);
+              setFreeAllowSentiment(!!globalCfg.allow_sentiment);
             }
           } catch {
             // Mantém defaults
@@ -242,6 +245,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     freeAllowDashboard,
     freeAllowDCACalc,
     freeAllowPortfolio,
+    freeAllowSentiment,
     login,
     register,
     logout,

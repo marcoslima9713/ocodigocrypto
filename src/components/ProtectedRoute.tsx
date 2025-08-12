@@ -8,7 +8,7 @@ interface ProtectedRouteProps {
 }
 
 export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
-  const { currentUser, loading, isMember, isFreeUser, allowedModules, freeAllowDashboard, freeAllowDCACalc, freeAllowPortfolio } = useAuth();
+  const { currentUser, loading, isMember, isFreeUser, allowedModules, freeAllowDashboard, freeAllowDCACalc, freeAllowPortfolio, freeAllowSentiment } = useAuth();
   const location = useLocation();
 
   // Mostrar loading enquanto verifica autenticação
@@ -36,6 +36,7 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   const isDashboard = path.startsWith('/dashboard');
   const isDCACalc = path.startsWith('/dca-calculator');
   const isPortfolio = path.startsWith('/portfolio');
+  const isSentiment = path.startsWith('/sentimento');
 
   let showLock = false;
   if (isModuleRoute && !isMember) {
@@ -50,6 +51,7 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   if (!isMember && isDashboard && freeAllowDashboard === false) showLock = true;
   if (!isMember && isDCACalc && freeAllowDCACalc === false) showLock = true;
   if (!isMember && isPortfolio && freeAllowPortfolio === false) showLock = true;
+  if (!isMember && isSentiment && freeAllowSentiment === false) showLock = true;
 
   // Demais páginas permanecem visíveis para free, porém com overlay de bloqueio
 

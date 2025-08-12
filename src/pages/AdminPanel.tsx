@@ -389,12 +389,13 @@ function FreeAccessSettingsCard() {
   const [allowDca, setAllowDca] = useState(false);
   const [allowHome, setAllowHome] = useState(false);
   const [allowPortfolio, setAllowPortfolio] = useState(false);
+  const [allowSentiment, setAllowSentiment] = useState(false);
 
   useEffect(() => {
     const load = async () => {
       const { data } = await supabase
         .from('free_access_settings')
-        .select('allowed_modules, allow_dashboard, allow_dca_calculator, allow_home, allow_portfolio')
+        .select('allowed_modules, allow_dashboard, allow_dca_calculator, allow_home, allow_portfolio, allow_sentiment')
         .eq('id', 'global')
         .maybeSingle();
       if (data) {
@@ -403,6 +404,7 @@ function FreeAccessSettingsCard() {
         setAllowDca(!!data.allow_dca_calculator);
         setAllowHome(!!data.allow_home);
         setAllowPortfolio(!!data.allow_portfolio);
+        setAllowSentiment(!!data.allow_sentiment);
       }
     };
     load();
@@ -423,6 +425,7 @@ function FreeAccessSettingsCard() {
         allow_dca_calculator: allowDca,
         allow_home: allowHome,
         allow_portfolio: allowPortfolio,
+        allow_sentiment: allowSentiment,
       });
     setLoading(false);
   };
@@ -466,6 +469,10 @@ function FreeAccessSettingsCard() {
           <label className="flex items-center gap-2 text-sm">
             <input type="checkbox" checked={allowPortfolio} onChange={(e) => setAllowPortfolio(e.target.checked)} />
             Meu Portfólio Crypto
+          </label>
+          <label className="flex items-center gap-2 text-sm">
+            <input type="checkbox" checked={allowSentiment} onChange={(e) => setAllowSentiment(e.target.checked)} />
+            Sentimento de Mercado
           </label>
         </div>
 

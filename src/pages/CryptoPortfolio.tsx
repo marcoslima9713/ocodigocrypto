@@ -219,6 +219,17 @@ export default function CryptoPortfolio() {
             <Button
               variant="outline"
               size="sm"
+              onClick={() => navigate('/sentimento')}
+              className="text-xs sm:text-sm px-2 sm:px-3"
+            >
+              <BarChart3 className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+              <span className="hidden sm:inline">Sentimento</span>
+              <span className="sm:hidden">Índice</span>
+            </Button>
+
+            <Button
+              variant="outline"
+              size="sm"
               onClick={() => setShowValues(!showValues)}
               className="text-xs sm:text-sm px-2 sm:px-3"
             >
