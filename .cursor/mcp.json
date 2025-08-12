@@ -13,6 +13,14 @@
       "env": {
         "SUPABASE_ACCESS_TOKEN": "sbp_eb4abb3ddcf26286a439641a5db45286d768453c"
       }
+    },
+    "crypto-feargreed-mcp": {
+      "command": "uv",
+      "args": [
+        "--directory", "C:/Users/Clara/Desktop/projeto membros/crypto-feargreed-mcp",
+        "run",
+        "main.py"
+      ]
     }
   }
 }

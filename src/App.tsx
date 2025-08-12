@@ -31,6 +31,7 @@ import AdminPanel from "./pages/AdminPanel";
 import PortfolioRankingPage from "./pages/PortfolioRankingPage";
 import DCACalculator from "./pages/DCACalculator";
 import NotFound from "./pages/NotFound";
+import Sentiment from "./pages/Sentiment";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -146,6 +147,9 @@ const App = () => {
                 <Route path="/admin-login" element={<AdminLogin />} />
                 <Route path="/forgot-password" element={<ForgotPassword />} />
                 <Route path="/reset-password" element={<ResetPassword />} />
+                
+                {/* Página pública: Sentimento de Mercado */}
+                <Route path="/sentimento" element={<Sentiment />} />
                 
                 {/* Rotas protegidas */}
                 <Route 
