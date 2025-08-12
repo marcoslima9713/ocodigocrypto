@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useId } from 'react';
 import {
   ResponsiveContainer,
   AreaChart,
@@ -38,6 +38,9 @@ const timeFilters = [
 export function ProfitLossChart({ data, loading = false }: ProfitLossChartProps) {
   // Começa em "Total" para dar visão geral; altere para 0 se preferir 24H.
   const [selectedFilter, setSelectedFilter] = useState(timeFilters.length - 1);
+  // ID único para evitar conflitos de defs/gradients entre múltiplos gráficos
+  const reactId = useId();
+  const gradientId = useMemo(() => `pnlGradient-${reactId.replace(/[:]/g, '')}`, [reactId]);
 
   // Acrescenta pnl em cada ponto
   const processedData = useMemo(() => {
@@ -154,9 +157,10 @@ export function ProfitLossChart({ data, loading = false }: ProfitLossChartProps)
       </CardHeader>
       <CardContent>
         <ResponsiveContainer width="100%" height={300}>
-          <AreaChart data={filteredData} margin={{ left: 0, right: 0, top: 10, bottom: 0 }}>
+          {/* key força remount ao trocar timeframe, evitando inconsistências do DOM do Recharts */}
+          <AreaChart key={selectedFilter} data={filteredData} margin={{ left: 0, right: 0, top: 10, bottom: 0 }}>
             <defs>
-              <linearGradient id="pnlGradient" x1="0" y1="0" x2="0" y2="1">
+              <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
                 <stop offset="5%" stopColor={mainColor} stopOpacity={0.35} />
                 <stop offset="95%" stopColor={mainColor} stopOpacity={0} />
               </linearGradient>
@@ -184,7 +188,7 @@ export function ProfitLossChart({ data, loading = false }: ProfitLossChartProps)
               type="monotone"
               dataKey="pnl"
               stroke={mainColor}
-              fill="url(#pnlGradient)"
+              fill={`url(#${gradientId})`}
               strokeWidth={2}
               name="PNL"
             />
