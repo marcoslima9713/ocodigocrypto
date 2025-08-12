@@ -1,3 +1,14 @@
+-- Tornar community_feed legível publicamente e inserível apenas pelos usuários
+alter table public.community_feed enable row level security;
+
+drop policy if exists "Public can read community feed" on public.community_feed;
+create policy "Public can read community feed" on public.community_feed
+  for select using (true);
+
+drop policy if exists "Users can insert their own feed entries" on public.community_feed;
+create policy "Users can insert their own feed entries" on public.community_feed
+  for insert with check (auth.role() = 'authenticated');
+
 -- Corrigir segurança do feed e garantir políticas de transactions
 
 -- 1) Recriar função do feed com SECURITY DEFINER para poder ler auth.users
