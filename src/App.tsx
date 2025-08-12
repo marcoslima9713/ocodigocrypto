@@ -15,6 +15,7 @@ import { useState, useEffect } from "react";
 
 // Páginas de autenticação
 import Login from "./pages/Login";
+import Register from "./pages/Register";
 import AdminLogin from "./pages/AdminLogin";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
@@ -141,6 +142,7 @@ const App = () => {
                 
                 {/* Rotas de autenticação */}
                 <Route path="/login" element={<Login />} />
+                <Route path="/signup" element={<Register />} />
                 <Route path="/admin-login" element={<AdminLogin />} />
                 <Route path="/forgot-password" element={<ForgotPassword />} />
                 <Route path="/reset-password" element={<ResetPassword />} />

@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Copy, CheckCircle, Shield, Code, Globe, Image, AlertTriangle, User, Coins } from "lucide-react";
+import { supabase } from '@/integrations/supabase/client';
 import { useToast } from "@/hooks/use-toast";
 import VideoManager from "@/components/VideoManager";
 import CoinGeckoManager from "@/components/CoinGeckoManager";
@@ -71,6 +72,7 @@ const AdminPanel = () => {
             <TabsTrigger value="coingecko">API CoinGecko</TabsTrigger>
             <TabsTrigger value="crypto-images">Imagens Crypto</TabsTrigger>
             <TabsTrigger value="dca-crypto">DCA Crypto</TabsTrigger>
+            <TabsTrigger value="free-access">Acesso Gratuito</TabsTrigger>
             <TabsTrigger value="docs">Documentação</TabsTrigger>
           </TabsList>
 
@@ -368,6 +370,10 @@ Colunas:
               </CardContent>
             </Card>
           </TabsContent>
+
+          <TabsContent value="free-access" className="space-y-4">
+            <FreeAccessSettingsCard />
+          </TabsContent>
         </Tabs>
       </div>
     </div>
@@ -375,3 +381,98 @@ Colunas:
 };
 
 export default AdminPanel;
+
+function FreeAccessSettingsCard() {
+  const [loading, setLoading] = useState(false);
+  const [allowedModules, setAllowedModules] = useState<string[]>(['ciclo-de-juros-e-spx500']);
+  const [allowDashboard, setAllowDashboard] = useState(false);
+  const [allowDca, setAllowDca] = useState(false);
+  const [allowHome, setAllowHome] = useState(false);
+  const [allowPortfolio, setAllowPortfolio] = useState(false);
+
+  useEffect(() => {
+    const load = async () => {
+      const { data } = await supabase
+        .from('free_access_settings')
+        .select('allowed_modules, allow_dashboard, allow_dca_calculator, allow_home, allow_portfolio')
+        .eq('id', 'global')
+        .maybeSingle();
+      if (data) {
+        setAllowedModules(data.allowed_modules ?? ['ciclo-de-juros-e-spx500']);
+        setAllowDashboard(!!data.allow_dashboard);
+        setAllowDca(!!data.allow_dca_calculator);
+        setAllowHome(!!data.allow_home);
+        setAllowPortfolio(!!data.allow_portfolio);
+      }
+    };
+    load();
+  }, []);
+
+  const toggleModule = (slug: string) => {
+    setAllowedModules(prev => prev.includes(slug) ? prev.filter(s => s !== slug) : [...prev, slug]);
+  };
+
+  const save = async () => {
+    setLoading(true);
+    await supabase
+      .from('free_access_settings')
+      .upsert({
+        id: 'global',
+        allowed_modules: allowedModules,
+        allow_dashboard: allowDashboard,
+        allow_dca_calculator: allowDca,
+        allow_home: allowHome,
+        allow_portfolio: allowPortfolio,
+      });
+    setLoading(false);
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Configurações de Acesso Gratuito</CardTitle>
+        <CardDescription>Defina o que é liberado para usuários não pagantes.</CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="space-y-2">
+          <div className="font-medium">Módulos liberados</div>
+          {[
+            { slug: 'ciclo-de-juros-e-spx500', label: 'Ciclo de Juros e SPX500' },
+            { slug: 'origens-bitcoin', label: 'Origens do Bitcoin' },
+            { slug: 'pool-de-liquidez', label: 'Pool de Liquidez' },
+            { slug: 'dca', label: 'DCA (Aulas)' },
+          ].map(m => (
+            <label key={m.slug} className="flex items-center gap-2 text-sm">
+              <input type="checkbox" checked={allowedModules.includes(m.slug)} onChange={() => toggleModule(m.slug)} />
+              {m.label}
+            </label>
+          ))}
+        </div>
+
+        <div className="space-y-2">
+          <div className="font-medium">Páginas</div>
+          <label className="flex items-center gap-2 text-sm">
+            <input type="checkbox" checked={allowHome} onChange={(e) => setAllowHome(e.target.checked)} />
+            Página Principal
+          </label>
+          <label className="flex items-center gap-2 text-sm">
+            <input type="checkbox" checked={allowDashboard} onChange={(e) => setAllowDashboard(e.target.checked)} />
+            Dashboard
+          </label>
+          <label className="flex items-center gap-2 text-sm">
+            <input type="checkbox" checked={allowDca} onChange={(e) => setAllowDca(e.target.checked)} />
+            Calculadora DCA
+          </label>
+          <label className="flex items-center gap-2 text-sm">
+            <input type="checkbox" checked={allowPortfolio} onChange={(e) => setAllowPortfolio(e.target.checked)} />
+            Meu Portfólio Crypto
+          </label>
+        </div>
+
+        <button onClick={save} className="btn-gold px-4 py-2 rounded" disabled={loading}>
+          {loading ? 'Salvando...' : 'Salvar Configurações'}
+        </button>
+      </CardContent>
+    </Card>
+  );
+}

@@ -160,12 +160,21 @@ export default function Login() {
             transition={{ delay: 0.7 }}
             className="mt-6 space-y-4 text-center"
           >
-            <Link
-              to="/forgot-password"
-              className="block text-sm text-muted-foreground hover:text-primary transition-colors"
-            >
-              Esqueceu sua senha?
-            </Link>
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+              <Link
+                to="/forgot-password"
+                className="text-sm text-muted-foreground hover:text-primary transition-colors"
+              >
+                Esqueceu sua senha?
+              </Link>
+
+              <Link
+                to="/signup"
+                className="text-sm text-primary hover:underline"
+              >
+                Criar conta gratuita
+              </Link>
+            </div>
             
             <div className="border-t border-border pt-4">
               <Link

@@ -95,6 +95,57 @@ export interface Database {
         }
         Relationships: []
       }
+      free_users: {
+        Row: {
+          user_id: string
+          allowed_modules: string[]
+          created_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          user_id: string
+          allowed_modules?: string[]
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          user_id?: string
+          allowed_modules?: string[]
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      free_access_settings: {
+        Row: {
+          id: string
+          allowed_modules: string[]
+          allow_dashboard: boolean
+          allow_dca_calculator: boolean
+          allow_home: boolean
+          allow_portfolio: boolean
+          updated_at: string | null
+        }
+        Insert: {
+          id?: string
+          allowed_modules?: string[]
+          allow_dashboard?: boolean
+          allow_dca_calculator?: boolean
+          allow_home?: boolean
+          allow_portfolio?: boolean
+          updated_at?: string | null
+        }
+        Update: {
+          id?: string
+          allowed_modules?: string[]
+          allow_dashboard?: boolean
+          allow_dca_calculator?: boolean
+          allow_home?: boolean
+          allow_portfolio?: boolean
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       modules: {
         Row: {
           created_at: string | null
@@ -205,24 +256,24 @@ export interface Database {
       }
       user_roles: {
         Row: {
-          created_at: string | null
-          firebase_uid: string
           id: string
+          user_id: string
           role: Database["public"]["Enums"]["app_role"]
+          created_at: string | null
           updated_at: string | null
         }
         Insert: {
-          created_at?: string | null
-          firebase_uid: string
           id?: string
+          user_id: string
           role?: Database["public"]["Enums"]["app_role"]
+          created_at?: string | null
           updated_at?: string | null
         }
         Update: {
-          created_at?: string | null
-          firebase_uid?: string
           id?: string
+          user_id?: string
           role?: Database["public"]["Enums"]["app_role"]
+          created_at?: string | null
           updated_at?: string | null
         }
         Relationships: []
@@ -325,7 +376,7 @@ export interface Database {
     }
     Functions: {
       get_current_user_role: {
-        Args: { _firebase_uid: string }
+        Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"]
       }
       get_firebase_uid: {
@@ -333,10 +384,7 @@ export interface Database {
         Returns: string
       }
       has_role: {
-        Args: {
-          _firebase_uid: string
-          _role: Database["public"]["Enums"]["app_role"]
-        }
+        Args: { _user_id: string; _role: Database["public"]["Enums"]["app_role"] }
         Returns: boolean
       }
       set_config: {

@@ -126,8 +126,8 @@ async function createMember(customerData: any, productName: string, transactionI
             full_name: customerData.name,
             product_name: productName,
             ggcheckout_transaction_id: transactionId,
-            is_active: true
-            // auth_user_id: authUser.user?.id // Temporarily removed until column is added
+            is_active: true,
+            auth_user_id: authUser.user?.id
           })
           .select()
           .single();
@@ -138,6 +138,16 @@ async function createMember(customerData: any, productName: string, transactionI
       await supabase.auth.admin.deleteUser(authUser.user.id);
     }
     throw new Error(`Failed to create member: ${error.message}`);
+  }
+
+  // Grant full access by assigning 'member' role
+  if (authUser.user?.id) {
+    const { error: roleErr } = await supabase
+      .from('user_roles')
+      .insert({ user_id: authUser.user.id, role: 'member' });
+    if (roleErr) {
+      console.error('Failed to assign member role:', roleErr);
+    }
   }
 
   return { member, plainPassword: password };
