@@ -55,9 +55,12 @@ export function ProfitLossChart({ data, loading = false }: ProfitLossChartProps)
     const { days } = timeFilters[selectedFilter];
     if (days === 0) return processedData; // Total
 
-    const cutoff = Date.now() - days * 24 * 60 * 60 * 1000;
+    // Usa a data do último ponto (fim da série) como referência, em vez de Date.now.
+    // Isso evita janelas vazias quando os dados não incluem o dia atual.
+    const lastTs = new Date(processedData[processedData.length - 1].date).getTime();
+    const cutoff = lastTs - days * 24 * 60 * 60 * 1000;
     const filtered = processedData.filter((d) => new Date(d.date).getTime() >= cutoff);
-    return filtered.length > 0 ? filtered : processedData; // fallback caso não haja dados
+    return filtered.length > 1 ? filtered : processedData; // se ficar 0/1 pontos, usa total
   }, [processedData, selectedFilter]);
 
   // Calcula performance no período filtrado
@@ -66,7 +69,9 @@ export function ProfitLossChart({ data, loading = false }: ProfitLossChartProps)
     const first = filteredData[0].pnl;
     const last = filteredData[filteredData.length - 1].pnl;
     const absolute = last - first;
-    const percentage = first !== 0 ? (absolute / Math.abs(first)) * 100 : 0;
+    // Percentual em relação ao valor investido do primeiro ponto no período para refletir retorno
+    const investedBase = Math.max(1, Math.abs(filteredData[0].invested));
+    const percentage = (last - first) / investedBase * 100;
     return { absolute, percentage };
   }, [filteredData]);
 

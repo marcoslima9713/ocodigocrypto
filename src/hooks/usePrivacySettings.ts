@@ -29,33 +29,33 @@ export function usePrivacySettings(): UsePrivacySettingsReturn {
         throw new Error('Usuário não autenticado');
       }
 
-      // Buscar configurações de privacidade
+      // Buscar configurações de privacidade (sem gerar 406 quando não há linha)
       const { data, error: fetchError } = await supabase
         .from('user_privacy_settings')
         .select('*')
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
 
       if (fetchError) {
-        // Se não existir, criar configuração padrão
-        if (fetchError.code === 'PGRST116') {
-          const { data: newSettings, error: insertError } = await supabase
-            .from('user_privacy_settings')
-            .insert({
-              user_id: user.id,
-              show_in_community_feed: true
-            })
-            .select()
-            .single();
+        throw new Error(`Erro ao buscar configurações: ${fetchError.message}`);
+      }
 
-          if (insertError) {
-            throw new Error(`Erro ao criar configurações: ${insertError.message}`);
-          }
+      if (!data) {
+        // Criar configuração padrão se não existir
+        const { data: newSettings, error: upsertError } = await supabase
+          .from('user_privacy_settings')
+          .upsert({
+            user_id: user.id,
+            show_in_community_feed: true
+          })
+          .select()
+          .single();
 
-          setPrivacySettings(newSettings);
-        } else {
-          throw new Error(`Erro ao buscar configurações: ${fetchError.message}`);
+        if (upsertError) {
+          throw new Error(`Erro ao criar configurações: ${upsertError.message}`);
         }
+
+        setPrivacySettings(newSettings);
       } else {
         setPrivacySettings(data);
       }
@@ -78,10 +78,13 @@ export function usePrivacySettings(): UsePrivacySettingsReturn {
         throw new Error('Usuário não autenticado');
       }
 
+      // Upsert garante criação/atualização sem 406 e respeita RLS do próprio usuário
       const { data, error } = await supabase
         .from('user_privacy_settings')
-        .update(settings)
-        .eq('user_id', user.id)
+        .upsert({
+          user_id: user.id,
+          ...settings
+        })
         .select()
         .single();
 
