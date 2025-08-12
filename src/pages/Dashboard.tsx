@@ -242,10 +242,6 @@ export default function Dashboard() {
                 <Play className="w-3 h-3 sm:w-4 sm:h-4 lg:w-5 lg:h-5 mr-1 sm:mr-2" />
                 Assistir Agora
               </Button>
-              <Button onClick={() => navigate('/sentimento')} className="bg-orange-600 hover:bg-orange-700 text-white px-4 sm:px-6 lg:px-8 py-2 sm:py-2.5 lg:py-3 text-sm sm:text-base lg:text-lg font-semibold">
-                <Gauge className="w-3 h-3 sm:w-4 sm:h-4 lg:w-5 lg:h-5 mr-1 sm:mr-2" />
-                Sentimento de Mercado
-              </Button>
               <Dialog>
                 <DialogTrigger asChild>
                   <Button variant="secondary" className="bg-gray-600/70 text-white hover:bg-gray-600 px-4 sm:px-6 lg:px-8 py-2 sm:py-2.5 lg:py-3 text-sm sm:text-base lg:text-lg">
