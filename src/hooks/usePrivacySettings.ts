@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { UserPrivacySettings } from '@/integrations/supabase/types';
+import { UserPrivacySettings } from '@/types/database';
 
 interface UsePrivacySettingsReturn {
   privacySettings: UserPrivacySettings | null;

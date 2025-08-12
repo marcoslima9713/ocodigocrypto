@@ -41,11 +41,10 @@ interface VideoLesson {
 }
 
 interface ModuleCover {
-  id: string;
-  module_id: string;
-  cover_image: string;
-  created_at: string;
-  updated_at: string;
+  id: number;
+  slug: string;
+  title: string;
+  cover_url: string;
 }
 
 const VideoManager: React.FC = () => {
@@ -129,24 +128,23 @@ const VideoManager: React.FC = () => {
 
   // Funções para gerenciar capas dos módulos
   const getModuleCover = (moduleId: string) => {
-    const cover = moduleCovers.find(c => c.module_id === moduleId);
-    return cover?.cover_image || '';
+    const cover = moduleCovers.find(c => c.slug === moduleId);
+    return cover?.cover_url || '';
   };
 
   const saveModuleCover = async (moduleId: string, imageUrl: string) => {
     try {
       // Verificar se já existe uma capa para este módulo
-      const existingCover = moduleCovers.find(c => c.module_id === moduleId);
+      const existingCover = moduleCovers.find(c => c.slug === moduleId);
       
       if (existingCover) {
         // Atualizar capa existente
         const { error } = await supabase
           .from('module_covers')
           .update({ 
-            cover_image: imageUrl,
-            updated_at: new Date().toISOString()
+            cover_url: imageUrl
           })
-          .eq('module_id', moduleId);
+          .eq('slug', moduleId);
         
         if (error) throw error;
       } else {
@@ -154,8 +152,9 @@ const VideoManager: React.FC = () => {
         const { error } = await supabase
           .from('module_covers')
           .insert({
-            module_id: moduleId,
-            cover_image: imageUrl
+            slug: moduleId,
+            title: moduleId.replace('-', ' ').toUpperCase(),
+            cover_url: imageUrl
           });
         
         if (error) throw error;
@@ -184,7 +183,7 @@ const VideoManager: React.FC = () => {
       const { error } = await supabase
         .from('module_covers')
         .delete()
-        .eq('module_id', moduleId);
+        .eq('slug', moduleId);
       
       if (error) throw error;
       

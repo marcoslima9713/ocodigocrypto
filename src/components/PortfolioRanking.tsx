@@ -19,7 +19,7 @@ import {
   WifiOff
 } from 'lucide-react';
 import { usePortfolioRankings } from '@/hooks/usePortfolioRankings';
-import { PortfolioRankingEntry } from '@/integrations/supabase/types';
+import { PortfolioRankingEntry } from '@/types/database';
 
 interface PortfolioRankingProps {
   className?: string;

@@ -52,12 +52,12 @@ export default function PoolLiquidezModule() {
         try {
           const { data: coverData, error: coverError } = await supabase
             .from('module_covers')
-            .select('cover_image')
-            .eq('module_id', currentModuleId)
+            .select('cover_url')
+            .eq('slug', currentModuleId)
             .single();
           
           if (!coverError && coverData) {
-            setModuleCover(coverData.cover_image);
+            setModuleCover(coverData.cover_url);
           }
         } catch (error) {
           console.log('Capa personalizada não encontrada, usando padrão');

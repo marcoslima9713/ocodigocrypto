@@ -18,7 +18,7 @@ import {
 } from 'lucide-react';
 import { useCommunityFeed } from '@/hooks/useCommunityFeed';
 import { usePrivacySettings } from '@/hooks/usePrivacySettings';
-import { CommunityFeedEntry } from '@/integrations/supabase/types';
+import { CommunityFeedEntry } from '@/types/database';
 import { EmptyState } from '@/components/EmptyState';
 
 interface CommunityFeedProps {

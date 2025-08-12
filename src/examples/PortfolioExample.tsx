@@ -62,11 +62,9 @@ export const PortfolioExample: React.FC = () => {
     error: pricesError,
     refetch: refetchPrices,
     clearCache,
-    cacheStats,
     lastUpdated
   } = usePortfolioPrices(assets, {
-    refreshInterval: 4 * 60 * 60 * 1000, // 4 horas
-    enableAutoRefresh: false // Desabilitado para evitar atualizações constantes
+    enableAutoUpdate: false // Desabilitado para evitar atualizações constantes
   })
 
   const handleAssetUpdate = (updatedAsset: PortfolioAsset) => {
@@ -189,13 +187,8 @@ export const PortfolioExample: React.FC = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              <p><strong>Tamanho do Cache:</strong> {cacheStats.size} entradas</p>
-              <p><strong>Entradas:</strong></p>
-              <ul className="list-disc list-inside text-sm text-gray-600">
-                {cacheStats.entries.map((entry, index) => (
-                  <li key={index}>{entry}</li>
-                ))}
-              </ul>
+              <p><strong>Status:</strong> Cache ativo</p>
+              <p><strong>Última Atualização:</strong> {lastUpdated?.toLocaleTimeString('pt-BR') || 'N/A'}</p>
             </div>
           </CardContent>
         </Card>

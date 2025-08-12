@@ -106,7 +106,7 @@ export default function Dashboard() {
         if (!coversError && coversData) {
           const coversMap: {[key: string]: string} = {};
           coversData.forEach(cover => {
-            coversMap[cover.module_id] = cover.cover_image;
+            coversMap[cover.slug] = cover.cover_url;
           });
           setModuleCovers(coversMap);
         }

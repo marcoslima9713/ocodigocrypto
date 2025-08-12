@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { PortfolioRankingEntry, PortfolioRankings } from '@/integrations/supabase/types';
+import { PortfolioRankingEntry, PortfolioRankings } from '@/types/database';
 
 interface UsePortfolioRankingsOptions {
   timeWindow?: '7_days' | '30_days';
@@ -62,16 +62,18 @@ export function usePortfolioRankings(options: UsePortfolioRankingsOptions = {}) 
         user_id: entry.user_id,
         user_name: entry.user_name || 'Usuário Anônimo',
         user_username: entry.user_email?.split('@')[0] || '',
+        user_email: entry.user_email,
         user_created_at: entry.user_created_at,
         time_window: timeWindow,
         return_percent: entry.return_percent || 0,
         top_asset: 'N/A', // A nova view não tem top_asset, mas mantemos para compatibilidade
         top_asset_return: entry.return_percent || 0,
         dca_purchase_count: 0, // A nova view não tem DCA count, mas mantemos para compatibilidade
-        dca_avg_price: 0,
         total_invested: entry.total_invested || 0,
         total_current_value: entry.total_current_value || 0,
         total_unrealized_pnl: entry.profit_usd || 0,
+        profit_usd: entry.profit_usd || 0,
+        dca_avg_price: 0,
         badge: getBadgeForReturn(entry.return_percent || 0)
       }));
 

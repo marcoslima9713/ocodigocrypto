@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { CommunityFeedEntry } from '@/integrations/supabase/types';
+import { CommunityFeedEntry } from '@/types/database';
 
 interface UseCommunityFeedOptions {
   limit?: number;

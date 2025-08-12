@@ -6,52 +6,7 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[]
 
-  export interface CommunityFeedEntry {
-    id: string;
-    user_id: string;
-    user_display_name: string;
-    user_username?: string;
-    action_type: 'buy' | 'sell' | 'add';
-    asset: string;
-    amount: number;
-    price: number;
-    total_value: number;
-    pnl_percent?: number;
-    pnl_amount?: number;
-    created_at: string;
-  }
-
-  export interface UserPrivacySettings {
-    user_id: string;
-    show_in_community_feed: boolean;
-    created_at: string;
-    updated_at: string;
-  }
-
-  export interface PortfolioRankingEntry {
-    user_id: string;
-    user_name: string;
-    user_username?: string;
-    user_created_at: string;
-    time_window: '7_days' | '30_days';
-    return_percent: number;
-    top_asset?: string;
-    top_asset_return?: number;
-    dca_purchase_count: number;
-    dca_avg_price?: number;
-    total_invested: number;
-    total_current_value: number;
-    total_unrealized_pnl: number;
-    badge?: 'Top Trader' | 'Elite Trader' | 'DCA Master';
-  }
-
-  export interface PortfolioRankings {
-    return_percent: PortfolioRankingEntry[];
-    top_asset: PortfolioRankingEntry[];
-    dca_strategy: PortfolioRankingEntry[];
-  }
-
-export interface Database {
+export type Database = {
   // Allows to automatically instanciate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
@@ -59,8 +14,240 @@ export interface Database {
   }
   public: {
     Tables: {
+      community_feed: {
+        Row: {
+          action_type: string
+          amount: number
+          asset: string
+          created_at: string | null
+          id: string
+          pnl_amount: number | null
+          pnl_percent: number | null
+          price: number
+          source_transaction_id: string | null
+          total_value: number
+          user_display_name: string
+          user_id: string
+          user_username: string | null
+        }
+        Insert: {
+          action_type: string
+          amount: number
+          asset: string
+          created_at?: string | null
+          id?: string
+          pnl_amount?: number | null
+          pnl_percent?: number | null
+          price: number
+          source_transaction_id?: string | null
+          total_value: number
+          user_display_name: string
+          user_id: string
+          user_username?: string | null
+        }
+        Update: {
+          action_type?: string
+          amount?: number
+          asset?: string
+          created_at?: string | null
+          id?: string
+          pnl_amount?: number | null
+          pnl_percent?: number | null
+          price?: number
+          source_transaction_id?: string | null
+          total_value?: number
+          user_display_name?: string
+          user_id?: string
+          user_username?: string | null
+        }
+        Relationships: []
+      }
+      crypto_images: {
+        Row: {
+          created_at: string | null
+          id: string
+          image_url: string
+          name: string
+          symbol: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          image_url: string
+          name: string
+          symbol: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          image_url?: string
+          name?: string
+          symbol?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      crypto_prices: {
+        Row: {
+          crypto_symbol: string
+          price_usd: number
+          updated_at: string
+        }
+        Insert: {
+          crypto_symbol: string
+          price_usd: number
+          updated_at?: string
+        }
+        Update: {
+          crypto_symbol?: string
+          price_usd?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      dca_calculations: {
+        Row: {
+          calculation_date: string | null
+          created_at: string | null
+          cryptocurrency_symbol: string
+          current_value: number
+          frequency: string
+          id: string
+          initial_date: string
+          investment_amount: number
+          profitability_percentage: number
+          total_coins: number
+          total_invested: number
+          user_id: string | null
+        }
+        Insert: {
+          calculation_date?: string | null
+          created_at?: string | null
+          cryptocurrency_symbol: string
+          current_value: number
+          frequency: string
+          id?: string
+          initial_date: string
+          investment_amount: number
+          profitability_percentage: number
+          total_coins: number
+          total_invested: number
+          user_id?: string | null
+        }
+        Update: {
+          calculation_date?: string | null
+          created_at?: string | null
+          cryptocurrency_symbol?: string
+          current_value?: number
+          frequency?: string
+          id?: string
+          initial_date?: string
+          investment_amount?: number
+          profitability_percentage?: number
+          total_coins?: number
+          total_invested?: number
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      dca_cryptocurrencies: {
+        Row: {
+          coin_gecko_id: string
+          created_at: string | null
+          id: string
+          image_url: string | null
+          is_active: boolean | null
+          name: string
+          order_index: number | null
+          symbol: string
+          updated_at: string | null
+        }
+        Insert: {
+          coin_gecko_id: string
+          created_at?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean | null
+          name: string
+          order_index?: number | null
+          symbol: string
+          updated_at?: string | null
+        }
+        Update: {
+          coin_gecko_id?: string
+          created_at?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean | null
+          name?: string
+          order_index?: number | null
+          symbol?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      free_access_settings: {
+        Row: {
+          allow_dashboard: boolean
+          allow_dca_calculator: boolean
+          allow_home: boolean
+          allow_portfolio: boolean
+          allowed_modules: string[]
+          id: string
+          updated_at: string | null
+        }
+        Insert: {
+          allow_dashboard?: boolean
+          allow_dca_calculator?: boolean
+          allow_home?: boolean
+          allow_portfolio?: boolean
+          allowed_modules?: string[]
+          id?: string
+          updated_at?: string | null
+        }
+        Update: {
+          allow_dashboard?: boolean
+          allow_dca_calculator?: boolean
+          allow_home?: boolean
+          allow_portfolio?: boolean
+          allowed_modules?: string[]
+          id?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      free_users: {
+        Row: {
+          allowed_modules: string[]
+          created_at: string | null
+          email: string
+          full_name: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          allowed_modules?: string[]
+          created_at?: string | null
+          email: string
+          full_name?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          allowed_modules?: string[]
+          created_at?: string | null
+          email?: string
+          full_name?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       members: {
         Row: {
+          auth_user_id: string | null
           created_at: string
           email: string
           full_name: string
@@ -72,6 +259,7 @@ export interface Database {
           updated_at: string
         }
         Insert: {
+          auth_user_id?: string | null
           created_at?: string
           email: string
           full_name: string
@@ -83,6 +271,7 @@ export interface Database {
           updated_at?: string
         }
         Update: {
+          auth_user_id?: string | null
           created_at?: string
           email?: string
           full_name?: string
@@ -95,54 +284,24 @@ export interface Database {
         }
         Relationships: []
       }
-      free_users: {
+      module_covers: {
         Row: {
-          user_id: string
-          allowed_modules: string[]
-          created_at: string | null
-          updated_at: string | null
+          cover_url: string | null
+          id: number
+          slug: string | null
+          title: string | null
         }
         Insert: {
-          user_id: string
-          allowed_modules?: string[]
-          created_at?: string | null
-          updated_at?: string | null
+          cover_url?: string | null
+          id?: number
+          slug?: string | null
+          title?: string | null
         }
         Update: {
-          user_id?: string
-          allowed_modules?: string[]
-          created_at?: string | null
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
-      free_access_settings: {
-        Row: {
-          id: string
-          allowed_modules: string[]
-          allow_dashboard: boolean
-          allow_dca_calculator: boolean
-          allow_home: boolean
-          allow_portfolio: boolean
-          updated_at: string | null
-        }
-        Insert: {
-          id?: string
-          allowed_modules?: string[]
-          allow_dashboard?: boolean
-          allow_dca_calculator?: boolean
-          allow_home?: boolean
-          allow_portfolio?: boolean
-          updated_at?: string | null
-        }
-        Update: {
-          id?: string
-          allowed_modules?: string[]
-          allow_dashboard?: boolean
-          allow_dca_calculator?: boolean
-          allow_home?: boolean
-          allow_portfolio?: boolean
-          updated_at?: string | null
+          cover_url?: string | null
+          id?: number
+          slug?: string | null
+          title?: string | null
         }
         Relationships: []
       }
@@ -212,6 +371,93 @@ export interface Database {
         }
         Relationships: []
       }
+      portfolio_rankings_simple: {
+        Row: {
+          badge: string | null
+          created_at: string | null
+          dca_avg_price: number | null
+          dca_purchase_count: number | null
+          id: string
+          return_percent: number
+          time_window: string
+          top_asset: string | null
+          top_asset_return: number | null
+          total_current_value: number
+          total_invested: number
+          total_unrealized_pnl: number
+          updated_at: string | null
+          user_created_at: string | null
+          user_id: string
+          user_name: string
+          user_username: string | null
+        }
+        Insert: {
+          badge?: string | null
+          created_at?: string | null
+          dca_avg_price?: number | null
+          dca_purchase_count?: number | null
+          id?: string
+          return_percent: number
+          time_window: string
+          top_asset?: string | null
+          top_asset_return?: number | null
+          total_current_value: number
+          total_invested: number
+          total_unrealized_pnl: number
+          updated_at?: string | null
+          user_created_at?: string | null
+          user_id: string
+          user_name: string
+          user_username?: string | null
+        }
+        Update: {
+          badge?: string | null
+          created_at?: string | null
+          dca_avg_price?: number | null
+          dca_purchase_count?: number | null
+          id?: string
+          return_percent?: number
+          time_window?: string
+          top_asset?: string | null
+          top_asset_return?: number | null
+          total_current_value?: number
+          total_invested?: number
+          total_unrealized_pnl?: number
+          updated_at?: string | null
+          user_created_at?: string | null
+          user_id?: string
+          user_name?: string
+          user_username?: string | null
+        }
+        Relationships: []
+      }
+      ranking_update_log: {
+        Row: {
+          created_at: string | null
+          execution_time_ms: number | null
+          id: string
+          last_update: string
+          records_updated: number | null
+          update_type: string
+        }
+        Insert: {
+          created_at?: string | null
+          execution_time_ms?: number | null
+          id?: string
+          last_update?: string
+          records_updated?: number | null
+          update_type?: string
+        }
+        Update: {
+          created_at?: string | null
+          execution_time_ms?: number | null
+          id?: string
+          last_update?: string
+          records_updated?: number | null
+          update_type?: string
+        }
+        Relationships: []
+      }
       transactions: {
         Row: {
           amount: number
@@ -254,27 +500,72 @@ export interface Database {
         }
         Relationships: []
       }
-      user_roles: {
+      user_privacy_settings: {
         Row: {
-          id: string
-          user_id: string
-          role: Database["public"]["Enums"]["app_role"]
           created_at: string | null
+          show_in_community_feed: boolean | null
+          show_portfolio_value: boolean | null
+          show_transactions: boolean | null
           updated_at: string | null
+          user_id: string
         }
         Insert: {
-          id?: string
-          user_id: string
-          role?: Database["public"]["Enums"]["app_role"]
           created_at?: string | null
+          show_in_community_feed?: boolean | null
+          show_portfolio_value?: boolean | null
+          show_transactions?: boolean | null
           updated_at?: string | null
+          user_id: string
         }
         Update: {
-          id?: string
-          user_id?: string
-          role?: Database["public"]["Enums"]["app_role"]
           created_at?: string | null
+          show_in_community_feed?: boolean | null
+          show_portfolio_value?: boolean | null
+          show_transactions?: boolean | null
           updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string | null
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      users_progress: {
+        Row: {
+          completed_modules: string[] | null
+          last_access: string | null
+          user_id: string
+        }
+        Insert: {
+          completed_modules?: string[] | null
+          last_access?: string | null
+          user_id: string
+        }
+        Update: {
+          completed_modules?: string[] | null
+          last_access?: string | null
+          user_id?: string
         }
         Relationships: []
       }
@@ -359,24 +650,25 @@ export interface Database {
         }
         Relationships: []
       }
-      community_feed: {
-        Row: CommunityFeedEntry;
-        Insert: Omit<CommunityFeedEntry, 'id' | 'created_at'>;
-        Update: Partial<Omit<CommunityFeedEntry, 'id' | 'created_at'>>;
-      };
-      
-      user_privacy_settings: {
-        Row: UserPrivacySettings;
-        Insert: Omit<UserPrivacySettings, 'created_at' | 'updated_at'>;
-        Update: Partial<Omit<UserPrivacySettings, 'created_at' | 'updated_at'>>;
-      };
     }
     Views: {
-      [_ in never]: never
+      portfolio_performance_rankings_v2: {
+        Row: {
+          profit_usd: number | null
+          return_percent: number | null
+          total_current_value: number | null
+          total_invested: number | null
+          user_created_at: string | null
+          user_email: string | null
+          user_id: string | null
+          user_name: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       get_current_user_role: {
-        Args: { _user_id: string }
+        Args: { _firebase_uid: string } | { _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"]
       }
       get_firebase_uid: {
@@ -384,15 +676,34 @@ export interface Database {
         Returns: string
       }
       has_role: {
-        Args: { _user_id: string; _role: Database["public"]["Enums"]["app_role"] }
+        Args:
+          | {
+              _firebase_uid: string
+              _role: Database["public"]["Enums"]["app_role"]
+            }
+          | { _user_id: string; _role: Database["public"]["Enums"]["app_role"] }
         Returns: boolean
       }
-      set_config: {
+      log_ranking_update: {
         Args: {
-          setting_name: string
-          setting_value: string
-          is_local?: boolean
+          p_update_type?: string
+          p_records_updated?: number
+          p_execution_time_ms?: number
         }
+        Returns: undefined
+      }
+      refresh_portfolio_rankings_v2: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
+      refresh_portfolio_rankings_v2_with_log: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
+      set_config: {
+        Args:
+          | { is_local: boolean; setting_name: string; setting_value: string }
+          | { setting_name: string; setting_value: string; is_local?: boolean }
         Returns: undefined
       }
     }

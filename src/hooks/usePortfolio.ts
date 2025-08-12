@@ -59,7 +59,7 @@ export function usePortfolio(portfolioId: string = 'main') {
     lastUpdated,
     isUpdating,
     updateStatus
-  } = usePortfolioPrices(portfolioData.holdings, {
+  } = usePortfolioPrices(portfolioData.holdings.filter(h => h.coinGeckoId).map(h => ({ coinGeckoId: h.coinGeckoId! })), {
     enableAutoUpdate: true // Habilitado para atualização automática a cada 2 minutos
   })
 

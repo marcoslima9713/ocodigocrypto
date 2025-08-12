@@ -35,7 +35,9 @@ export const PriceUpdateNotification: React.FC<PriceUpdateNotificationProps> = (
       }
     });
 
-    return unsubscribe;
+    return () => {
+      unsubscribe();
+    };
   }, [enabled, lastUpdate, toast]);
 
   return null; // Componente invisível, apenas para efeitos colaterais

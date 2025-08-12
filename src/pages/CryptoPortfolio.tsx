@@ -89,13 +89,14 @@ export default function CryptoPortfolio() {
   const handleTransactionRemoved = async () => {
     if (!transactionToDelete) return;
     
-    const success = await removeTransaction(transactionToDelete.id);
-    if (success) {
+    try {
+      await removeTransaction(transactionToDelete.id);
+      // If no error is thrown, consider it successful
       toast({
         title: "Transação removida!",
         description: "A transação foi removida com sucesso.",
       });
-    } else {
+    } catch (error) {
       toast({
         title: "Erro ao remover transação",
         description: "Não foi possível remover a transação. Tente novamente.",
@@ -606,7 +607,7 @@ export default function CryptoPortfolio() {
               <PortfolioDistribution
                 holdings={holdings}
                 currentPrices={Object.fromEntries(
-                  Object.entries(prices).map(([symbol, data]) => [symbol, data.current_price])
+                  Object.entries(prices).map(([symbol, data]) => [symbol, data.usd])
                 )}
               />
 
@@ -628,7 +629,8 @@ export default function CryptoPortfolio() {
                       <span className="text-zinc-300">Ativos em Lucro</span>
                       <span className="font-semibold text-green-400">
                         {holdings.filter(h => {
-                          const currentPrice = prices[h.crypto_symbol]?.current_price || 0;
+                          const coinGeckoId = h.coinGeckoId || h.crypto_symbol.toLowerCase();
+                          const currentPrice = prices[coinGeckoId]?.usd || 0;
                           return currentPrice > Number(h.average_buy_price);
                         }).length}
                             </span>
@@ -637,7 +639,8 @@ export default function CryptoPortfolio() {
                       <span className="text-zinc-300">Ativos em Prejuízo</span>
                       <span className="font-semibold text-red-400">
                         {holdings.filter(h => {
-                          const currentPrice = prices[h.crypto_symbol]?.current_price || 0;
+                          const coinGeckoId = h.coinGeckoId || h.crypto_symbol.toLowerCase();
+                          const currentPrice = prices[coinGeckoId]?.usd || 0;
                           return currentPrice < Number(h.average_buy_price);
                         }).length}
                             </span>
