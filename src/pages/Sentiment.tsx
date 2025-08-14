@@ -38,8 +38,11 @@ export default function Sentiment() {
       // Fear & Greed (via Supabase Function se existir; fallback API pública)
       let items: FearGreedItem[] | null = null;
       try {
+        const { data: sess } = await supabase.auth.getSession();
+        const token = sess.session?.access_token;
         const { data, error } = await supabase.functions.invoke("feargreed", {
           body: { limit: days === "30" ? 30 : days === "365" ? 365 : 730 },
+          headers: token ? { Authorization: `Bearer ${token}` } : undefined,
         });
         if (!error) items = (data?.data as FearGreedItem[]) ?? null;
       } catch {}
@@ -74,17 +77,50 @@ export default function Sentiment() {
     return () => clearInterval(id);
   }, [range]);
 
-  // Notícias (busca via Supabase Function em produção; fallback MCP local não está disponível no browser)
+  // Notícias (tenta Supabase Function; fallback em API pública do CoinGecko status_updates)
   useEffect(() => {
     (async () => {
       try {
+        const { data: sess } = await supabase.auth.getSession();
+        const token = sess.session?.access_token;
         const { data, error } = await supabase.functions.invoke("cryptonews", {
-          // filtros padrão pt-BR
-          headers: { "x-use-cache": "1" },
+          headers: token ? { Authorization: `Bearer ${token}` } : undefined,
         });
-        if (!error && data?.results) setNews(data.results.slice(0, 10));
+        if (!error && data?.results) {
+          setNews(
+            (data.results as any[])
+              .filter(Boolean)
+              .slice(0, 10)
+              .map((n) => ({
+                title: n.title,
+                link: n.link || n.url,
+                pubDate: n.pubDate || n.published_at,
+                source: n.source_id || n.source,
+              }))
+          );
+          return;
+        }
       } catch {
-        // como fallback, não quebra a tela
+        // ignora
+      }
+
+      // Fallback: CoinGecko status updates (sem chave, CORS ok)
+      try {
+        const r = await fetch(
+          "https://api.coingecko.com/api/v3/status_updates?category=general&per_page=20&page=1"
+        );
+        if (r.ok) {
+          const j = await r.json();
+          const items = (j?.status_updates || []).map((it: any) => ({
+            title: `${it.project?.name || it.user_title || 'Atualização'}${it.category ? ' – ' + it.category : ''}`,
+            link: it.article_url || it.project?.homepage || undefined,
+            pubDate: it.created_at,
+            source: it.project?.name || it.user,
+          }));
+          setNews(items.slice(0, 10));
+        }
+      } catch {
+        // manter vazio
       }
     })();
   }, []);
@@ -243,19 +279,19 @@ export default function Sentiment() {
                     {news.map((n, i) => (
                       <a
                         key={i}
-                        href={n.link || n.url}
+                        href={n.link || '#'}
                         target="_blank"
                         rel="noreferrer"
                         className="block p-3 rounded-md border border-zinc-800 hover:border-zinc-700 hover:bg-zinc-800/50 transition"
                       >
                         <div className="text-sm text-zinc-400">
-                          {new Date(n.pubDate || n.published_at || Date.now()).toLocaleString('pt-BR')}
+                          {new Date(n.pubDate || Date.now()).toLocaleString('pt-BR')}
                         </div>
                         <div className="text-white font-medium">
                           {n.title}
                         </div>
-                        {n.source_id || n.source ? (
-                          <div className="text-xs text-zinc-500 mt-1">{n.source_id || n.source}</div>
+                        {n.source ? (
+                          <div className="text-xs text-zinc-500 mt-1">{n.source}</div>
                         ) : null}
                       </a>
                     ))}

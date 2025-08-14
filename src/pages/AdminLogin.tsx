@@ -5,6 +5,7 @@ import { Mail, Lock, Eye, EyeOff, ArrowLeft, Shield, LogIn } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { useAdminAuth } from '@/contexts/AdminAuthContext';
+import { supabase } from '@/integrations/supabase/client';
 
 export default function AdminLogin() {
   const [email, setEmail] = useState('marcoslima9713@gmail.com');
@@ -20,7 +21,7 @@ export default function AdminLogin() {
     setIsLoading(true);
 
     try {
-      // Verificar se é o email correto
+      // Verificar se é o email correto (gate local)
       if (email !== 'marcoslima9713@gmail.com') {
         toast({
           title: "Acesso Negado",
@@ -30,11 +31,12 @@ export default function AdminLogin() {
         return;
       }
 
-      // Verificar se a senha está correta
-      if (password !== 'Bitcoin2026!') {
+      // Autenticar no Supabase para ter sessão válida (necessário para salvar no banco)
+      const { error: authError } = await supabase.auth.signInWithPassword({ email, password });
+      if (authError) {
         toast({
-          title: "Senha Incorreta",
-          description: "A senha administrativa está incorreta",
+          title: "Erro no Login",
+          description: authError.message,
           variant: "destructive",
         });
         return;

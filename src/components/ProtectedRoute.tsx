@@ -55,11 +55,17 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
 
   // Demais páginas permanecem visíveis para free, porém com overlay de bloqueio
 
-  console.log('User authenticated and authorized, rendering protected or marketing-locked content');
-  return (
-    <div className="relative">
-      {children}
-      {showLock && <LockedOverlay />}
-    </div>
-  );
+  console.log('User authenticated, verificando permissões...');
+
+  // Se não tiver acesso, não renderiza o conteúdo sensível
+  if (showLock) {
+    return (
+      <div className="relative min-h-screen">
+        <LockedOverlay />
+      </div>
+    );
+  }
+
+  // Acesso permitido: renderiza normalmente
+  return <>{children}</>;
 };

@@ -12,7 +12,6 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
 // URLs das imagens enviadas pelo usuário
-const bitcoinLogoUrl = '/lovable-uploads/210bfef1-70e7-47d1-852d-e3861dca17b2.png';
 const origensUrl = '/lovable-uploads/4dfe53fa-27f3-4715-921d-e467cf2c5f75.png';
 const ciclosUrl = '/lovable-uploads/4e9eee5a-5e64-42a8-bbc4-a937a029b016.png';
 const oportunidadesUrl = '/lovable-uploads/5c736e41-daae-472c-87ed-70b134a91c9c.png';
@@ -174,13 +173,12 @@ export default function Dashboard() {
           <div className="flex items-center justify-between">
             {/* Logo */}
             <div className="flex items-center space-x-2 sm:space-x-4">
-              <img src={bitcoinLogoUrl} alt="Bitcoin" className="w-8 h-8 sm:w-10 sm:h-10" />
               <div className="hidden sm:block">
-                <h1 className="text-lg sm:text-xl font-bold text-white">O Código Crypto</h1>
-                <p className="text-xs sm:text-sm text-gray-400">Portal de Investimentos</p>
+                <h1 className="text-lg sm:text-xl font-bold text-white">Academia Premium</h1>
+                <p className="text-xs sm:text-sm text-gray-400">Área de Membros</p>
               </div>
               <div className="sm:hidden">
-                <h1 className="text-sm font-bold text-white">O Código Crypto</h1>
+                <h1 className="text-sm font-bold text-white">Academia Premium</h1>
               </div>
             </div>
 

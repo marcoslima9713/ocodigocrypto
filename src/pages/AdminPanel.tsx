@@ -416,7 +416,7 @@ function FreeAccessSettingsCard() {
 
   const save = async () => {
     setLoading(true);
-    await supabase
+    const { error } = await supabase
       .from('free_access_settings')
       .upsert({
         id: 'global',
@@ -427,6 +427,29 @@ function FreeAccessSettingsCard() {
         allow_portfolio: allowPortfolio,
         allow_sentiment: allowSentiment,
       });
+    if (error) {
+      // tenta com rpc via service
+      try {
+        await fetch(`${import.meta.env.VITE_SUPABASE_URL}/rest/v1/free_access_settings`, {
+          method: 'POST',
+          headers: {
+            'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
+            'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token ?? ''}`,
+            'Content-Type': 'application/json',
+            'Prefer': 'resolution=merge-duplicates'
+          },
+          body: JSON.stringify({
+            id: 'global',
+            allowed_modules: allowedModules,
+            allow_dashboard: allowDashboard,
+            allow_dca_calculator: allowDca,
+            allow_home: allowHome,
+            allow_portfolio: allowPortfolio,
+            allow_sentiment: allowSentiment,
+          })
+        });
+      } catch {}
+    }
     setLoading(false);
   };
 

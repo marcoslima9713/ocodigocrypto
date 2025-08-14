@@ -2,18 +2,19 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
-// Configurações de fallback caso as variáveis de ambiente não estejam disponíveis
+// Configurações de fallback apenas em desenvolvimento, nunca em produção
 const fallbackSupabaseUrl = "https://wvojbjkdlnvlqgjwtdaf.supabase.co";
 const fallbackSupabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind2b2piamtkbG52bHFnanF3dGRhZiIsInJvbGUiOiJhbm9uIiwiaWF0IjoxNzM1NzI5NzE5LCJleHAiOjIwNTEzMDU3MTl9.juWlSIl6oLFH43Ii39TQ1p55scz04uhDj0TVjNduH0k";
 
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || fallbackSupabaseUrl;
-const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || fallbackSupabaseKey;
+const isDev = import.meta.env.DEV === true;
+const SUPABASE_URL =
+  (import.meta.env.VITE_SUPABASE_URL as string | undefined) || (isDev ? fallbackSupabaseUrl : undefined);
+const SUPABASE_PUBLISHABLE_KEY =
+  (import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined) || (isDev ? fallbackSupabaseKey : undefined);
 
-// Debug: Verificar se as variáveis de ambiente estão sendo carregadas
-console.log('Supabase Config:', {
-  url: SUPABASE_URL ? '✅ Configurado' : '❌ Não configurado',
-  key: SUPABASE_PUBLISHABLE_KEY ? '✅ Configurado' : '❌ Não configurado'
-});
+if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
+  throw new Error('Variáveis de ambiente do Supabase ausentes. Configure VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY.');
+}
 
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
@@ -21,15 +22,14 @@ console.log('Supabase Config:', {
 export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
   auth: {
     storage: localStorage,
-    persistSession: false, // Desabilita persistência de sessão
-    autoRefreshToken: false, // Desabilita refresh automático de token
-    detectSessionInUrl: false, // Desabilita detecção de sessão na URL
+    persistSession: true, // Persistir sessão para manter usuário autenticado após reload
+    autoRefreshToken: true, // Renovar token automaticamente
+    detectSessionInUrl: false,
   }
 });
 
 // Função para atualizar o header Authorization dinamicamente
 export async function setSupabaseAuthToken(token: string) {
-  // Não precisamos mais definir sessão do Supabase, pois usamos apenas Firebase
-  // Esta função é mantida para compatibilidade, mas não faz nada
-  console.log('Supabase auth token set (Firebase auth used instead)');
+  // Mantida para compatibilidade; o app usa apenas Supabase Auth
+  // No momento não há necessidade de atualizar manualmente a sessão
 }

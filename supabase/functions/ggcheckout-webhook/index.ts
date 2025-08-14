@@ -153,6 +153,117 @@ async function createMember(customerData: any, productName: string, transactionI
   return { member, plainPassword: password };
 }
 
+async function updateExistingMember(customerData: any, productName: string, transactionId: string) {
+  console.log("Updating existing member:", customerData.email);
+
+  // First, check if user exists in auth
+  const { data: authUser, error: authError } = await supabase.auth.admin.listUsers();
+  
+  if (authError) {
+    console.error("Error listing auth users:", authError);
+    throw new Error(`Failed to list auth users: ${authError.message}`);
+  }
+
+  const existingAuthUser = authUser.users.find(user => user.email === customerData.email);
+  
+  if (!existingAuthUser) {
+    console.log("Auth user not found, creating new one");
+    // If no auth user exists, create one
+    const password = generateRandomPassword();
+    const { data: newAuthUser, error: createAuthError } = await supabase.auth.admin.createUser({
+      email: customerData.email,
+      password: password,
+      email_confirm: true,
+      user_metadata: {
+        full_name: customerData.name,
+        product_name: productName,
+        ggcheckout_transaction_id: transactionId
+      }
+    });
+
+    if (createAuthError) {
+      console.error("Error creating auth user:", createAuthError);
+      throw new Error(`Failed to create auth user: ${createAuthError.message}`);
+    }
+
+    // Update the member record with the new auth user ID
+    const { data: updatedMember, error: updateError } = await supabase
+      .from("members")
+      .update({
+        auth_user_id: newAuthUser.user?.id,
+        product_name: productName,
+        ggcheckout_transaction_id: transactionId,
+        is_active: true,
+        updated_at: new Date().toISOString()
+      })
+      .eq("email", customerData.email)
+      .select()
+      .single();
+
+    if (updateError) {
+      throw new Error(`Failed to update member: ${updateError.message}`);
+    }
+
+    // Grant full access by assigning 'member' role
+    if (newAuthUser.user?.id) {
+      const { error: roleErr } = await supabase
+        .from('user_roles')
+        .upsert({ user_id: newAuthUser.user.id, role: 'member' }, { onConflict: 'user_id' });
+      if (roleErr) {
+        console.error('Failed to assign member role:', roleErr);
+      }
+    }
+
+    return { member: updatedMember, plainPassword: password, isNewAuth: true };
+  } else {
+    console.log("Auth user found, updating existing user");
+    
+    // Update the existing auth user metadata
+    const { error: updateAuthError } = await supabase.auth.admin.updateUserById(
+      existingAuthUser.id,
+      {
+        user_metadata: {
+          ...existingAuthUser.user_metadata,
+          product_name: productName,
+          ggcheckout_transaction_id: transactionId
+        }
+      }
+    );
+
+    if (updateAuthError) {
+      console.error("Error updating auth user:", updateAuthError);
+      throw new Error(`Failed to update auth user: ${updateAuthError.message}`);
+    }
+
+    // Update the member record
+    const { data: updatedMember, error: updateError } = await supabase
+      .from("members")
+      .update({
+        product_name: productName,
+        ggcheckout_transaction_id: transactionId,
+        is_active: true,
+        updated_at: new Date().toISOString()
+      })
+      .eq("email", customerData.email)
+      .select()
+      .single();
+
+    if (updateError) {
+      throw new Error(`Failed to update member: ${updateError.message}`);
+    }
+
+    // Ensure member role is assigned
+    const { error: roleErr } = await supabase
+      .from('user_roles')
+      .upsert({ user_id: existingAuthUser.id, role: 'member' }, { onConflict: 'user_id' });
+    if (roleErr) {
+      console.error('Failed to assign member role:', roleErr);
+    }
+
+    return { member: updatedMember, plainPassword: null, isNewAuth: false };
+  }
+}
+
 // AWS SES signature generation
 async function generateAwsSignature(method: string, url: string, headers: Record<string, string>, payload: string): Promise<string> {
   const encoder = new TextEncoder();
@@ -428,6 +539,179 @@ async function sendWelcomeEmail(memberData: any, password: string) {
   console.log("Email sent successfully via AWS SES:", result);
 }
 
+async function sendUpgradeEmail(memberData: any) {
+  const emailHtml = `
+    <!DOCTYPE html>
+    <html lang="pt-BR">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Upgrade Confirmado</title>
+    </head>
+    <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #121212;">
+      <table role="presentation" style="width: 100%; border-collapse: collapse;">
+        <tr>
+          <td style="padding: 20px 0; text-align: center;">
+            <table role="presentation" style="max-width: 600px; margin: 0 auto; background-color: #1C1C1C; border-radius: 12px; overflow: hidden;">
+              
+              <!-- Header -->
+              <tr>
+                <td style="background-color: #FF6A00; padding: 40px 30px; text-align: center;">
+                  <h1 style="margin: 0; color: #FFFFFF; font-size: 28px; font-weight: 700;">
+                    🎉 UPGRADE CONFIRMADO!
+                  </h1>
+                  <p style="margin: 10px 0 0; color: #FFFFFF; font-size: 16px; opacity: 0.9;">
+                    Seu acesso premium foi ativado com sucesso
+                  </p>
+                </td>
+              </tr>
+              
+              <!-- Content -->
+              <tr>
+                <td style="background-color: #121212; padding: 40px 30px;" class="mobile-padding">
+                  <h2 style="margin: 0 0 20px; color: #FFFFFF; font-size: 24px; font-weight: 600;">
+                    Olá ${memberData.full_name}!
+                  </h2>
+                  
+                  <p style="margin: 0 0 20px; font-size: 16px; color: #CCCCCC; line-height: 1.6;">
+                    Parabéns! Seu upgrade para o plano premium foi processado com sucesso. 
+                    Agora você tem acesso completo a todos os módulos exclusivos da plataforma.
+                  </p>
+                  
+                  <div style="background-color: #1C1C1C; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                    <h3 style="margin: 0 0 15px; color: #FF6A00; font-size: 18px;">
+                      ✅ O que foi liberado:
+                    </h3>
+                    <ul style="margin: 0; padding-left: 20px; color: #CCCCCC;">
+                      <li>Acesso a todos os módulos premium</li>
+                      <li>Análises exclusivas de mercado</li>
+                      <li>Estratégias avançadas de trading</li>
+                      <li>Suporte prioritário</li>
+                    </ul>
+                  </div>
+                </td>
+              </tr>
+              
+              <!-- Access Button -->
+              <tr>
+                <td style="background-color: #121212; padding: 0 30px 40px; text-align: center;" class="mobile-padding">
+                  <table role="presentation" style="margin: 0 auto;">
+                    <tr>
+                      <td style="border-radius: 8px; background-color: #FF6A00;">
+                        <a href="https://hidden-market-revelation.vercel.app/login" 
+                           style="display: inline-block; padding: 18px 32px; color: #FFFFFF; text-decoration: none; font-weight: 600; font-size: 16px; border-radius: 8px; text-transform: uppercase; letter-spacing: 1px;" 
+                           class="mobile-button">
+                          🔗 ACESSAR ÁREA PREMIUM
+                        </a>
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+              
+              <!-- Footer -->
+              <tr>
+                <td style="background-color: #1C1C1C; padding: 30px; text-align: center; border-top: 1px solid #333333;" class="mobile-padding">
+                  <p style="margin: 0; font-size: 12px; color: #888888; font-weight: 400;">
+                    © 2025 Equipe . Todos os direitos reservados.
+                  </p>
+                </td>
+              </tr>
+              
+            </table>
+          </td>
+        </tr>
+      </table>
+    </body>
+    </html>
+  `;
+
+  // Prepare email data for SES
+  const emailData = {
+    Source: 'noreply@investidorcrypto.com',
+    Destination: {
+      ToAddresses: [memberData.email]
+    },
+    Message: {
+      Subject: {
+        Data: '🎉 UPGRADE CONFIRMADO - Acesso Premium Ativado!',
+        Charset: 'UTF-8'
+      },
+      Body: {
+        Html: {
+          Data: emailHtml,
+          Charset: 'UTF-8'
+        },
+        Text: {
+          Data: `Olá ${memberData.full_name}! Seu upgrade para o plano premium foi confirmado. Acesse: https://hidden-market-revelation.vercel.app/login`,
+          Charset: 'UTF-8'
+        }
+      }
+    }
+  };
+
+  // Convert email data to XML
+  const xmlData = `<?xml version="1.0" encoding="UTF-8"?>
+<SendEmailRequest xmlns="http://ses.amazonaws.com/doc/2010-12-01/">
+  <Source>${emailData.Source}</Source>
+  <Destination>
+    <ToAddresses>
+      <member>${emailData.Destination.ToAddresses[0]}</member>
+    </ToAddresses>
+  </Destination>
+  <Message>
+    <Subject>
+      <Data>${emailData.Message.Subject.Data}</Data>
+      <Charset>${emailData.Message.Subject.Charset}</Charset>
+    </Subject>
+    <Body>
+      <Html>
+        <Data>${emailData.Message.Body.Html.Data.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</Data>
+        <Charset>${emailData.Message.Body.Html.Charset}</Charset>
+      </Html>
+      <Text>
+        <Data>${emailData.Message.Body.Text.Data}</Data>
+        <Charset>${emailData.Message.Body.Text.Charset}</Charset>
+      </Text>
+    </Body>
+  </Message>
+</SendEmailRequest>`;
+
+  // Prepare headers for AWS SES
+  const timestamp = new Date().toISOString().replace(/[:-]|\.\d{3}/g, '');
+  const headers = {
+    'Content-Type': 'application/x-www-form-urlencoded',
+    'X-Amz-Date': timestamp,
+    'Host': `email.${awsRegion}.amazonaws.com`
+  };
+
+  // Generate AWS signature
+  const signature = await generateAwsSignature('POST', `https://email.${awsRegion}.amazonaws.com`, headers, xmlData);
+  
+  // Create authorization header
+  const credentialScope = `${timestamp.slice(0, 8)}/${awsRegion}/ses/aws4_request`;
+  const signedHeaders = Object.keys(headers).map(key => key.toLowerCase()).sort().join(';');
+  
+  // Add authorization header AFTER calculating signature
+  headers['Authorization'] = `AWS4-HMAC-SHA256 Credential=${awsAccessKeyId}/${credentialScope}, SignedHeaders=${signedHeaders}, Signature=${signature}`;
+  
+  // Send email using AWS SES
+  const response = await fetch(`https://email.${awsRegion}.amazonaws.com`, {
+    method: 'POST',
+    headers,
+    body: xmlData
+  });
+
+  if (!response.ok) {
+    const errorData = await response.text();
+    console.error("AWS SES API error:", errorData);
+    throw new Error(`Failed to send upgrade email via AWS SES: ${response.status} - ${errorData}`);
+  }
+
+  const result = await response.text();
+  console.log("Upgrade email sent successfully via AWS SES:", result);
+}
+
 async function logWebhook(webhookType: string, payload: any, status: string, errorMessage?: string) {
   await supabase
     .from("webhook_logs")
@@ -589,11 +873,39 @@ const handler = async (req: Request): Promise<Response> => {
 
       if (existingMemberByEmail) {
         console.log("Member already exists for email:", webhookData.customer.email);
-        await logWebhook("ggcheckout", webhookData, "skipped", "Member already exists");
+        console.log("Updating existing member with new payment...");
         
+        // Get product name from different possible fields
+        const productName = webhookData.product?.name || 
+                           `Product_${webhookData.product?.id}` ||
+                           "Default Product";
+
+        // Update existing member instead of creating new one
+        const { member, plainPassword, isNewAuth } = await updateExistingMember(
+          webhookData.customer,
+          productName,
+          transactionId
+        );
+
+        console.log("Member updated successfully:", member.email);
+
+        // Send welcome email only if it's a new auth user (with password)
+        if (isNewAuth && plainPassword) {
+          await sendWelcomeEmail(member, plainPassword);
+          console.log("Welcome email sent to:", member.email);
+        } else {
+          // Send upgrade confirmation email
+          await sendUpgradeEmail(member);
+          console.log("Upgrade confirmation email sent to:", member.email);
+        }
+
+        // Log success
+        await logWebhook("ggcheckout", webhookData, "updated");
+
         return new Response(JSON.stringify({ 
           success: true, 
-          message: "Member already exists" 
+          message: "Member updated successfully",
+          member_id: member.id
         }), {
           status: 200,
           headers: { "Content-Type": "application/json", ...corsHeaders },

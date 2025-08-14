@@ -25,11 +25,27 @@ export const AdminAuthProvider = ({ children }: AdminAuthProviderProps) => {
 
   const loginAdmin = () => {
     setIsAdminLoggedIn(true);
+    try {
+      localStorage.setItem('admin_logged', '1');
+    } catch {}
   };
 
   const logoutAdmin = () => {
     setIsAdminLoggedIn(false);
+    try {
+      localStorage.removeItem('admin_logged');
+    } catch {}
   };
+
+  // restaurar estado após reload
+  if (!isAdminLoggedIn) {
+    try {
+      const v = localStorage.getItem('admin_logged');
+      if (v === '1' && !isAdminLoggedIn) {
+        setIsAdminLoggedIn(true);
+      }
+    } catch {}
+  }
 
   return (
     <AdminAuthContext.Provider value={{ isAdminLoggedIn, loginAdmin, logoutAdmin }}>
