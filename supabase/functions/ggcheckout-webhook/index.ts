@@ -97,11 +97,26 @@ async function verifyWebhookSignature(payload: string, signature: string): Promi
 }
 
 async function createMember(customerData: any, productName: string, transactionId: string) {
+  // Antes de criar um novo usuário, verificar se ele já existe no auth
+  const { data: authUserList, error: authError } = await supabase.auth.admin.listUsers();
+  
+  if (authError) {
+    console.error("Error listing auth users:", authError);
+    throw new Error(`Failed to list auth users: ${authError.message}`);
+  }
+
+  const existingAuthUser = authUserList.users.find(user => user.email === customerData.email);
+  
+  if (existingAuthUser) {
+    console.log("User already exists in auth, redirecting to update flow");
+    return await updateExistingMember(customerData, productName, transactionId);
+  }
+
   const password = generateRandomPassword();
   const passwordHash = await hashPassword(password);
 
   // First, create user in Supabase Auth
-  const { data: authUser, error: authError } = await supabase.auth.admin.createUser({
+  const { data: authUser, error: createAuthError } = await supabase.auth.admin.createUser({
     email: customerData.email,
     password: password,
     email_confirm: true,
@@ -112,25 +127,25 @@ async function createMember(customerData: any, productName: string, transactionI
     }
   });
 
-  if (authError) {
-    console.error("Error creating auth user:", authError);
-    throw new Error(`Failed to create auth user: ${authError.message}`);
+  if (createAuthError) {
+    console.error("Error creating auth user:", createAuthError);
+    throw new Error(`Failed to create auth user: ${createAuthError.message}`);
   }
 
-                // Then insert new member in members table
-        const { data: member, error } = await supabase
-          .from("members")
-          .insert({
-            email: customerData.email,
-            password_hash: passwordHash,
-            full_name: customerData.name,
-            product_name: productName,
-            ggcheckout_transaction_id: transactionId,
-            is_active: true,
-            auth_user_id: authUser.user?.id
-          })
-          .select()
-          .single();
+  // Then insert new member in members table
+  const { data: member, error } = await supabase
+    .from("members")
+    .insert({
+      email: customerData.email,
+      password_hash: passwordHash,
+      full_name: customerData.name,
+      product_name: productName,
+      ggcheckout_transaction_id: transactionId,
+      is_active: true,
+      auth_user_id: authUser.user?.id
+    })
+    .select()
+    .single();
 
   if (error) {
     // If member creation fails, we should clean up the auth user
@@ -170,6 +185,7 @@ async function updateExistingMember(customerData: any, productName: string, tran
     console.log("Auth user not found, creating new one");
     // If no auth user exists, create one
     const password = generateRandomPassword();
+    const passwordHash = await hashPassword(password);
     const { data: newAuthUser, error: createAuthError } = await supabase.auth.admin.createUser({
       email: customerData.email,
       password: password,
@@ -187,21 +203,51 @@ async function updateExistingMember(customerData: any, productName: string, tran
     }
 
     // Update the member record with the new auth user ID
-    const { data: updatedMember, error: updateError } = await supabase
+    const { data: existingMember, error: memberCheckError } = await supabase
       .from("members")
-      .update({
-        auth_user_id: newAuthUser.user?.id,
-        product_name: productName,
-        ggcheckout_transaction_id: transactionId,
-        is_active: true,
-        updated_at: new Date().toISOString()
-      })
-      .eq("email", customerData.email)
       .select()
-      .single();
+      .eq("email", customerData.email)
+      .maybeSingle();
 
-    if (updateError) {
-      throw new Error(`Failed to update member: ${updateError.message}`);
+    let updatedMember;
+    if (existingMember) {
+      const { data, error: updateError } = await supabase
+        .from("members")
+        .update({
+          auth_user_id: newAuthUser.user?.id,
+          product_name: productName,
+          ggcheckout_transaction_id: transactionId,
+          is_active: true,
+          updated_at: new Date().toISOString()
+        })
+        .eq("email", customerData.email)
+        .select()
+        .maybeSingle();
+
+      if (updateError) {
+        throw new Error(`Failed to update member: ${updateError.message}`);
+      }
+      updatedMember = data;
+    } else {
+      // If no member exists, create one
+      const { data, error: insertError } = await supabase
+        .from("members")
+        .insert({
+          email: customerData.email,
+          full_name: customerData.name,
+          product_name: productName,
+          ggcheckout_transaction_id: transactionId,
+          is_active: true,
+          auth_user_id: newAuthUser.user?.id,
+          password_hash: passwordHash
+        })
+        .select()
+        .maybeSingle();
+
+      if (insertError) {
+        throw new Error(`Failed to create member: ${insertError.message}`);
+      }
+      updatedMember = data;
     }
 
     // Grant full access by assigning 'member' role
@@ -236,20 +282,52 @@ async function updateExistingMember(customerData: any, productName: string, tran
     }
 
     // Update the member record
-    const { data: updatedMember, error: updateError } = await supabase
+    const { data: existingMember, error: memberCheckError } = await supabase
       .from("members")
-      .update({
-        product_name: productName,
-        ggcheckout_transaction_id: transactionId,
-        is_active: true,
-        updated_at: new Date().toISOString()
-      })
-      .eq("email", customerData.email)
       .select()
-      .single();
+      .eq("email", customerData.email)
+      .maybeSingle();
 
-    if (updateError) {
-      throw new Error(`Failed to update member: ${updateError.message}`);
+    let updatedMember;
+    if (existingMember) {
+      const { data, error: updateError } = await supabase
+        .from("members")
+        .update({
+          product_name: productName,
+          ggcheckout_transaction_id: transactionId,
+          is_active: true,
+          updated_at: new Date().toISOString()
+        })
+        .eq("email", customerData.email)
+        .select()
+        .maybeSingle();
+
+      if (updateError) {
+        throw new Error(`Failed to update member: ${updateError.message}`);
+      }
+      updatedMember = data;
+    } else {
+      // If no member exists, create one
+      const password = generateRandomPassword();
+      const passwordHash = await hashPassword(password);
+      const { data, error: insertError } = await supabase
+        .from("members")
+        .insert({
+          email: customerData.email,
+          full_name: customerData.name,
+          product_name: productName,
+          ggcheckout_transaction_id: transactionId,
+          is_active: true,
+          auth_user_id: existingAuthUser.id,
+          password_hash: passwordHash
+        })
+        .select()
+        .maybeSingle();
+
+      if (insertError) {
+        throw new Error(`Failed to create member: ${insertError.message}`);
+      }
+      updatedMember = data;
     }
 
     // Ensure member role is assigned

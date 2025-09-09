@@ -11,39 +11,69 @@ serve(async (req) => {
   }
 
   try {
-    const url = new URL(req.url);
-    const ids = url.searchParams.get("ids");
-    const vs = url.searchParams.get("vs") || "usd";
+    let endpoint: string | null = null;
+    let coinId: string | null = null;
+    let vsCurrency: string | null = null;
+    let days: string | null = null;
 
-    if (!ids) {
+    // Tenta ler parâmetros do body primeiro (POST)
+    if (req.method === "POST") {
+      try {
+        const body = await req.json();
+        endpoint = body.endpoint;
+        coinId = body.coin_id;
+        vsCurrency = body.vs_currency;
+        days = body.days;
+      } catch (e) {
+        console.log("Erro ao ler body:", e);
+      }
+    }
+
+    // Se não há parâmetros no body, tenta URL params
+    if (!endpoint) {
+      const url = new URL(req.url);
+      endpoint = url.searchParams.get("endpoint");
+      coinId = url.searchParams.get("coin_id");
+      vsCurrency = url.searchParams.get("vs_currency");
+      days = url.searchParams.get("days");
+    }
+
+    if (endpoint === "market_chart") {
+      // API de market_chart para gráficos
+      coinId = coinId || "bitcoin";
+      vsCurrency = vsCurrency || "usd";
+      days = days || "30";
+
+      const coingeckoUrl = `https://api.coingecko.com/api/v3/coins/${coinId}/market_chart?vs_currency=${vsCurrency}&days=${days}`;
+      console.log("Chamando market_chart URL:", coingeckoUrl);
+
+      const response = await fetch(coingeckoUrl, {
+        headers: {
+          "Accept": "application/json",
+          "User-Agent": "CryptoLuxePortal/1.0",
+        },
+      });
+
+      if (!response.ok) {
+        console.error("CoinGecko API error:", response.status, response.statusText);
+        throw new Error(`CoinGecko API error: ${response.status} ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      console.log("Dados recebidos com sucesso");
+
+      return new Response(JSON.stringify(data), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    } else {
       return new Response(
-        JSON.stringify({ error: "Missing required parameter: ids" }),
+        JSON.stringify({ error: "Endpoint não suportado. Use 'market_chart'" }),
         {
           status: 400,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         }
       );
     }
-
-    // URL simples da API CoinGecko
-    const coingeckoUrl = `https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=${vs}&include_24hr_change=true&include_market_cap=true&include_24hr_vol=true&include_24hr_high=true&include_24hr_low=true`;
-
-    const response = await fetch(coingeckoUrl, {
-      headers: {
-        "Accept": "application/json",
-        "User-Agent": "CryptoLuxePortal/1.0",
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error(`CoinGecko API error: ${response.status}`);
-    }
-
-    const data = await response.json();
-
-    return new Response(JSON.stringify(data), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
   } catch (error) {
     console.error("Error in coingecko function:", error);
 

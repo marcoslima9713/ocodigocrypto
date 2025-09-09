@@ -16,6 +16,7 @@ import CryptoImageManager from "@/components/CryptoImageManager";
 import DCACryptoManager from "@/components/DCACryptoManager";
 
 import { useAdminAuth } from "@/contexts/AdminAuthContext";
+import { UserManagement } from "@/components/UserManagement";
 
 const AdminPanel = () => {
   const { logoutAdmin } = useAdminAuth();
@@ -65,8 +66,9 @@ const AdminPanel = () => {
         </div>
 
         <Tabs defaultValue="status" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-8">
+          <TabsList className="grid w-full grid-cols-9">
             <TabsTrigger value="status">Status do Sistema</TabsTrigger>
+            <TabsTrigger value="users">Gerenciar Usuários</TabsTrigger>
             <TabsTrigger value="webhook">Webhook</TabsTrigger>
             <TabsTrigger value="videos">Gerenciar Vídeos</TabsTrigger>
             <TabsTrigger value="coingecko">API CoinGecko</TabsTrigger>
@@ -75,6 +77,10 @@ const AdminPanel = () => {
             <TabsTrigger value="free-access">Acesso Gratuito</TabsTrigger>
             <TabsTrigger value="docs">Documentação</TabsTrigger>
           </TabsList>
+
+          <TabsContent value="users" className="space-y-4">
+            <UserManagement />
+          </TabsContent>
 
           <TabsContent value="status" className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

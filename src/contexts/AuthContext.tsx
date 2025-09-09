@@ -1,6 +1,6 @@
 // Supabase-only AuthContext – substitui a antiga dependência de Firebase
 import { createContext, useContext, useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase, clearAuthSession } from "@/integrations/supabase/client";
 import type { Session, User } from "@supabase/supabase-js";
 import { useToast } from "@/hooks/use-toast";
 
@@ -181,10 +181,25 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const logout = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      toast({ title: "Erro ao sair", description: error.message, variant: "destructive" });
-      throw error;
+    try {
+      // Limpar estado local primeiro
+      setCurrentUser(null);
+      setSession(null);
+      setIsMember(false);
+      setIsFreeUser(false);
+      setAllowedModules([]);
+      setUserProgress(null);
+      
+      // Usar a função utilitária para limpar completamente a sessão
+      await clearAuthSession();
+      
+      // Redirecionar para login
+      window.location.href = '/login';
+      
+    } catch (error) {
+      console.error('Erro no logout:', error);
+      // Mesmo com erro, redirecionar para login
+      window.location.href = '/login';
     }
   };
 

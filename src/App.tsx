@@ -28,10 +28,13 @@ import PoolLiquidezModule from "./pages/PoolLiquidezModule";
 import DCAModule from "./pages/DCAModule";
 import CryptoPortfolio from "./pages/CryptoPortfolio";
 import AdminPanel from "./pages/AdminPanel";
+import AdminDashboard from "./pages/AdminDashboard";
 import PortfolioRankingPage from "./pages/PortfolioRankingPage";
 import DCACalculator from "./pages/DCACalculator";
-import NotFound from "./pages/NotFound";
 import Sentiment from "./pages/Sentiment";
+import CorrelationPairsPage from "./pages/CorrelationPairsPage";
+import MaquinaAlavancagemSP500 from "./pages/MaquinaAlavancagemSP500";
+import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -50,22 +53,27 @@ const GlobalErrorHandler = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     const handleError = (event: ErrorEvent) => {
       console.error('Global error caught:', event.error);
-      setError(event.error);
-      setHasError(true);
+      // Usar setTimeout para evitar setState durante render
+      setTimeout(() => {
+        setError(event.error);
+        setHasError(true);
+      }, 0);
     };
 
     window.addEventListener('error', handleError);
     window.addEventListener('unhandledrejection', (event) => {
       console.error('Unhandled promise rejection:', event.reason);
       
-      // Não quebrar a aplicação para erros de rede
+      // Não quebrar a aplicação para erros de rede ou CORS
       if (event.reason && typeof event.reason === 'object') {
         const reason = event.reason;
         if (reason.message && (
           reason.message.includes('Failed to fetch') || 
           reason.message.includes('net::ERR_INTERNET_DISCONNECTED') ||
           reason.message.includes('NetworkError') ||
-          reason.message.includes('timeout')
+          reason.message.includes('timeout') ||
+          reason.message.includes('CORS') ||
+          reason.message.includes('Access-Control-Allow-Origin')
         )) {
           console.warn('Erro de rede ignorado:', reason.message);
           event.preventDefault();
@@ -151,6 +159,8 @@ const App = () => {
                 {/* Página pública: Sentimento de Mercado */}
                 <Route path="/sentimento" element={<Sentiment />} />
                 
+                {/* Página pública: Indicador de Correlação de Pares */}
+                <Route path="/correlation-pairs" element={<CorrelationPairsPage />} />
                 {/* Rotas protegidas */}
                 <Route 
                   path="/dashboard" 
@@ -198,6 +208,15 @@ const App = () => {
                 />
                 
                 <Route 
+                  path="/modulo/maquina-alavancagem-2" 
+                  element={
+                    <ProtectedRoute>
+                      <MaquinaAlavancagemSP500 />
+                    </ProtectedRoute>
+                  } 
+                />
+                
+                <Route 
                   path="/portfolio" 
                   element={
                     <ProtectedRoute>
@@ -224,12 +243,21 @@ const App = () => {
                   } 
                 />
                 
-                {/* Rota administrativa */}
+                {/* Rotas administrativas */}
                 <Route 
                   path="/admin" 
                   element={
                     <AdminRoute>
                       <AdminPanel />
+                    </AdminRoute>
+                  } 
+                />
+                
+                <Route 
+                  path="/admin-dashboard" 
+                  element={
+                    <AdminRoute>
+                      <AdminDashboard />
                     </AdminRoute>
                   } 
                 />

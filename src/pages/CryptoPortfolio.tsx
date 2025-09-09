@@ -18,7 +18,8 @@ import {
   ArrowLeft,
   Users,
   Trophy,
-  Trash2
+  Trash2,
+  Calculator
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePortfolio } from '@/hooks/usePortfolio';
@@ -215,58 +216,47 @@ export default function CryptoPortfolio() {
             </p>
           </div>
           
-          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => navigate('/sentimento')}
-              className="text-xs sm:text-sm px-2 sm:px-3"
-            >
-              <BarChart3 className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
-              <span className="hidden sm:inline">Sentimento</span>
-              <span className="sm:hidden">Índice</span>
-            </Button>
-
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowValues(!showValues)}
-              className="text-xs sm:text-sm px-2 sm:px-3"
-            >
-              {showValues ? <EyeOff className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" /> : <Eye className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />}
-              <span className="hidden sm:inline">{showValues ? 'Ocultar' : 'Mostrar'} Valores</span>
-              <span className="sm:hidden">{showValues ? 'Ocultar' : 'Mostrar'}</span>
-            </Button>
-            
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => navigate('/ranking')}
-              className="text-xs sm:text-sm px-2 sm:px-3"
-            >
-              <Trophy className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
-              <span className="hidden sm:inline">Ver Ranking</span>
-              <span className="sm:hidden">Ranking</span>
-            </Button>
-            
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={refetch}
-              disabled={loading}
-              className="text-xs sm:text-sm px-2 sm:px-3"
-            >
-              <RefreshCw className={`w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2 ${loading ? 'animate-spin' : ''}`} />
-              <span className="hidden sm:inline">Atualizar</span>
-              <span className="sm:hidden">Atualizar</span>
-            </Button>
-            
-            <Button onClick={() => setShowAddTransaction(true)} className="text-xs sm:text-sm px-2 sm:px-3">
-              <Plus className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
-              <span className="hidden sm:inline">Adicionar Transação</span>
-              <span className="sm:hidden">Adicionar</span>
-            </Button>
-          </div>
+                     <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+             <Button
+               variant="outline"
+               size="sm"
+               onClick={() => setShowValues(!showValues)}
+               className="text-xs sm:text-sm px-2 sm:px-3"
+             >
+               {showValues ? <EyeOff className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" /> : <Eye className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />}
+               <span className="hidden sm:inline">{showValues ? 'Ocultar' : 'Mostrar'} Valores</span>
+               <span className="sm:hidden">{showValues ? 'Ocultar' : 'Mostrar'}</span>
+             </Button>
+             
+             <Button
+               variant="outline"
+               size="sm"
+               onClick={() => navigate('/ranking')}
+               className="text-xs sm:text-sm px-2 sm:px-3"
+             >
+               <Trophy className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+               <span className="hidden sm:inline">Ver Ranking</span>
+               <span className="sm:hidden">Ranking</span>
+             </Button>
+             
+             <Button
+               variant="outline"
+               size="sm"
+               onClick={refetch}
+               disabled={loading}
+               className="text-xs sm:text-sm px-2 sm:px-3"
+             >
+               <RefreshCw className={`w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2 ${loading ? 'animate-spin' : ''}`} />
+               <span className="hidden sm:inline">Atualizar</span>
+               <span className="sm:hidden">Atualizar</span>
+             </Button>
+             
+             <Button onClick={() => setShowAddTransaction(true)} className="text-xs sm:text-sm px-2 sm:px-3">
+               <Plus className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+               <span className="hidden sm:inline">Adicionar Transação</span>
+               <span className="sm:hidden">Adicionar</span>
+             </Button>
+           </div>
         </div>
 
         {/* Métricas Principais */}
@@ -326,6 +316,100 @@ export default function CryptoPortfolio() {
             </CardContent>
           </Card>
         </div>
+
+                 {/* Ferramentas de Análise */}
+         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+           <Card className="bg-zinc-900 border-zinc-800 hover:border-orange-500 transition-colors">
+             <CardContent className="p-6">
+               <div className="flex items-center justify-between">
+                 <div>
+                   <h3 className="text-lg font-semibold text-white mb-2">
+                     Calculadora DCA
+                   </h3>
+                   <p className="text-zinc-400 text-sm">
+                     Simule investimentos recorrentes em criptomoedas
+                   </p>
+                 </div>
+                 <Button 
+                   onClick={() => navigate('/dca-calculator')}
+                   className="bg-orange-600 hover:bg-orange-700 text-white"
+                 >
+                   <Calculator className="w-4 h-4 mr-2" />
+                   Acessar
+                 </Button>
+               </div>
+             </CardContent>
+           </Card>
+
+           <Card className="bg-zinc-900 border-zinc-800 hover:border-blue-500 transition-colors">
+             <CardContent className="p-6">
+               <div className="flex items-center justify-between">
+                 <div>
+                   <h3 className="text-lg font-semibold text-white mb-2">
+                     Sentimento de Mercado
+                   </h3>
+                   <p className="text-zinc-400 text-sm">
+                     Índice de medo e ganância + notícias
+                   </p>
+                 </div>
+                 <Button 
+                   onClick={() => navigate('/sentimento')}
+                   className="bg-blue-600 hover:bg-blue-700 text-white"
+                 >
+                   <BarChart3 className="w-4 h-4 mr-2" />
+                   Acessar
+                 </Button>
+               </div>
+             </CardContent>
+           </Card>
+         </div>
+
+         {/* Máquinas de Alavancagem */}
+         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+           <Card className="bg-zinc-900 border-zinc-800 hover:border-green-500 transition-colors">
+             <CardContent className="p-6">
+               <div className="flex items-center justify-between">
+                 <div>
+                   <h3 className="text-lg font-semibold text-white mb-2">
+                     Máquina de Alavancagem
+                   </h3>
+                   <p className="text-zinc-400 text-sm">
+                     Indicador de correlação de pares cripto
+                   </p>
+                 </div>
+                 <Button 
+                   onClick={() => navigate('/correlation-pairs')}
+                   className="bg-green-600 hover:bg-green-700 text-white"
+                 >
+                   <TrendingUp className="w-4 h-4 mr-2" />
+                   Acessar
+                 </Button>
+               </div>
+             </CardContent>
+           </Card>
+
+                       <Card className="bg-zinc-900 border-zinc-800 hover:border-green-500 transition-colors">
+             <CardContent className="p-6">
+               <div className="flex items-center justify-between">
+                 <div>
+                   <h3 className="text-lg font-semibold text-white mb-2">
+                     Máquina de Alavancagem
+                   </h3>
+                   <p className="text-zinc-400 text-sm">
+                     Análise de retornos mensais do S&P 500
+                   </p>
+                 </div>
+                 <Button 
+                   onClick={() => navigate('/modulo/maquina-alavancagem-2')}
+                                       className="bg-green-600 hover:bg-green-700 text-white"
+                 >
+                   <Zap className="w-4 h-4 mr-2" />
+                   Acessar
+                 </Button>
+               </div>
+             </CardContent>
+           </Card>
+         </div>
 
         {/* Tabs Principais */}
         <Tabs defaultValue="portfolio" className="space-y-6">

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+
 import {
   ResponsiveContainer,
   LineChart,
@@ -13,7 +14,7 @@ import {
   Area,
 } from "recharts";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowLeft, Gauge, Bitcoin } from "lucide-react";
+import { ArrowLeft, Gauge, Bitcoin, Newspaper, ExternalLink } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 type FearGreedItem = { value: string; value_classification: string; timestamp: string };
@@ -27,7 +28,7 @@ export default function Sentiment() {
   const [btcData, setBtcData] = useState<MarketChart | null>(null);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
-  const [range, setRange] = useState<"30" | "365" | "all">("30");
+  const [range, setRange] = useState<"30" | "365">("365");
   const [news, setNews] = useState<any[]>([]);
 
   // Fetch Fear & Greed + BTC price/volume
@@ -44,23 +45,53 @@ export default function Sentiment() {
           body: { limit: days === "30" ? 30 : days === "365" ? 365 : 730 },
           headers: token ? { Authorization: `Bearer ${token}` } : undefined,
         });
-        if (!error) items = (data?.data as FearGreedItem[]) ?? null;
-      } catch {}
+        if (!error && data?.data) {
+          items = (data.data as FearGreedItem[]) ?? null;
+          console.log("Dados obtidos via Supabase Function:", items?.length);
+        }
+      } catch (supabaseError) {
+        console.warn("Erro na Supabase Function, tentando API direta:", supabaseError);
+      }
+      
       if (!items) {
-        const lim = days === "30" ? 30 : days === "365" ? 365 : 730;
-        const r = await fetch(`https://api.alternative.me/fng/?limit=${lim}&format=json`);
-        if (!r.ok) throw new Error(`upstream F&G ${r.status}`);
-        const json = await r.json();
-        items = (json?.data as FearGreedItem[]) ?? [];
+        try {
+          const lim = days === "30" ? 30 : days === "365" ? 365 : 730;
+          const r = await fetch(`https://api.alternative.me/fng/?limit=${lim}&format=json`);
+          if (!r.ok) throw new Error(`API F&G retornou ${r.status}`);
+          const json = await r.json();
+          items = (json?.data as FearGreedItem[]) ?? [];
+          console.log("Dados obtidos via API direta:", items?.length);
+        } catch (apiError) {
+          console.error("Erro na API direta:", apiError);
+          throw new Error("Não foi possível carregar dados do índice de medo e ganância. Verifique sua conexão com a internet.");
+        }
       }
 
-      // BTC Market Chart (CoinGecko)
-      const coingeckoDays = days === "all" ? "max" : days;
-      const rb = await fetch(
-        `https://api.coingecko.com/api/v3/coins/bitcoin/market_chart?vs_currency=usd&days=${coingeckoDays}`
-      );
-      if (!rb.ok) throw new Error(`upstream BTC ${rb.status}`);
-      const market = (await rb.json()) as MarketChart;
+      // BTC Market Chart (usando proxy do Vite para evitar CORS)
+      let market: MarketChart | null = null;
+      try {
+        const coingeckoDays = days === "all" ? "max" : days;
+        console.log("Carregando dados do Bitcoin com days:", coingeckoDays);
+        
+        const url = `/api/coingecko/coins/bitcoin/market_chart?vs_currency=usd&days=${coingeckoDays}`;
+        console.log("Fazendo requisição para:", url);
+        
+        const rb = await fetch(url);
+        console.log("Status da resposta:", rb.status, rb.statusText);
+        
+        if (!rb.ok) {
+          const errorText = await rb.text();
+          console.error("Erro na resposta:", errorText);
+          throw new Error(`Erro ao carregar dados do Bitcoin: ${rb.status} ${rb.statusText}`);
+        }
+        
+        market = (await rb.json()) as MarketChart;
+        console.log("Dados do Bitcoin carregados com sucesso");
+      } catch (btcError) {
+        console.error("Erro ao carregar dados do Bitcoin:", btcError);
+        // Continuar sem dados do Bitcoin se houver erro
+        market = null;
+      }
 
       setFgData(items || []);
       setBtcData(market);
@@ -98,10 +129,11 @@ export default function Sentiment() {
                 source: n.source_id || n.source,
               }))
           );
+          console.log("Notícias carregadas via Supabase Function:", data.results?.length);
           return;
         }
-      } catch {
-        // ignora
+      } catch (supabaseError) {
+        console.warn("Erro na Supabase Function de notícias:", supabaseError);
       }
 
       // Fallback: CoinGecko status updates (sem chave, CORS ok)
@@ -118,9 +150,13 @@ export default function Sentiment() {
             source: it.project?.name || it.user,
           }));
           setNews(items.slice(0, 10));
+          console.log("Notícias carregadas via API direta:", items.length);
+        } else {
+          console.warn("Erro na API de notícias:", r.status);
         }
-      } catch {
-        // manter vazio
+      } catch (apiError) {
+        console.warn("Erro ao carregar notícias:", apiError);
+        // Manter array vazio se não conseguir carregar
       }
     })();
   }, []);
@@ -184,168 +220,226 @@ export default function Sentiment() {
           <div className="flex gap-2">
             <Button variant={range === "30" ? "default" : "outline"} onClick={() => setRange("30")}>30 dias</Button>
             <Button variant={range === "365" ? "default" : "outline"} onClick={() => setRange("365")}>1 ano</Button>
-            <Button variant={range === "all" ? "default" : "outline"} onClick={() => setRange("all")}>Todos</Button>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Coluna Esquerda */}
-          <div className="lg:col-span-1 space-y-6">
-            <Card className="bg-zinc-900 border-zinc-800">
-              <CardHeader>
-                <CardTitle className="text-white flex items-center gap-2">
-                  <Gauge className="w-5 h-5 text-emerald-400" /> Índice de Medo e Ganância de Criptomoedas
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {loading ? (
-                  <div className="text-zinc-400">Carregando…</div>
-                ) : err ? (
-                  <div className="text-red-400">{err}</div>
-                ) : latest ? (
-                  <div className="space-y-6">
-                    {/* Gauge */}
-                    <div className="flex items-center justify-center">
-                      <div className="relative w-40 h-40">
-                        <svg viewBox="0 0 100 100" className="w-full h-full">
-                          <circle cx="50" cy="50" r="45" fill="#0b0f14" stroke="#1f2937" strokeWidth="2" />
-                          {/* arco preenchido */}
-                          <circle
-                            cx="50"
-                            cy="50"
-                            r="40"
-                            fill="none"
-                            stroke="#10b981"
-                            strokeWidth="8"
-                            strokeDasharray={`${(Number(latest.value) / 100) * 251.2} 251.2`}
-                            transform="rotate(-90 50 50)"
-                          />
-                          <text x="50" y="50" dominantBaseline="middle" textAnchor="middle" fill="white" fontSize="20" fontWeight="bold">
-                            {Number(latest.value)}
-                          </text>
-                        </svg>
-                      </div>
-                    </div>
-                    <div className={`text-center font-semibold ${classificationColor(Number(latest.value))}`}>
-                      {valueToLabel(Number(latest.value))}
-                    </div>
-
-                    {/* Valores históricos */}
-                    <div className="grid grid-cols-1 gap-3 text-sm">
-                      <div className="flex items-center justify-between">
-                        <span className="text-zinc-400">Ontem</span>
-                        <span className="text-white">
-                          {yesterday ? `${yesterday.value_classification} – ${yesterday.value}` : "–"}
-                        </span>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-zinc-400">Semana passada</span>
-                        <span className="text-white">{week ? `${week.value_classification} – ${week.value}` : "–"}</span>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-zinc-400">Mês passado</span>
-                        <span className="text-white">{month ? `${month.value_classification} – ${month.value}` : "–"}</span>
-                      </div>
-                    </div>
-
-                    {/* Máx/Mín anuais – placeholders (depende de série completa) */}
-                    <div className="grid grid-cols-1 gap-3 text-sm">
-                      <div className="flex items-center justify-between">
-                        <span className="text-zinc-400">Máxima anual</span>
-                        <span className="text-white">–</span>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-zinc-400">Baixa anual</span>
-                        <span className="text-white">–</span>
-                      </div>
-                    </div>
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+          {/* Card Índice de Medo e Ganância */}
+          <Card className="bg-gradient-to-br from-zinc-900 to-zinc-950 border-zinc-800/80 shadow-[0_0_0_1px_rgba(39,39,42,0.6)]">
+            <CardHeader>
+              <CardTitle className="text-white flex items-center gap-2">
+                <span className="inline-flex items-center justify-center w-8 h-8 rounded-md bg-emerald-500/10 ring-1 ring-emerald-500/30">
+                  <Gauge className="w-5 h-5 text-emerald-400" />
+                </span>
+                Índice de Medo e Ganância de Criptomoedas
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {loading ? (
+                <div className="text-zinc-400">Carregando…</div>
+              ) : err ? (
+                <div className="text-red-400 p-4 bg-red-900/20 border border-red-800/50 rounded-lg">
+                  <div className="font-medium mb-2">⚠️ Erro de Conexão</div>
+                  <div className="text-sm">{err}</div>
+                  <div className="text-xs mt-2 text-red-300">
+                    Verifique sua conexão com a internet e tente novamente.
                   </div>
-                ) : (
-                  <div className="text-zinc-400">Sem dados</div>
-                )}
-              </CardContent>
-            </Card>
+                </div>
+                             ) : latest ? (
+                 <div className="flex flex-col lg:flex-row items-center gap-8">
+                   {/* Gauge Centralizado */}
+                   <div className="flex flex-col items-center justify-center flex-1">
+                     <div className="relative w-48 h-48 lg:w-56 lg:h-56 mb-4">
+                       <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-lg">
+                         {/* Círculo de fundo */}
+                         <circle cx="50" cy="50" r="45" fill="#0b0f14" stroke="#1f2937" strokeWidth="2" />
+                         {/* Arco de progresso */}
+                         <circle
+                           cx="50"
+                           cy="50"
+                           r="40"
+                           fill="none"
+                           stroke="#10b981"
+                           strokeWidth="10"
+                           strokeLinecap="round"
+                           strokeDasharray={`${(Number(latest.value) / 100) * 251.2} 251.2`}
+                           transform="rotate(-90 50 50)"
+                           className="drop-shadow-md"
+                         />
+                         {/* Número principal */}
+                         <text 
+                           x="50" 
+                           y="50" 
+                           dominantBaseline="middle" 
+                           textAnchor="middle" 
+                           fill="white" 
+                           fontSize="32" 
+                           fontWeight="bold"
+                           className="drop-shadow-lg"
+                         >
+                           {Number(latest.value)}
+                         </text>
+                       </svg>
+                     </div>
+                     {/* Texto de classificação */}
+                     <div className={`text-center text-xl font-bold ${classificationColor(Number(latest.value))} drop-shadow-sm`}>
+                       {valueToLabel(Number(latest.value))}
+                     </div>
+                   </div>
 
-            {/* Notícias */}
-            <Card className="bg-zinc-900 border-zinc-800">
-              <CardHeader>
-                <CardTitle className="text-white flex items-center gap-2">Últimas notícias de cripto</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {news.length === 0 ? (
-                  <div className="text-zinc-400 text-sm">Sem notícias no momento.</div>
-                ) : (
-                  <div className="space-y-4">
-                    {news.map((n, i) => (
-                      <a
-                        key={i}
-                        href={n.link || '#'}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="block p-3 rounded-md border border-zinc-800 hover:border-zinc-700 hover:bg-zinc-800/50 transition"
-                      >
-                        <div className="text-sm text-zinc-400">
-                          {new Date(n.pubDate || Date.now()).toLocaleString('pt-BR')}
+                   {/* Valores comparativos em grid */}
+                   <div className="flex-1 max-w-xs">
+                     <div className="bg-zinc-800/50 rounded-lg p-4 border border-zinc-700/50">
+                       <h4 className="text-sm font-medium text-zinc-300 mb-3 uppercase tracking-wide">Histórico</h4>
+                       <div className="space-y-3">
+                         <div className="flex items-center justify-between py-2 border-b border-zinc-700/30 last:border-b-0">
+                           <span className="text-sm text-zinc-400">Ontem</span>
+                           <div className="text-right">
+                             <div className="text-white font-medium">
+                               {yesterday ? yesterday.value : "–"}
+                             </div>
+                             <div className="text-xs text-zinc-500">
+                               {yesterday ? yesterday.value_classification : "–"}
+                             </div>
+                           </div>
+                         </div>
+                         <div className="flex items-center justify-between py-2 border-b border-zinc-700/30 last:border-b-0">
+                           <span className="text-sm text-zinc-400">Semana passada</span>
+                           <div className="text-right">
+                             <div className="text-white font-medium">
+                               {week ? week.value : "–"}
+                             </div>
+                             <div className="text-xs text-zinc-500">
+                               {week ? week.value_classification : "–"}
+                             </div>
+                           </div>
+                         </div>
+                         <div className="flex items-center justify-between py-2 border-b border-zinc-700/30 last:border-b-0">
+                           <span className="text-sm text-zinc-400">Mês passado</span>
+                           <div className="text-right">
+                             <div className="text-white font-medium">
+                               {month ? month.value : "–"}
+                             </div>
+                             <div className="text-xs text-zinc-500">
+                               {month ? month.value_classification : "–"}
+                             </div>
+                           </div>
+                         </div>
+                         <div className="flex items-center justify-between py-2">
+                           <span className="text-sm text-zinc-400">Máxima anual</span>
+                           <div className="text-right">
+                             <div className="text-white font-medium">–</div>
+                             <div className="text-xs text-zinc-500">–</div>
+                           </div>
+                         </div>
+                       </div>
+                     </div>
+                   </div>
+                 </div>
+              ) : (
+                <div className="text-zinc-400">Sem dados</div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Card Notícias */}
+          <Card className="bg-gradient-to-br from-zinc-900 to-zinc-950 border-zinc-800/80 shadow-[0_0_0_1px_rgba(39,39,42,0.6)]">
+            <CardHeader>
+              <CardTitle className="text-white flex items-center gap-2">
+                <span className="inline-flex items-center justify-center w-8 h-8 rounded-md bg-blue-500/10 ring-1 ring-blue-500/30">
+                  <Newspaper className="w-5 h-5 text-blue-400" />
+                </span>
+                Últimas notícias de cripto
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {news.length === 0 ? (
+                <div className="text-zinc-400 text-sm">Sem notícias no momento.</div>
+              ) : (
+                <div className="space-y-3 max-h-80 overflow-y-auto pr-1">
+                  {news.map((n, i) => (
+                    <a
+                      key={i}
+                      href={n.link || '#'}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="block p-3 rounded-md border border-zinc-800/80 hover:border-zinc-700 bg-zinc-900/40 hover:bg-zinc-900/70 transition group"
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className="mt-0.5">
+                          <span className="inline-flex items-center justify-center w-7 h-7 rounded-md bg-blue-500/10 ring-1 ring-blue-500/30">
+                            <Newspaper className="w-4 h-4 text-blue-400" />
+                          </span>
                         </div>
-                        <div className="text-white font-medium">
-                          {n.title}
+                        <div className="flex-1 min-w-0">
+                          <div className="text-xs text-zinc-400 flex items-center gap-2">
+                            <span>{new Date(n.pubDate || Date.now()).toLocaleString('pt-BR')}</span>
+                            {n.source ? <span className="px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-300 border border-zinc-700/60">{n.source}</span> : null}
+                          </div>
+                          <div className="text-white font-medium text-sm mt-1 line-clamp-2">
+                            {n.title}
+                          </div>
                         </div>
-                        {n.source ? (
-                          <div className="text-xs text-zinc-500 mt-1">{n.source}</div>
-                        ) : null}
-                      </a>
+                        <ExternalLink className="w-4 h-4 text-zinc-500 opacity-0 group-hover:opacity-100 transition" />
+                      </div>
+                    </a>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Gráfico em linha separada */}
+        <div className="mt-6">
+          <Card className="bg-zinc-900 border-zinc-800">
+            <CardHeader>
+              <CardTitle className="text-white flex items-center gap-2">
+                <Bitcoin className="w-5 h-5 text-yellow-400" /> Gráfico do Índice de Medo e Ganância
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {loading ? (
+                <div className="text-zinc-400">Carregando…</div>
+              ) : err ? (
+                <div className="text-red-400 p-4 bg-red-900/20 border border-red-800/50 rounded-lg">
+                  <div className="font-medium mb-2">⚠️ Erro de Conexão</div>
+                  <div className="text-sm">{err}</div>
+                  <div className="text-xs mt-2 text-red-300">
+                    Verifique sua conexão com a internet e tente novamente.
+                  </div>
+                </div>
+              ) : (
+                <ResponsiveContainer width="100%" height={400}>
+                  <LineChart data={merged} margin={{ left: 10, right: 10, top: 10, bottom: 0 }}>
+                    {/* Faixas de zona no eixo do índice (direita) */}
+                    {zones.map((z, i) => (
+                      <ReferenceArea key={i} y1={z.y1} y2={z.y2} yAxisId="right" fill={z.color} ifOverflow="extendDomain" />
                     ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Coluna Direita */}
-          <div className="lg:col-span-2">
-            <Card className="bg-zinc-900 border-zinc-800">
-              <CardHeader>
-                <CardTitle className="text-white flex items-center gap-2">
-                  <Bitcoin className="w-5 h-5 text-yellow-400" /> Gráfico do Índice de Medo e Ganância
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {loading ? (
-                  <div className="text-zinc-400">Carregando…</div>
-                ) : err ? (
-                  <div className="text-red-400">{err}</div>
-                ) : (
-                  <ResponsiveContainer width="100%" height={360}>
-                    <LineChart data={merged} margin={{ left: 10, right: 10, top: 10, bottom: 0 }}>
-                      {/* Faixas de zona no eixo do índice (direita) */}
-                      {zones.map((z, i) => (
-                        <ReferenceArea key={i} y1={z.y1} y2={z.y2} yAxisId="right" fill={z.color} ifOverflow="extendDomain" />
-                      ))}
-                      <XAxis dataKey="date" tick={{ fill: "#a1a1aa", fontSize: 12 }} minTickGap={24} />
-                      <YAxis yAxisId="left" orientation="left" tick={{ fill: "#a1a1aa", fontSize: 12 }} width={60} />
-                      <YAxis yAxisId="right" orientation="right" domain={[0, 100]} tick={{ fill: "#a1a1aa", fontSize: 12 }} width={50} />
-                      <Tooltip contentStyle={{ background: "#0b0f14", border: "1px solid #27272a" }} formatter={(v: any, n: any) => [n === "index" ? `${v}` : `$${Number(v).toLocaleString()}`, n]} />
-                      <Legend wrapperStyle={{ color: "#e5e7eb" }} />
-                      {/* Volume como área (usa eixo esquerdo, mas valores são bem maiores que preço; para simplificar, normalizamos) */}
-                      <Area
-                        type="monotone"
-                        dataKey={(d: any) => (d.volume ? Math.log(d.volume) : null)}
-                        name="Volume BTC (log)"
-                        yAxisId="left"
-                        stroke="#60a5fa"
-                        fill="#60a5fa33"
-                        dot={false}
-                      />
-                      {/* Preço BTC */}
-                      <Line type="monotone" dataKey="price" name="Preço BTC (USD)" yAxisId="left" stroke="#f59e0b" strokeWidth={2} dot={false} />
-                      {/* Índice F&G */}
-                      <Line type="monotone" dataKey="index" name="Índice F&G" yAxisId="right" stroke="#10b981" strokeWidth={2} dot={false} />
-                    </LineChart>
-                  </ResponsiveContainer>
-                )}
-              </CardContent>
-            </Card>
-          </div>
+                    <XAxis dataKey="date" tick={{ fill: "#a1a1aa", fontSize: 12 }} minTickGap={24} />
+                    <YAxis yAxisId="left" orientation="left" tick={{ fill: "#a1a1aa", fontSize: 12 }} width={60} />
+                    <YAxis yAxisId="right" orientation="right" domain={[0, 100]} tick={{ fill: "#a1a1aa", fontSize: 12 }} width={50} />
+                    <Tooltip contentStyle={{ background: "#0b0f14", border: "1px solid #27272a" }} formatter={(v: any, n: any) => [n === "index" ? `${v}` : `$${Number(v).toLocaleString()}`, n]} />
+                    <Legend wrapperStyle={{ color: "#e5e7eb" }} />
+                    {/* Volume como área (usa eixo esquerdo, mas valores são bem maiores que preço; para simplificar, normalizamos) */}
+                    <Area
+                      type="monotone"
+                      dataKey={(d: any) => (d.volume ? Math.log(d.volume) : null)}
+                      name="Volume BTC (log)"
+                      yAxisId="left"
+                      stroke="#60a5fa"
+                      fill="#60a5fa33"
+                      dot={false}
+                    />
+                    {/* Preço BTC */}
+                    <Line type="monotone" dataKey="price" name="Preço BTC (USD)" yAxisId="left" stroke="#f59e0b" strokeWidth={2} dot={false} />
+                    {/* Índice F&G */}
+                    <Line type="monotone" dataKey="index" name="Índice F&G" yAxisId="right" stroke="#10b981" strokeWidth={2} dot={false} />
+                  </LineChart>
+                </ResponsiveContainer>
+              )}
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>

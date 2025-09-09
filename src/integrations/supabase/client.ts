@@ -33,3 +33,37 @@ export async function setSupabaseAuthToken(token: string) {
   // Mantida para compatibilidade; o app usa apenas Supabase Auth
   // No momento não há necessidade de atualizar manualmente a sessão
 }
+
+// Função para limpar completamente a sessão de autenticação
+export async function clearAuthSession() {
+  try {
+    // Fazer logout do Supabase
+    await supabase.auth.signOut();
+  } catch (error) {
+    console.warn('Erro no logout do Supabase:', error);
+  }
+  
+  // Limpar localStorage manualmente
+  try {
+    const keys = Object.keys(localStorage);
+    keys.forEach(key => {
+      if (key.includes('supabase') || key.includes('sb-')) {
+        localStorage.removeItem(key);
+      }
+    });
+  } catch (error) {
+    console.warn('Erro ao limpar localStorage:', error);
+  }
+  
+  // Limpar sessionStorage também
+  try {
+    const keys = Object.keys(sessionStorage);
+    keys.forEach(key => {
+      if (key.includes('supabase') || key.includes('sb-')) {
+        sessionStorage.removeItem(key);
+      }
+    });
+  } catch (error) {
+    console.warn('Erro ao limpar sessionStorage:', error);
+  }
+}

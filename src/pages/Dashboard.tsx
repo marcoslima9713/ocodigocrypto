@@ -1,14 +1,15 @@
 // Dashboard Principal - Layout estilo Netflix
 import { motion } from 'framer-motion';
-import { Bitcoin, Globe, Timer, Eye, Wallet, FileText, LogOut, User, Play, Info, ChevronRight, Calculator, Gauge } from 'lucide-react';
+import { Bitcoin, Globe, Timer, Eye, Wallet, FileText, LogOut, User, Play, Info, ChevronRight, Calculator, Gauge, TrendingUp, ChevronLeft } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
 import { useUserAuth } from '@/hooks/useAuth';
-import { useAuth as useFirebaseAuth } from '@/contexts/AuthContext';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { ModuleCard } from '@/components/ModuleCard';
+import { LogoutButton } from '@/components/LogoutButton';
 
 import { useNavigate } from 'react-router-dom';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
 // URLs das imagens enviadas pelo usuário
@@ -45,7 +46,7 @@ const moduleImages = [origensUrl, ciclosUrl, oportunidadesUrl, analiseUrl, lucro
 const moduleColors = ['from-orange-500/20 to-orange-600/20', 'from-blue-500/20 to-blue-600/20', 'from-green-500/20 to-green-600/20', 'from-purple-500/20 to-purple-600/20', 'from-indigo-500/20 to-indigo-600/20', 'from-red-500/20 to-red-600/20'];
 export default function Dashboard() {
   const { currentUser } = useUserAuth();
-  const { userProgress, logout } = useFirebaseAuth();
+  const { userProgress, logout, markModuleComplete } = useAuth();
   
   // Email do administrador autorizado
   const ADMIN_EMAIL = 'marcoslima9713@gmail.com';
@@ -55,31 +56,12 @@ export default function Dashboard() {
   const [videoLessons, setVideoLessons] = useState<VideoLesson[]>([]);
   const [moduleCovers, setModuleCovers] = useState<{[key: string]: string}>({});
   const [loading, setLoading] = useState(true);
+  const [currentSlide, setCurrentSlide] = useState(0);
   const completedCount = userProgress?.completedModules.length || 0;
-  useEffect(() => {
-    fetchModulesAndVideos();
-
-    // Listener para atualizações em tempo real
-    const moduleSubscription = supabase.channel('modules_changes').on('postgres_changes', {
-      event: '*',
-      schema: 'public',
-      table: 'modules'
-    }, () => {
-      fetchModulesAndVideos();
-    }).subscribe();
-    const videosSubscription = supabase.channel('videos_changes').on('postgres_changes', {
-      event: '*',
-      schema: 'public',
-      table: 'video_lessons'
-    }, () => {
-      fetchModulesAndVideos();
-    }).subscribe();
-    return () => {
-      moduleSubscription.unsubscribe();
-      videosSubscription.unsubscribe();
-    };
-  }, []);
-  const fetchModulesAndVideos = async () => {
+  
+  const fetchModulesAndVideos = useCallback(async () => {
+    if (!currentUser) return;
+    
     try {
       // Buscar módulos ativos
       const {
@@ -120,7 +102,33 @@ export default function Dashboard() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentUser]);
+
+  useEffect(() => {
+    if (!currentUser) return;
+    
+    fetchModulesAndVideos();
+
+    // Listener para atualizações em tempo real
+    const moduleSubscription = supabase.channel('modules_changes').on('postgres_changes', {
+      event: '*',
+      schema: 'public',
+      table: 'modules'
+    }, () => {
+      fetchModulesAndVideos();
+    }).subscribe();
+    const videosSubscription = supabase.channel('videos_changes').on('postgres_changes', {
+      event: '*',
+      schema: 'public',
+      table: 'video_lessons'
+    }, () => {
+      fetchModulesAndVideos();
+    }).subscribe();
+    return () => {
+      moduleSubscription.unsubscribe();
+      videosSubscription.unsubscribe();
+    };
+  }, [currentUser, fetchModulesAndVideos]);
 
   // Transformar módulos em formato compatível com o layout
   const displayModules = modules.map((module, index) => ({
@@ -143,7 +151,13 @@ export default function Dashboard() {
     estimatedTime: '0 min'
   };
   const handleLogout = async () => {
-    await logout();
+    try {
+      await logout();
+    } catch (error) {
+      console.error('Erro no logout:', error);
+      // Mesmo com erro, forçar redirecionamento
+      window.location.href = '/login';
+    }
   };
   
   const handleWatchNow = () => {
@@ -155,6 +169,29 @@ export default function Dashboard() {
   const handleModuleClick = (moduleId: string) => {
     navigate(`/modulo/${moduleId}`);
   };
+
+  const nextSlide = () => {
+    setCurrentSlide((prev) => (prev + 1) % displayModules.length);
+  };
+
+  const prevSlide = () => {
+    setCurrentSlide((prev) => (prev - 1 + displayModules.length) % displayModules.length);
+  };
+
+  const goToSlide = (index: number) => {
+    setCurrentSlide(index);
+  };
+
+  // Auto-play do carrossel (posicionado após a definição de displayModules)
+  useEffect(() => {
+    if (displayModules.length <= 1) return;
+
+    const interval = setInterval(() => {
+      setCurrentSlide(prev => (prev + 1) % displayModules.length);
+    }, 5000); // Muda a cada 5 segundos
+
+    return () => clearInterval(interval);
+  }, [displayModules.length]);
   if (loading) {
     return <div className="min-h-screen bg-black flex items-center justify-center">
         <div className="text-white text-xl">Carregando...</div>
@@ -196,47 +233,68 @@ export default function Dashboard() {
                 <span className="hidden sm:inline">Portfólio</span>
                 <span className="sm:hidden">📊</span>
               </Button>
-              <Button variant="ghost" size="sm" onClick={handleLogout} className="text-white hover:text-gray-300">
+              <LogoutButton 
+                variant="ghost" 
+                size="sm" 
+                className="text-white hover:text-gray-300"
+              >
                 <LogOut className="w-3 h-3 sm:w-4 sm:h-4" />
-              </Button>
+              </LogoutButton>
             </div>
           </div>
         </div>
       </motion.header>
 
-      {/* Hero Section */}
+      {/* Hero Section - Carrossel Netflix */}
       <motion.section initial={{
         opacity: 0
       }} animate={{
         opacity: 1
-      }} className="relative min-h-[70vh] sm:min-h-[80vh] lg:h-screen flex items-center">
+      }} className="relative min-h-[70vh] sm:min-h-[80vh] lg:h-screen flex items-center overflow-hidden">
         {/* Background Image */}
         <div className="absolute inset-0">
-          <img src={featuredModule.image} alt={featuredModule.title} className="w-full h-full object-cover" />
+          <motion.img 
+            key={currentSlide}
+            src={displayModules[currentSlide]?.image || featuredModule.image} 
+            alt={displayModules[currentSlide]?.title || featuredModule.title} 
+            className="w-full h-full object-cover"
+            initial={{ scale: 1.1, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ duration: 0.8 }}
+          />
           <div className="absolute inset-0 bg-gradient-to-r from-black via-black/70 to-transparent" />
           <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent" />
         </div>
 
         {/* Hero Content */}
         <div className="relative z-10 px-4 sm:px-8 lg:px-16 max-w-2xl mt-16 sm:mt-0">
-          <motion.div initial={{
-            opacity: 0,
-            y: 50
-          }} animate={{
-            opacity: 1,
-            y: 0
-          }} transition={{
-            delay: 0.3
-          }}>
+          <motion.div 
+            key={currentSlide}
+            initial={{
+              opacity: 0,
+              y: 50
+            }} 
+            animate={{
+              opacity: 1,
+              y: 0
+            }} 
+            transition={{
+              delay: 0.2,
+              duration: 0.6
+            }}
+          >
             <h1 className="text-2xl sm:text-3xl md:text-5xl lg:text-6xl xl:text-7xl font-bold text-white mb-3 sm:mb-4 leading-tight">
-              {featuredModule.title}
+              {displayModules[currentSlide]?.title || featuredModule.title}
             </h1>
             <p className="text-sm sm:text-base md:text-lg lg:text-xl text-gray-300 mb-4 sm:mb-6 lg:mb-8 leading-relaxed">
-              {featuredModule.description}
+              {displayModules[currentSlide]?.description || featuredModule.description}
             </p>
             
             <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 lg:gap-4">
-              <Button onClick={handleWatchNow} className="bg-white text-black hover:bg-gray-200 px-4 sm:px-6 lg:px-8 py-2 sm:py-2.5 lg:py-3 text-sm sm:text-base lg:text-lg font-semibold">
+              <Button 
+                onClick={() => handleModuleClick(displayModules[currentSlide]?.id || featuredModule.id)} 
+                className="bg-white text-black hover:bg-gray-200 px-4 sm:px-6 lg:px-8 py-2 sm:py-2.5 lg:py-3 text-sm sm:text-base lg:text-lg font-semibold"
+              >
                 <Play className="w-3 h-3 sm:w-4 sm:h-4 lg:w-5 lg:h-5 mr-1 sm:mr-2" />
                 Assistir Agora
               </Button>
@@ -270,6 +328,41 @@ export default function Dashboard() {
             </div>
           </motion.div>
         </div>
+
+        {/* Navigation Arrows */}
+        {displayModules.length > 1 && (
+          <>
+            <button
+              onClick={prevSlide}
+              className="absolute left-4 top-1/2 transform -translate-y-1/2 z-20 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition-all duration-300 opacity-0 hover:opacity-100 group"
+            >
+              <ChevronLeft className="w-6 h-6" />
+            </button>
+            <button
+              onClick={nextSlide}
+              className="absolute right-4 top-1/2 transform -translate-y-1/2 z-20 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition-all duration-300 opacity-0 hover:opacity-100 group"
+            >
+              <ChevronRight className="w-6 h-6" />
+            </button>
+          </>
+        )}
+
+        {/* Dots Indicator */}
+        {displayModules.length > 1 && (
+          <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-20 flex space-x-2">
+            {displayModules.map((_, index) => (
+              <button
+                key={index}
+                onClick={() => goToSlide(index)}
+                className={`w-3 h-3 rounded-full transition-all duration-300 ${
+                  index === currentSlide 
+                    ? 'bg-white scale-125' 
+                    : 'bg-white/50 hover:bg-white/75'
+                }`}
+              />
+            ))}
+          </div>
+        )}
       </motion.section>
 
       {/* Content Sections */}
@@ -371,35 +464,7 @@ export default function Dashboard() {
           </div>
         </motion.section>
 
-        {/* Calculadora DCA */}
-        <motion.section initial={{
-          opacity: 0,
-          y: 50
-        }} animate={{
-          opacity: 1,
-          y: 0
-        }} transition={{
-          delay: 0.9
-        }} className="bg-gray-900/50 backdrop-blur-sm rounded-lg p-4 sm:p-6 lg:p-8">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div>
-              <h3 className="text-lg sm:text-xl lg:text-2xl font-bold text-white mb-2">
-                Calculadora DCA
-              </h3>
-              <p className="text-gray-300 text-sm sm:text-base">
-                Simule investimentos recorrentes em criptomoedas
-              </p>
-            </div>
-            
-            <Button 
-              onClick={() => navigate('/dca-calculator')}
-              className="bg-orange-600 hover:bg-orange-700 text-white px-6 py-3 rounded-lg flex items-center space-x-2"
-            >
-              <Calculator className="w-5 h-5" />
-              <span>Acessar Calculadora</span>
-            </Button>
-          </div>
-        </motion.section>
+
 
         {/* Status do Progresso */}
         <motion.section initial={{
@@ -409,7 +474,7 @@ export default function Dashboard() {
           opacity: 1,
           y: 0
         }} transition={{
-          delay: 1.0
+          delay: 0.9
         }} className="bg-gray-900/50 backdrop-blur-sm rounded-lg p-4 sm:p-6 lg:p-8">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div>

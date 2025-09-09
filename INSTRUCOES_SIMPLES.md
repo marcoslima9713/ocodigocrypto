@@ -1,90 +1,102 @@
-# 🚀 Solução Simples para o Ranking
+# 🚀 Instruções Simples - Pools de Liquidez
 
-## ❌ Problema
-- Erro 404 ao tentar acessar as tabelas de ranking
-- Usuário Marcos não aparece no ranking
-- Scripts complexos podem dar erro no Supabase
-- **ERRO**: Tabela `users` não existe
+## ✅ Como Executar
 
-## ✅ Solução Dividida em 3 Partes
-
-### 📋 **PASSO A PASSO:**
-
-#### **1. Criar Tabela de Rankings** 
-- Abra o Supabase SQL Editor
-- Execute o arquivo: `parte1_criar_tabela.sql`
-- Aguarde a mensagem "Tabela criada com sucesso!"
-
-#### **2. Criar Tabelas e Inserir Dados do Usuário**
-- Execute o arquivo: `parte2_corrigida.sql` ⚠️ **USAR ESTE ARQUIVO**
-- Aguarde a mensagem "Dados do usuário inseridos com sucesso!"
-- Verifique se o usuário Marcos aparece no resultado
-
-#### **3. Criar Ranking**
-- Execute o arquivo: `parte3_criar_ranking.sql`
-- Verifique se aparece o usuário Marcos no resultado
-
-### 🧪 **Testar no Frontend:**
-1. Acesse: http://localhost:8081/
-2. Faça login com usuário Marcos
-3. Vá para aba "Rankings"
-4. O usuário deve aparecer no ranking
-
-### 📊 **Resultado Esperado:**
-- **Usuário**: Marcos Fut
-- **Retorno**: 2.5%
-- **Badge**: DCA Master
-- **Total Investido**: $25,000
-- **Melhor Ativo**: BTC
-
-### 🔧 **Se Ainda Der Erro:**
-
-#### **Verificar se a tabela existe:**
-```sql
-SELECT * FROM public.portfolio_rankings_simple LIMIT 1;
+### 1. **Instalar Dependências**
+```bash
+cd crypto-luxe-portal
+npm install
 ```
 
-#### **Verificar se há dados:**
-```sql
-SELECT COUNT(*) FROM public.portfolio_rankings_simple;
+### 2. **Executar o Projeto**
+```bash
+npm run dev
 ```
 
-#### **Verificar usuário Marcos:**
-```sql
-SELECT * FROM public.users WHERE id = '856d169f-8563-4126-a348-fdedb4f3259f';
-```
+### 3. **Acessar a Página**
+- Abra o navegador em: `http://localhost:5173`
+- Navegue para a página "Máquina de Alavancagem 2"
+- Ou acesse diretamente: `http://localhost:5173/dashboard/maquina-alavancagem-2`
 
-#### **Verificar transações:**
-```sql
-SELECT COUNT(*) FROM public.transactions WHERE user_id = '856d169f-8563-4126-a348-fdedb4f3259f';
-```
+## 🎯 O que Você Verá
 
-### 📁 **Arquivos Criados:**
-- `parte1_criar_tabela.sql` - Cria a tabela de rankings
-- `parte2_corrigida.sql` - ⚠️ **USAR ESTE** - Cria todas as tabelas e dados
-- `parte3_criar_ranking.sql` - Cria o ranking
-- `INSTRUCOES_SIMPLES.md` - Este guia
+### **Funcionalidades Disponíveis:**
+- ✅ **Filtros por Rede**: Ethereum, BSC, Polygon, Arbitrum, etc.
+- ✅ **Ordenação**: Por TVL, APY, Volume, Taxas
+- ✅ **Busca por Token**: Encontre pools específicos
+- ✅ **Top Oportunidades**: Melhores pools por score
+- ✅ **Tabela Completa**: Todos os pools com métricas
+- ✅ **Estatísticas**: TVL total, volume, pools ativos
 
-### ⚡ **Execução Rápida:**
-1. Execute `parte1_criar_tabela.sql`
-2. Execute `parte2_corrigida.sql` ⚠️ **USAR ESTE**
-3. Execute `parte3_criar_ranking.sql`
-4. Teste no frontend
+### **Dados Mockados Incluídos:**
+- 🔵 **Ethereum**: USDC/WETH, DAI/WETH, WBTC/WETH
+- 🟡 **BSC**: CAKE/WBNB, USDT/WBNB
+- 🟣 **Polygon**: WETH/WMATIC, USDC/WMATIC
+- 🔵 **Arbitrum**: USDC/WETH, ARB/WETH
+- 🔴 **Optimism**: USDC/WETH
+- 🔵 **Base**: USDC/WETH
+- 🟢 **Solana**: USDC/SOL
+- 🔴 **Avalanche**: USDC/WAVAX
 
-### 🎯 **Por que Funciona:**
-- Scripts simples e diretos
-- Cria todas as tabelas necessárias
-- Sem dependências complexas
-- Dados inseridos diretamente
-- RLS configurado corretamente
-- Política de acesso público
+## 🎨 Interface
 
-### 🎉 **Após Executar:**
-O usuário Marcos deve aparecer no ranking com:
-- Posição: #1
-- Badge: "DCA Master"
-- Retorno: 2.5%
-- Estratégia: DCA (Dollar-Cost Averaging)
+### **Design:**
+- 🎨 Tema escuro mantido
+- 📱 Layout responsivo
+- 🎯 Filtros organizados
+- 📊 Tabs para diferentes visualizações
+- 🌈 Cores baseadas em APY e risco
 
-### ⚠️ **IMPORTANTE:**
-Use o arquivo `parte2_corrigida.sql` em vez de `parte2_inserir_dados.sql`!
+### **Cores dos APYs:**
+- 🟢 **Verde**: APY alto (20%+)
+- 🟡 **Amarelo**: APY médio (15-20%)
+- 🟠 **Laranja**: APY baixo (10-15%)
+- 🔴 **Vermelho**: APY muito baixo (10%-)
+
+## 🔧 Funcionalidades
+
+### **Score de Oportunidade:**
+- 📊 Calculado automaticamente
+- 🎯 Baseado em TVL, volume, APY e taxas
+- ⚠️ Classificação de risco (Baixo/Médio/Alto)
+
+### **Busca Inteligente:**
+- 🔍 Por símbolo do token
+- 🌐 Por rede específica
+- 📈 Resultados em tempo real
+
+## 📱 Como Usar
+
+### **1. Explorar Redes:**
+- Use o filtro "Rede" para selecionar diferentes blockchains
+- Veja estatísticas específicas de cada rede
+
+### **2. Encontrar Oportunidades:**
+- Aba "Top Oportunidades" mostra os melhores pools
+- Score calculado automaticamente
+- Recomendações baseadas em métricas
+
+### **3. Analisar Todos os Pools:**
+- Aba "Todos os Pools" mostra tabela completa
+- Ordene por diferentes critérios
+- Veja métricas detalhadas
+
+### **4. Buscar Tokens Específicos:**
+- Aba "Busca" para encontrar pools por token
+- Digite símbolos como "USDC", "ETH", "CAKE"
+- Resultados filtrados por rede
+
+## 🎉 Pronto!
+
+Agora você pode:
+- ✅ Executar apenas com `npm run dev`
+- ✅ Ver dados de pools de liquidez
+- ✅ Explorar múltiplas redes
+- ✅ Encontrar oportunidades
+- ✅ Usar interface completa
+
+**Não precisa executar MCP separadamente!** 🚀
+
+---
+
+**Desenvolvido com ❤️ para análise DeFi**

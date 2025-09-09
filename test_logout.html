@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste de Logout</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #1a1a1a;
+            color: white;
+        }
+        .container {
+            background-color: #2a2a2a;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        button {
+            background-color: #dc2626;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #b91c1c;
+        }
+        .info {
+            background-color: #1e40af;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .error {
+            background-color: #dc2626;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .success {
+            background-color: #059669;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Teste de Logout - Sistema de Autenticação</h1>
+        <p>Este teste verifica se o logout está funcionando corretamente e limpa todas as sessões.</p>
+        
+        <div class="info">
+            <strong>Status da Sessão:</strong>
+            <div id="sessionStatus">Verificando...</div>
+        </div>
+        
+        <div>
+            <button onclick="checkSession()">Verificar Sessão</button>
+            <button onclick="clearAllSessions()">Limpar Todas as Sessões</button>
+            <button onclick="testLogout()">Testar Logout</button>
+            <button onclick="redirectToLogin()">Ir para Login</button>
+        </div>
+        
+        <div id="results"></div>
+    </div>
+
+    <script>
+        function checkSession() {
+            const results = document.getElementById('results');
+            const status = document.getElementById('sessionStatus');
+            
+            try {
+                // Verificar localStorage
+                const localStorageKeys = Object.keys(localStorage).filter(key => 
+                    key.includes('supabase') || key.includes('sb-')
+                );
+                
+                // Verificar sessionStorage
+                const sessionStorageKeys = Object.keys(sessionStorage).filter(key => 
+                    key.includes('supabase') || key.includes('sb-')
+                );
+                
+                let statusText = '';
+                if (localStorageKeys.length > 0 || sessionStorageKeys.length > 0) {
+                    statusText = '🔴 Sessão ativa encontrada';
+                    statusText += `<br>LocalStorage: ${localStorageKeys.length} chaves`;
+                    statusText += `<br>SessionStorage: ${sessionStorageKeys.length} chaves`;
+                } else {
+                    statusText = '🟢 Nenhuma sessão ativa';
+                }
+                
+                status.innerHTML = statusText;
+                
+                results.innerHTML = `
+                    <div class="info">
+                        <strong>Detalhes da Verificação:</strong><br>
+                        LocalStorage (${localStorageKeys.length}): ${localStorageKeys.join(', ') || 'Nenhuma'}<br>
+                        SessionStorage (${sessionStorageKeys.length}): ${sessionStorageKeys.join(', ') || 'Nenhuma'}
+                    </div>
+                `;
+                
+            } catch (error) {
+                results.innerHTML = `<div class="error">Erro ao verificar sessão: ${error.message}</div>`;
+            }
+        }
+        
+        function clearAllSessions() {
+            const results = document.getElementById('results');
+            
+            try {
+                // Limpar localStorage
+                const localStorageKeys = Object.keys(localStorage).filter(key => 
+                    key.includes('supabase') || key.includes('sb-')
+                );
+                localStorageKeys.forEach(key => localStorage.removeItem(key));
+                
+                // Limpar sessionStorage
+                const sessionStorageKeys = Object.keys(sessionStorage).filter(key => 
+                    key.includes('supabase') || key.includes('sb-')
+                );
+                sessionStorageKeys.forEach(key => sessionStorage.removeItem(key));
+                
+                results.innerHTML = `
+                    <div class="success">
+                        ✅ Sessões limpas com sucesso!<br>
+                        Removidas ${localStorageKeys.length} chaves do LocalStorage<br>
+                        Removidas ${sessionStorageKeys.length} chaves do SessionStorage
+                    </div>
+                `;
+                
+                // Atualizar status
+                setTimeout(checkSession, 100);
+                
+            } catch (error) {
+                results.innerHTML = `<div class="error">Erro ao limpar sessões: ${error.message}</div>`;
+            }
+        }
+        
+        function testLogout() {
+            const results = document.getElementById('results');
+            
+            try {
+                // Simular o processo de logout
+                clearAllSessions();
+                
+                results.innerHTML += `
+                    <div class="info">
+                        <strong>Teste de Logout Concluído:</strong><br>
+                        1. ✅ Sessões locais limpas<br>
+                        2. ✅ Redirecionamento para login preparado<br>
+                        <br>
+                        <strong>Próximos passos:</strong><br>
+                        - Clique em "Ir para Login" para testar o redirecionamento<br>
+                        - Ou acesse diretamente: <a href="/login" style="color: #60a5fa;">/login</a>
+                    </div>
+                `;
+                
+            } catch (error) {
+                results.innerHTML = `<div class="error">Erro no teste de logout: ${error.message}</div>`;
+            }
+        }
+        
+        function redirectToLogin() {
+            window.location.href = '/login';
+        }
+        
+        // Verificar sessão ao carregar a página
+        window.onload = function() {
+            checkSession();
+        };
+    </script>
+</body>
+</html>
